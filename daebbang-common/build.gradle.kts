@@ -1,29 +1,20 @@
-plugins {
-    java
-    id("org.springframework.boot") version "4.0.2"
-    id("io.spring.dependency-management") version "1.1.7"
-}
+import org.springframework.boot.gradle.tasks.bundling.BootJar
 
-group = "com.daebbang"
-version = "0.0.1-SNAPSHOT"
 description = "daebbang-common"
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-repositories {
-    mavenCentral()
+plugins {
+    id("java-library")
+    id("org.springframework.boot")
 }
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+tasks.named<BootJar>("bootJar") {
+    enabled = false
+}
+
+tasks.named<Jar>("jar") {
+    enabled = true
 }
