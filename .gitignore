@@ -1,4 +1,4 @@
-HELP.md
+### Build or Compile ###
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -35,3 +35,23 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### OS File ###
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+### log 파일 ###
+*.log
+logs/
+
+### Docker ###
+/redis_data
+/db_data_local
+
+### 환경 파일 ###
+.env
+application-local.yml
+
+### 기타 파일 ###
+HELP.md
