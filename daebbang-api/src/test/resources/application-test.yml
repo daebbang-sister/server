@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: daebbang-api
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/daebbang_local
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: admin
+    password: admin
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        highlight_sql: true
+        format_sql: true
+        show-sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379

@@ -22,13 +22,16 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
+
+        # Gradle Settings
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
 
         # Gradle Build (API)
-      - name: Build API Module
+      - name: Build Gradle
         run: |
           chmod +x ./gradlew
-          ./gradlew :daebbang-api:bootJar
+          ./gradlew :daebbang-api:clean :daebbang-api:build
 
         # Jar file Extract
       - name: Extract Jar Layers
