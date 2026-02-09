@@ -36,9 +36,9 @@ jobs:
         # Jar file Extract
       - name: Extract Jar Layers
         run: |
-          cp daebbang-api/build/libs/*.jar daebbang-api/app.jar
-          cd daebbang-api
-          java -Djarmode=tools -jar app.jar extract --layers --launcher
+          cp daebbang-api/build/libs/*.jar daebbang-api/build/libs/api.jar
+          cd daebbang-api/build/libs
+          java -Djarmode=tools -jar api.jar extract --layers --launcher
 
         # Docker Buildx Settings
       - name: Set up Docker Buildx
@@ -55,7 +55,7 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
-          context: ./daebbang-api
+          context: ./daebbang-api/build/libs/api
           file: ./daebbang-api/Dockerfile-prod
           push: 'true'
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/daebbang-server:latest
