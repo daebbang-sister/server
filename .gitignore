@@ -48,6 +48,7 @@ logs/
 ### Docker ###
 /redis_data
 /db_data_local
+/daebbang-api/Dockerfile-local
 
 ### 환경 파일 ###
 .env
