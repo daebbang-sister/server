@@ -42,7 +42,7 @@ jobs:
 
       - name: Run Tests
         env:
-          MYSQL_USER: ${{ secrets.CI_MYSQL_USER }}
+          MYSQL_USER: root
           MYSQL_PASSWORD: ${{ secrets.CI_MYSQL_PASSWORD }}
         run: |
           chmod +x ./gradlew
