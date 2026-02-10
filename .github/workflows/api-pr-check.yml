@@ -17,6 +17,16 @@ jobs:
     permissions:
       contents: read
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: daebbang_local
+          MYSQL_ROOT_PASSWORD: ${{ secrets.CI_MYSQL_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -31,6 +41,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Run Tests
+        env:
+          MYSQL_USER: ${{ secrets.CI_MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.CI_MYSQL_PASSWORD }}
         run: |
           chmod +x ./gradlew
           ./gradlew :daebbang-api:clean :daebbang-api:test
