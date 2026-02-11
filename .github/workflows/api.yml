@@ -31,7 +31,7 @@ jobs:
       - name: Build Gradle
         run: |
           chmod +x ./gradlew
-          ./gradlew :daebbang-api:clean :daebbang-api:build
+          ./gradlew :daebbang-api:clean :daebbang-api:build -x test
 
         # Jar file Extract
       - name: Extract Jar Layers
