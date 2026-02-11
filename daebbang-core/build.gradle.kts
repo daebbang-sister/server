@@ -12,7 +12,11 @@ dependencies {
     api(project(":daebbang-common"))
 
     // jpa
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    api("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    // flyway
+    implementation("org.flywaydb:flyway-mysql")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
 
     // redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
