@@ -21,12 +21,14 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: daebbang_local
+          MYSQL_USER: admin
+          MYSQL_PASSWORD: admin
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mysql -uadmin -padmin -e 'select 1'"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -49,8 +51,8 @@ jobs:
 
       - name: Run Tests
         env:
-          MYSQL_USER: root
-          MYSQL_PASSWORD: root
+          MYSQL_USER: admin
+          MYSQL_PASSWORD: admin
         run: |
           chmod +x ./gradlew
           ./gradlew :daebbang-api:clean :daebbang-api:test -Dspring.profiles.active=test
