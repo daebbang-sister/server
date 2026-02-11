@@ -46,4 +46,4 @@ jobs:
           MYSQL_PASSWORD: root
         run: |
           chmod +x ./gradlew
-          ./gradlew :daebbang-api:clean :daebbang-api:test
+          ./gradlew :daebbang-api:clean :daebbang-api:test -Dspring.profiles.active=test
