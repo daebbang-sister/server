@@ -3,7 +3,7 @@ spring:
     name: daebbang-api
 
   datasource:
-    url: jdbc:mysql://localhost:3306/daebbang_local
+    url: jdbc:mysql://127.0.0.1:3306/daebbang_local
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: root
