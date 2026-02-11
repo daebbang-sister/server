@@ -1,6 +1,7 @@
 package com.daebbang.daebbangcore.domain.user.entity;
 
 import com.daebbang.daebbangcore.infra.converter.UserStatusConverter;
+import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,13 +25,24 @@ public class Users {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Provider provider;
+
     @Convert(converter = UserStatusConverter.class)
     private UserStatus status;
+
+    @Column(nullable = false, length = 16)
     private String loginId;
+
+    @Column(length = 255)
     private String loginPwd;
+
+    @Column(nullable = false, length = 50)
     private String name;
+
+    @Column(nullable = false, length = 20)
     private String phoneNumber;
+
     private LocalDateTime lastLoginAt;
 
     @Builder
