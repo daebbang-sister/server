@@ -46,9 +46,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: Wait for MySQL
-        run: sleep 20
-
       - name: Run Tests
         env:
           MYSQL_USER: admin
