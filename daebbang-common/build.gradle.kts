@@ -9,6 +9,7 @@ plugins {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("com.fasterxml.jackson.core:jackson-annotations")
 }
 
 tasks.named<BootJar>("bootJar") {
