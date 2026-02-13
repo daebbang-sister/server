@@ -1,6 +1,6 @@
 package com.daebbang.daebbangapi.handler;
 
-import com.daebbang.daebbangcommon.dto.CommonResponse;
+import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
 import com.daebbang.daebbangcommon.error.ErrorCode;
