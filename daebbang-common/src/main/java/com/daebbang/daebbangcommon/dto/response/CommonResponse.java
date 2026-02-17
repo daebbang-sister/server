@@ -1,4 +1,4 @@
-package com.daebbang.daebbangcommon.dto;
+package com.daebbang.daebbangcommon.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
