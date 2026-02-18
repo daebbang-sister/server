@@ -23,6 +23,7 @@ public record UserInfo(
             .loginId(user.getLoginId())
             .userName(user.getName())
             .userPhoneNumber(PhoneNumberUtils.maskPhoneNumber(user.getPhoneNumber()))
+            .createdAt(user.getCreatedAt())
             .lastLoginAt(user.getLastLoginAt())
             .build();
     }

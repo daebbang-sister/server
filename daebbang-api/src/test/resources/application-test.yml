@@ -22,3 +22,6 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+  jwt:
+    secret: "daebbang_sister_test_secret_key_test_information_at_least_32_chars"
