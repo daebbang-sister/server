@@ -1,5 +1,6 @@
 package com.daebbang.daebbangcommon.dto.response;
 
+import com.daebbang.daebbangcommon.success.SuccessCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import lombok.AccessLevel;
@@ -31,8 +32,16 @@ public class CommonResponse<T> {
         return new CommonResponse<>(true, status, message, null, null);
     }
 
+    public static <T> CommonResponse<T> success(SuccessCode code) {
+        return new CommonResponse<>(true, code.getStatus(), code.getMessage(), null, null);
+    }
+
     public static <T> CommonResponse<T> success(Integer status, String message, T data) {
         return new CommonResponse<>(true, status, message, data, null);
+    }
+
+    public static <T> CommonResponse<T> success(SuccessCode code, T data) {
+        return new CommonResponse<>(true, code.getStatus(), code.getMessage(), data, null);
     }
 
     public static <T> CommonResponse<T> error(Integer status, String message) {
