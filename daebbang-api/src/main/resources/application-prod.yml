@@ -17,3 +17,6 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
+
+  jwt:
+    secret: ${SECRET_KEY}

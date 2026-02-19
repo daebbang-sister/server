@@ -1,5 +1,6 @@
 package com.daebbang.daebbangcore.domain.user.entity;
 
+import com.daebbang.daebbangcore.domain.audit.CreatedBase;
 import com.daebbang.daebbangcore.infra.converter.UserStatusConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Users {
+public class Users extends CreatedBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
