@@ -38,6 +38,9 @@ public class Users extends CreatedBase {
     @Column(length = 255)
     private String loginPwd;
 
+    @Column(nullable = false)
+    private String email;
+
     @Column(nullable = false, length = 50)
     private String name;
 
@@ -47,23 +50,25 @@ public class Users extends CreatedBase {
     private LocalDateTime lastLoginAt;
 
     @Builder
-    private Users(Provider provider, UserStatus status, String loginId, String loginPwd, String name, String phoneNumber) {
+    private Users(Provider provider, UserStatus status, String loginId, String loginPwd, String name, String email, String phoneNumber) {
         this.provider = provider;
         this.status = status;
         this.loginId = loginId;
         this.loginPwd = loginPwd;
         this.name = name;
+        this.email = email;
         this.phoneNumber = phoneNumber;
         this.lastLoginAt = null;
     }
 
-    public static Users createLocalUser(String loginId, String loginPwd, String name, String phoneNumber) {
+    public static Users createLocalUser(String loginId, String loginPwd, String name, String email, String phoneNumber) {
         return Users.builder()
             .provider(Provider.LOCAL)
             .status(UserStatus.ACTIVE)
             .loginId(loginId)
             .loginPwd(loginPwd)
             .name(name)
+            .email(email)
             .phoneNumber(phoneNumber)
             .build();
     }

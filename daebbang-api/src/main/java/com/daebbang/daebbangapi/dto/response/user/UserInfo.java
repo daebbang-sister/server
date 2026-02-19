@@ -12,6 +12,7 @@ public record UserInfo(
     Provider provider,
     String loginId,
     String userName,
+    String userEmail,
     String userPhoneNumber,
     LocalDateTime createdAt,
     LocalDateTime lastLoginAt
@@ -22,6 +23,7 @@ public record UserInfo(
             .provider(user.getProvider())
             .loginId(user.getLoginId())
             .userName(user.getName())
+            .userEmail(user.getEmail())
             .userPhoneNumber(PhoneNumberUtils.maskPhoneNumber(user.getPhoneNumber()))
             .createdAt(user.getCreatedAt())
             .lastLoginAt(user.getLastLoginAt())

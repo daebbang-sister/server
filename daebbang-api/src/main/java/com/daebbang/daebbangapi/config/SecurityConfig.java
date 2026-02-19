@@ -1,8 +1,8 @@
 package com.daebbang.daebbangapi.config;
 
 import com.daebbang.daebbangapi.filter.UserLoginFilter;
+import com.daebbang.daebbangapi.provider.TokenProvider;
 import com.daebbang.daebbangapi.service.user.CustomUserDetailsService;
-import com.daebbang.daebbangcore.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,15 +25,11 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtUtils jwtUtils;
     private final ObjectMapper mapper;
+    private final TokenProvider tokenProvider;
+    private final PasswordConfig passwordConfig;
 
     private final CustomUserDetailsService userService;
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public AuthenticationManager authenticationManager(CustomUserDetailsService service, PasswordEncoder encoder) {
@@ -45,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain doChain(HttpSecurity http) throws Exception {
 
-        AuthenticationManager manager = authenticationManager(userService, passwordEncoder());
+        AuthenticationManager manager = authenticationManager(userService, passwordConfig.passwordEncoder());
 
         http
             .csrf(AbstractHttpConfigurer::disable);
@@ -64,7 +60,7 @@ public class SecurityConfig {
             );
 
         http
-            .addFilterAt(new UserLoginFilter(manager, mapper, jwtUtils), UsernamePasswordAuthenticationFilter.class);
+            .addFilterAt(new UserLoginFilter(manager, mapper, tokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         http
             .sessionManagement((session) -> session

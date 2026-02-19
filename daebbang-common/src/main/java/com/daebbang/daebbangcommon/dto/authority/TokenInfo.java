@@ -15,6 +15,10 @@ public class TokenInfo {
         this.refreshToken = refreshToken;
     }
 
+    public static TokenInfo create(String accessToken, String refreshToken) {
+        return new TokenInfo("bearer", accessToken, refreshToken);
+    }
+
     public static TokenInfo create(String grantType, String accessToken, String refreshToken) {
         return new TokenInfo(grantType, accessToken, refreshToken);
     }
