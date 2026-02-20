@@ -12,7 +12,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -61,25 +60,11 @@ public class JwtUtils {
     }
 
     public boolean validateToken(String token) {
-        try {
-            Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token);
-            return true;
-        } catch (SecurityException | MalformedJwtException e) {
-            log.warn("잘못된 JWT 서명입니다. : ", e);
-            return false;
-        } catch (ExpiredJwtException e) {
-            log.warn("만료된 JWT 토큰입니다. :", e);
-            return false;
-        } catch (UnsupportedJwtException e) {
-            log.warn("지원되지 않는 JWT 토큰입니다.");
-            return false;
-        } catch (IllegalArgumentException e) {
-            log.warn("JWT 토큰이 비어있거나 잘못되었습니다.");
-            return false;
-        }
+        Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token);
+        return true;
     }
 
     public String createAccessToken(String name, String role) {

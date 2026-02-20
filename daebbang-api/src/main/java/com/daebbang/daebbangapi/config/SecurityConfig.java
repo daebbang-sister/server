@@ -63,7 +63,7 @@ public class SecurityConfig {
 
         http
             .addFilterAt(new UserLoginFilter(manager, mapper, tokenProvider), UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, mapper), UsernamePasswordAuthenticationFilter.class);
 
         http
             .sessionManagement((session) -> session
