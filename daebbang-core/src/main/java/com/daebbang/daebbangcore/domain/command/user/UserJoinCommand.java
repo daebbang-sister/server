@@ -1,4 +1,4 @@
-package com.daebbang.daebbangcore.command.user;
+package com.daebbang.daebbangcore.domain.command.user;
 
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import lombok.Builder;

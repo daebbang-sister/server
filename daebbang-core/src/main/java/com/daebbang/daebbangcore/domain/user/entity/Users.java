@@ -30,6 +30,7 @@ public class Users extends CreatedBase {
     private Provider provider;
 
     @Convert(converter = UserStatusConverter.class)
+    @Column(columnDefinition = "TINYINT UNSIGNED", nullable = false)
     private UserStatus status;
 
     @Column(nullable = false, length = 16)

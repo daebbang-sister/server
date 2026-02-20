@@ -5,7 +5,7 @@ import com.daebbang.daebbangapi.dto.response.user.UserInfo;
 import com.daebbang.daebbangapi.mapper.user.UserMapper;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
-import com.daebbang.daebbangcore.service.user.UserService;
+import com.daebbang.daebbangcore.domain.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

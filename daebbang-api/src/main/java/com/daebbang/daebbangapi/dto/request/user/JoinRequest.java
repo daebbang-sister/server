@@ -1,6 +1,6 @@
 package com.daebbang.daebbangapi.dto.request.user;
 
-import com.daebbang.daebbangcore.command.user.UserJoinCommand;
+import com.daebbang.daebbangcore.domain.command.user.UserJoinCommand;
 
 public record JoinRequest(
     String name,
