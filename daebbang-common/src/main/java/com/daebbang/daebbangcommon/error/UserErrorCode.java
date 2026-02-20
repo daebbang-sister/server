@@ -7,6 +7,10 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum UserErrorCode implements ErrorCode {
 
+    INVALID_TOKEN(401, "유효하지 않은 토큰입니다."),
+    EXPIRED_TOKEN(401, "만료된 토큰입니다."),
+    UNSUPPORTED_TOKEN(401, "지원되지 않는 토큰 형식입니다."),
+
     INVALID_PHONE_NUMBER_FORMAT(400, "유효하지 않은 전화번호 형식입니다."),
     INVALID_LOGIN_INFO(401, "아이디 또는 비밀번호가 일치하지 않습니다."),
     INVALID_PASSWORD(401, "비밀번호가 일치하지 않습니다."),

@@ -11,6 +11,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,8 +28,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<@NonNull CommonResponse<UserInfo>> getUser() {
-        UserInfo info = userMapper.toUserInfo(userService.getUser(""));
+    public ResponseEntity<@NonNull CommonResponse<UserInfo>> getUser(@AuthenticationPrincipal String username) {
+        UserInfo info = userMapper.toUserInfo(userService.getUser(username));
         return ResponseEntity
                             .status(HttpStatus.OK)
                             .body(CommonResponse.success(UserSuccessCode.USER_RETRIEVED, info));

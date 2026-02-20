@@ -1,14 +1,20 @@
 package com.daebbang.daebbangcore.infra.util;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Jwts.SIG;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Objects;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class JwtUtils {
 
@@ -46,14 +52,19 @@ public class JwtUtils {
                     .get("role", String.class);
     }
 
-    public boolean isExpired(String token) {
-        return Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
-                    .getExpiration()
-                    .before(new Date());
+    public String resolveToken(String authHeader) {
+        if (Objects.nonNull(authHeader) && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
+    }
+
+    public boolean validateToken(String token) {
+        Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token);
+        return true;
     }
 
     public String createAccessToken(String name, String role) {
