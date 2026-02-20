@@ -1,8 +1,10 @@
 package com.daebbang.daebbangapi.config;
 
+import com.daebbang.daebbangapi.filter.JwtAuthenticationFilter;
 import com.daebbang.daebbangapi.filter.UserLoginFilter;
 import com.daebbang.daebbangapi.provider.TokenProvider;
 import com.daebbang.daebbangapi.service.user.CustomUserDetailsService;
+import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +16,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -25,6 +26,7 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtUtils jwtUtils;
     private final ObjectMapper mapper;
     private final TokenProvider tokenProvider;
     private final PasswordConfig passwordConfig;
@@ -60,7 +62,8 @@ public class SecurityConfig {
             );
 
         http
-            .addFilterAt(new UserLoginFilter(manager, mapper, tokenProvider), UsernamePasswordAuthenticationFilter.class);
+            .addFilterAt(new UserLoginFilter(manager, mapper, tokenProvider), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
 
         http
             .sessionManagement((session) -> session
