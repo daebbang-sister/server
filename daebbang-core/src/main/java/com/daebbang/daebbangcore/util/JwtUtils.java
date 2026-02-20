@@ -12,13 +12,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtUtils {
 
-    private SecretKey key;
+    private final SecretKey key;
+    private final Long accessTokenExpirationTime;
+    private final Long refreshTokenExpirationTime;
 
-    public JwtUtils(@Value("${spring.jwt.secret}")String secret) {
+    public JwtUtils(
+        @Value("${spring.jwt.secret}")String secret,
+        @Value("${spring.jwt.access}")Long accessExpirationTime,
+        @Value("${spring.jwt.refresh}")Long refreshExpirationTime) {
         this.key = new SecretKeySpec(
             secret.getBytes(StandardCharsets.UTF_8),
             SIG.HS256.key().build().getAlgorithm()
         );
+        this.accessTokenExpirationTime = accessExpirationTime;
+        this.refreshTokenExpirationTime = refreshExpirationTime;
     }
 
     public String getUserName(String token) {
@@ -49,13 +56,23 @@ public class JwtUtils {
                     .before(new Date());
     }
 
-    public String createToken(String name, String role, Long expiredAt) {
+    public String createAccessToken(String name, String role) {
         return Jwts.builder()
                     .claim("name", name)
                     .claim("role", role)
                     .issuedAt(new Date(System.currentTimeMillis()))
-                    .expiration(new Date(System.currentTimeMillis() + expiredAt))
+                    .expiration(new Date(System.currentTimeMillis() + accessTokenExpirationTime))
                     .signWith(key)
                     .compact();
+    }
+
+    public String createRefreshToken(String name, String role) {
+        return Jwts.builder()
+            .claim("name", name)
+            .claim("role", role)
+            .issuedAt(new Date(System.currentTimeMillis()))
+            .expiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime))
+            .signWith(key)
+            .compact();
     }
 }

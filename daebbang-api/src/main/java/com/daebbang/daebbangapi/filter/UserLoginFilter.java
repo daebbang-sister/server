@@ -1,33 +1,43 @@
 package com.daebbang.daebbangapi.filter;
 
+import com.daebbang.daebbangapi.provider.TokenProvider;
+import com.daebbang.daebbangcommon.dto.authority.TokenInfo;
+import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
+import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.dto.LoginRequest;
-import com.daebbang.daebbangcore.util.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import tools.jackson.databind.ObjectMapper;
 
 @NullMarked
 public class UserLoginFilter extends UsernamePasswordAuthenticationFilter {
 
-    private final JwtUtils jwtUtils;
     private final ObjectMapper mapper;
+    private final TokenProvider tokenProvider;
     private final AuthenticationManager authManager;
 
-    public UserLoginFilter(AuthenticationManager authManager, ObjectMapper mapper, JwtUtils jwtUtils) {
+    public UserLoginFilter(AuthenticationManager authManager, ObjectMapper mapper, TokenProvider tokenProvider) {
         this.mapper = mapper;
-        this.jwtUtils = jwtUtils;
         this.authManager = authManager;
+        this.tokenProvider = tokenProvider;
+
+        setFilterProcessesUrl("/v1/auth/login");
     }
 
     @Override
@@ -48,13 +58,33 @@ public class UserLoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, FilterChain chain, Authentication authResult)
         throws IOException, ServletException {
-        super.successfulAuthentication(request, response, chain, authResult);
+        UserDetails user = (UserDetails) authResult.getPrincipal();
+        if (Objects.isNull(user)) {
+            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        CommonResponse<TokenInfo> success = tokenProvider.issueTokens(user);
+
+        writeResponse(response, mapper, HttpStatus.OK, success);
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, AuthenticationException failed)
         throws IOException, ServletException {
-        super.unsuccessfulAuthentication(request, response, failed);
+        CommonResponse<?> error = CommonResponse.error(UserErrorCode.INVALID_LOGIN_INFO);
+        writeResponse(response, mapper, HttpStatus.UNAUTHORIZED, error);
+    }
+
+    private void writeResponse(
+        HttpServletResponse response, ObjectMapper mapper,
+        HttpStatus status, CommonResponse<?> body) throws IOException {
+
+        response.setCharacterEncoding(StandardCharsets.UTF_8);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(status.value());
+
+        String bodyResponse = mapper.writeValueAsString(body);
+        response.getWriter().write(bodyResponse);
     }
 }

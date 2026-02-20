@@ -1,7 +1,9 @@
 package com.daebbang.daebbangcommon.dto.response;
 
+import com.daebbang.daebbangcommon.error.ErrorCode;
 import com.daebbang.daebbangcommon.success.SuccessCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -11,6 +13,7 @@ import org.springframework.validation.FieldError;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonPropertyOrder({"success", "status", "message", "data", "errors"})
 public class CommonResponse<T> {
 
     private boolean success;
@@ -48,11 +51,16 @@ public class CommonResponse<T> {
         return new CommonResponse<>(false, status, message, null, null);
     }
 
+    public static <T> CommonResponse<T> error(ErrorCode errorCode) {
+        return new CommonResponse<>(false, errorCode.getStatus(), errorCode.getMessage(), null, null);
+    }
+
     public static <T> CommonResponse<T> error(Integer status, String message, List<ValidationError> errors) {
         return new CommonResponse<>(false, status, message, null, errors);
     }
 
     @Builder
+    @JsonPropertyOrder({"field", "message"})
     public record ValidationError(String field, String message) {
         public static ValidationError of(final FieldError fieldError) {
                 return ValidationError.builder()

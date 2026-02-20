@@ -25,3 +25,5 @@ spring:
 
   jwt:
     secret: "daebbang_sister_test_secret_key_test_information_at_least_32_chars"
+    access: 600000
+    refresh: 604800000
