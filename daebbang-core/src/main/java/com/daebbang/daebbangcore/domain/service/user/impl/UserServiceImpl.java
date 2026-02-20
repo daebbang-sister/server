@@ -1,14 +1,13 @@
-package com.daebbang.daebbangcore.service.user.impl;
+package com.daebbang.daebbangcore.domain.service.user.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
-import com.daebbang.daebbangcore.command.user.PasswordPort;
-import com.daebbang.daebbangcore.command.user.UserJoinCommand;
+import com.daebbang.daebbangcore.domain.command.user.PasswordPort;
+import com.daebbang.daebbangcore.domain.command.user.UserJoinCommand;
 import com.daebbang.daebbangcore.domain.user.entity.UserStatus;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
-import com.daebbang.daebbangcore.service.user.UserService;
-import java.util.Objects;
+import com.daebbang.daebbangcore.domain.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.daebbang.daebbangcore.util;
+package com.daebbang.daebbangcore.infra.util;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Jwts.SIG;

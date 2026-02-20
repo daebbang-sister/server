@@ -1,4 +1,4 @@
-package com.daebbang.daebbangcore.command.user;
+package com.daebbang.daebbangcore.domain.command.user;
 
 public interface PasswordPort {
     String encode(String rawPassword);

@@ -1,4 +1,4 @@
-package com.daebbang.daebbangcore.dto;
+package com.daebbang.daebbangcore.domain.dto;
 
 public record LoginRequest(
     String id,

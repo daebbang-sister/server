@@ -1,4 +1,4 @@
-package com.daebbang.daebbangcore.config;
+package com.daebbang.daebbangcore.infra.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;

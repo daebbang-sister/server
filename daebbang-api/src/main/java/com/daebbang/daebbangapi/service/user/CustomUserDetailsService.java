@@ -1,7 +1,7 @@
 package com.daebbang.daebbangapi.service.user;
 
 import com.daebbang.daebbangcore.domain.user.entity.Users;
-import com.daebbang.daebbangcore.service.user.UserService;
+import com.daebbang.daebbangcore.domain.service.user.UserService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
