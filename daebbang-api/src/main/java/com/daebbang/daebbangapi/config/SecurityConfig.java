@@ -3,6 +3,7 @@ package com.daebbang.daebbangapi.config;
 import com.daebbang.daebbangapi.filter.JwtAuthenticationFilter;
 import com.daebbang.daebbangapi.filter.UserLoginFilter;
 import com.daebbang.daebbangapi.provider.TokenProvider;
+import com.daebbang.daebbangapi.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.service.user.CustomUserDetailsService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class SecurityConfig {
     private final PasswordConfig passwordConfig;
 
     private final CustomUserDetailsService userService;
+    private final Oauth2UserDetailsService oauth2Service;
 
     @Bean
     public AuthenticationManager authenticationManager(CustomUserDetailsService service, PasswordEncoder encoder) {
@@ -59,6 +61,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
                 .anyRequest().authenticated()
+            );
+
+        http
+            .oauth2Login((oauth2) -> oauth2
+                .userInfoEndpoint((config) -> config
+                    .userService(oauth2Service))
             );
 
         http
