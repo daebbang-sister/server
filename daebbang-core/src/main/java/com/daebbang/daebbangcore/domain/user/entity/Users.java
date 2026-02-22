@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -74,14 +75,27 @@ public class Users extends CreatedBase {
             .build();
     }
 
-    public static Users createSocialUser(Provider provider, String loginId, String name, String phoneNumber) {
+    public static Users createSocialUser(Provider provider, String providerId, String name, String email, String phoneNumber) {
         return Users.builder()
             .provider(provider)
             .status(UserStatus.ACTIVE)
-            .loginId(loginId)
+            .loginId(providerId)
             .loginPwd(null)
             .name(name)
+            .email(email)
             .phoneNumber(phoneNumber)
             .build();
+    }
+
+    public void updateSocialInfo(String name, String email, String phoneNumber) {
+        if (!this.name.equalsIgnoreCase(name)) {
+            this.name = name;
+        }
+        if (!this.email.equalsIgnoreCase(email)) {
+            this.email = email;
+        }
+        if (!this.phoneNumber.equalsIgnoreCase(phoneNumber)) {
+            this.phoneNumber = phoneNumber;
+        }
     }
 }

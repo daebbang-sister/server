@@ -11,6 +11,10 @@ public enum UserErrorCode implements ErrorCode {
     EXPIRED_TOKEN(401, "만료된 토큰입니다."),
     UNSUPPORTED_TOKEN(401, "지원되지 않는 토큰 형식입니다."),
 
+    UNSUPPORTED_SOCIAL_PROVIDER(400, "지원하지 않는 소셜 로그인 제공자입니다."),
+    INVALID_OAUTH2_ATTRIBUTES(400, "소셜 서비스로부터 사용자 정보를 가져올 수 없습니다."),
+    OAUTH2_AUTHENTICATION_FAILED(401, "소셜 로그인 인증에 실패했습니다."),
+
     INVALID_PHONE_NUMBER_FORMAT(400, "유효하지 않은 전화번호 형식입니다."),
     INVALID_LOGIN_INFO(401, "아이디 또는 비밀번호가 일치하지 않습니다."),
     INVALID_PASSWORD(401, "비밀번호가 일치하지 않습니다."),

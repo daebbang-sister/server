@@ -1,5 +1,6 @@
 package com.daebbang.daebbangcore.domain.user.repository;
 
+import com.daebbang.daebbangcore.domain.user.entity.Provider;
 import com.daebbang.daebbangcore.domain.user.entity.UserStatus;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import java.util.Optional;
@@ -21,9 +22,18 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
     SELECT COUNT(u) > 0
     FROM Users u
     WHERE u.loginId = :loginId
-        AND u.status != :excludeStatus
+      AND u.status != :excludeStatus
     """)
     boolean existsActiveUser(String loginId, UserStatus excludeStatus);
+
+    @Query("""
+    SELECT u
+    FROM Users u
+    WHERE u.loginId = :loginId
+      AND u.status != :excludeStatus
+      AND u.provider = :provider
+    """)
+    Optional<Users> findActiveUserByLoginIdAndProvider(String loginId, UserStatus excludeStatus, Provider provider);
 
     @Query("""
     SELECT u
