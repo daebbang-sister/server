@@ -36,12 +36,6 @@ public class SecurityConfig {
     private final CustomUserDetailsService userService;
     private final Oauth2UserDetailsService oauth2Service;
 
-    private static final String[] ALLOW_URIS = {
-        "/login",
-        "/v1/auth/login",
-        "/login/oauth2/code/kakao/**"
-    };
-
     @Bean
     public AuthenticationManager authenticationManager(CustomUserDetailsService service, PasswordEncoder encoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(service);
@@ -65,8 +59,8 @@ public class SecurityConfig {
 
         http
             .authorizeHttpRequests((auth) -> auth
-                .requestMatchers(ALLOW_URIS).permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
                 .anyRequest().authenticated()
             );
 
