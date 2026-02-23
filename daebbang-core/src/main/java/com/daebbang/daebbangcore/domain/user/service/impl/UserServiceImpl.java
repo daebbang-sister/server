@@ -9,6 +9,7 @@ import com.daebbang.daebbangcore.domain.user.entity.UserStatus;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
+import com.daebbang.daebbangcore.infra.service.SmsService;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ public class UserServiceImpl implements UserService {
 
     private final UsersRepository userRepository;
 
+    private final SmsService smsService;
+
     @Override
     @Transactional
     public void join(UserJoinCommand joinCommand) {
@@ -34,6 +37,8 @@ public class UserServiceImpl implements UserService {
         }
         // TODO : 휴대폰 인증 및 사용중인 이메일도 체크 해줘야함
         String encoded = passwordPort.encode(joinCommand.password());
+
+        smsService.sendAuthMessage(joinCommand.phoneNumber());
 
         Users joinUser = UserJoinCommand.toEntity(joinCommand, encoded);
         userRepository.save(joinUser);

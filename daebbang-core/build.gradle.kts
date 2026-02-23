@@ -26,6 +26,9 @@ dependencies {
     // redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
+    // cool - sms
+    implementation("com.solapi:sdk:1.0.3")
+
     // mysql
     runtimeOnly("com.mysql:mysql-connector-j")
 }
