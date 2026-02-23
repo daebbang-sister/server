@@ -27,3 +27,23 @@ spring:
     secret: "daebbang_sister_test_secret_key_test_information_at_least_32_chars"
     access: 600000
     refresh: 604800000
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-name: Kakao
+            client-id: ${KAKAO_REST_API_KEY}
+            redirect-uri: ${KAKAO_REDIRECT_URI}
+            client-secret: ${KAKAO_SECRET_KEY}
+            authorization-grant-type: authorization_code
+            scope:
+              - profile_nickname
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id

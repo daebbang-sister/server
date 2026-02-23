@@ -1,6 +1,6 @@
 package com.daebbang.daebbangapi.adapter;
 
-import com.daebbang.daebbangcore.domain.command.user.PasswordPort;
+import com.daebbang.daebbangcore.domain.user.command.PasswordPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

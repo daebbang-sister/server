@@ -15,12 +15,16 @@ public class TokenProvider {
     private final JwtUtils jwtUtils;
 
     public CommonResponse<TokenInfo> issueTokens(UserDetails user) {
+        String userRole = user.getAuthorities()
+                                .iterator()
+                                .next()
+                                .getAuthority();
+        return issueTokens(user.getUsername(), userRole);
+    }
 
-        String username = user.getUsername();
-        String userRole = user.getAuthorities().iterator().next().getAuthority();
-
-        String accessToken = jwtUtils.createAccessToken(username, userRole);
-        String refreshToken = jwtUtils.createRefreshToken(username, userRole);
+    public CommonResponse<TokenInfo> issueTokens(String username, String role) {
+        String accessToken = jwtUtils.createAccessToken(username, role);
+        String refreshToken = jwtUtils.createRefreshToken(username, role);
 
         return CommonResponse.success(
             UserSuccessCode.USER_LOGIN,
