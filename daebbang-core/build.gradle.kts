@@ -5,6 +5,7 @@ description = "daebbang-core"
 plugins {
     id("java-library")
     id("org.springframework.boot")
+    id("com.epages.restdocs-api-spec") version "0.18.2"
 }
 
 dependencies {
@@ -31,6 +32,9 @@ dependencies {
 
     // mysql
     runtimeOnly("com.mysql:mysql-connector-j")
+
+    // test
+    testImplementation("com.epages:restdocs-api-spec-mockmvc:0.18.2")
 }
 
 tasks.named<BootJar>("bootJar") {
