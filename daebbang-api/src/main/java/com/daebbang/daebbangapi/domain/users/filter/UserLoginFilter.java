@@ -6,7 +6,7 @@ import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
-import com.daebbang.daebbangcore.domain.user.dto.LoginRequest;
+import com.daebbang.daebbangcore.domain.user.dto.request.LoginRequest;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

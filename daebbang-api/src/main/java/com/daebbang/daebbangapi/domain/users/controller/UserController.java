@@ -1,7 +1,7 @@
 package com.daebbang.daebbangapi.domain.users.controller;
 
-import com.daebbang.daebbangapi.domain.users.dto.request.user.JoinRequest;
-import com.daebbang.daebbangapi.domain.users.dto.response.user.UserInfo;
+import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
+import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;

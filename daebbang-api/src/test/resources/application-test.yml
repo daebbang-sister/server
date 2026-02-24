@@ -28,6 +28,11 @@ spring:
     access: 600000
     refresh: 604800000
 
+  sms:
+    client-id: ertsgsdfgsdfgfs
+    client-secret: sdfgsdfgsdfgsdf
+    sender: 010-1234-5678
+
   security:
     oauth2:
       client:

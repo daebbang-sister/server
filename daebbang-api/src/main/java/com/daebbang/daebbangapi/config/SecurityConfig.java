@@ -59,6 +59,7 @@ public class SecurityConfig {
 
         http
             .authorizeHttpRequests((auth) -> auth
+                .requestMatchers(HttpMethod.POST, "/v1/sms/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
                 .anyRequest().authenticated()
