@@ -1,4 +1,4 @@
-package com.daebbang.daebbangapi.domain.users.dto.request.user;
+package com.daebbang.daebbangapi.domain.users.dto.request;
 
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 

@@ -1,4 +1,4 @@
-package com.daebbang.daebbangapi.domain.users.dto.response.user;
+package com.daebbang.daebbangapi.domain.users.dto.response;
 
 import com.daebbang.daebbangcommon.util.PhoneNumberUtils;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;

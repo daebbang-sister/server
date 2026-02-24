@@ -7,23 +7,27 @@ import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;
 import com.daebbang.daebbangcore.domain.user.entity.UserStatus;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
+import com.daebbang.daebbangcore.domain.user.event.UserJoinEvent;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
+@EnableAsync
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final PasswordPort passwordPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     private final UsersRepository userRepository;
 
@@ -35,13 +39,15 @@ public class UserServiceImpl implements UserService {
         if (existsUsers(joinCommand.loginId())) {
             throw new BusinessException(UserErrorCode.DUPLICATE_LOGIN_ID);
         }
-        // TODO : 휴대폰 인증 및 사용중인 이메일도 체크 해줘야함
+        if (!smsService.isVerified(joinCommand.phoneNumber())) {
+            throw new BusinessException(UserErrorCode.AUTH_CODE_EXPIRED);
+        }
         String encoded = passwordPort.encode(joinCommand.password());
-
-        smsService.sendAuthMessage(joinCommand.phoneNumber());
 
         Users joinUser = UserJoinCommand.toEntity(joinCommand, encoded);
         userRepository.save(joinUser);
+
+        eventPublisher.publishEvent(UserJoinEvent.toEvent(joinCommand.phoneNumber()));
     }
 
     @Override
@@ -56,6 +62,11 @@ public class UserServiceImpl implements UserService {
                     userRepository.save(socialUser);
                 }
             );
+    }
+
+    @Override
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        return userRepository.existsPhoneNumber(phoneNumber, UserStatus.WITHDRAWN);
     }
 
     @Override
