@@ -22,6 +22,8 @@ dependencies {
     // oauth2
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
+    // test
+    testRuntimeOnly("com.h2database:h2")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-restdocs")

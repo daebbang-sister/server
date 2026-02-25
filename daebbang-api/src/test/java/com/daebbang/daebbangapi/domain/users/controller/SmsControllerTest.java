@@ -7,12 +7,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.daebbang.daebbangapi.config.PasswordConfig;
+import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.dto.request.SmsSendRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.SmsVerifyRequest;
@@ -40,7 +42,7 @@ import tools.jackson.databind.ObjectMapper;
 @WebMvcTest(controllers = SmsController.class)
 @AutoConfigureRestDocs
 @ActiveProfiles("test")
-@Import(PasswordConfig.class)
+@Import({PasswordConfig.class, TestSecurityConfig.class})
 class SmsControllerTest {
 
     @Autowired
@@ -79,6 +81,7 @@ class SmsControllerTest {
 
         // when & then
         mockMvc.perform(post("/v1/sms/send")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -116,6 +119,7 @@ class SmsControllerTest {
 
         // when & then
         mockMvc.perform(post("/v1/sms/send")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -134,7 +138,8 @@ class SmsControllerTest {
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부 (false)"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드 (409)"),
-                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지")
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
@@ -150,6 +155,7 @@ class SmsControllerTest {
 
         // when & then
         mockMvc.perform(post("/v1/sms/verify")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -187,6 +193,7 @@ class SmsControllerTest {
 
         // when & then
         mockMvc.perform(post("/v1/sms/verify")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -206,7 +213,8 @@ class SmsControllerTest {
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부 (false)"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드 (400)"),
-                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지")
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
@@ -223,6 +231,7 @@ class SmsControllerTest {
 
         // when & then
         mockMvc.perform(post("/v1/sms/verify")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -242,7 +251,8 @@ class SmsControllerTest {
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부 (false)"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드 (401)"),
-                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지")
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
