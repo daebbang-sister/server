@@ -33,6 +33,13 @@ tasks.named<Jar>("jar") {
     enabled = false
 }
 
+tasks.register<Copy>("copyOasToSwagger") {
+    delete("src/main/resources/static/swagger-ui/openapi3.yaml")
+    from(layout.buildDirectory.file("api-spec/openapi3.yaml"))
+    into("src/main/resources/static/swagger-ui/.")
+    dependsOn("openapi3")
+}
+
 openapi3 {
     setServer("http://localhost:8080")
     title = "대빵 언니 API 서버 API 명세서"
