@@ -4,6 +4,7 @@ description = "daebbang-api"
 
 plugins {
     id("org.springframework.boot")
+    id("com.epages.restdocs-api-spec") version "0.18.2"
 }
 
 dependencies {
@@ -30,4 +31,19 @@ tasks.named<BootJar>("bootJar") {
 
 tasks.named<Jar>("jar") {
     enabled = false
+}
+
+tasks.register<Copy>("copyOasToSwagger") {
+    delete("src/main/resources/static/swagger-ui/openapi3.yaml")
+    from(layout.buildDirectory.file("api-spec/openapi3.yaml"))
+    into("src/main/resources/static/swagger-ui/.")
+    dependsOn("openapi3")
+}
+
+openapi3 {
+    setServer("http://localhost:8080")
+    title = "대빵 언니 API 서버 API 명세서"
+    description = "대빵 언니 API 서버 명세서입니다."
+    version = "1.0.0"
+    format = "yaml"
 }

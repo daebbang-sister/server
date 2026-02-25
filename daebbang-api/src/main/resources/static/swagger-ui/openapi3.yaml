@@ -1,0 +1,11 @@
+openapi: 3.0.1
+info:
+  title: 대빵 언니 API 서버 API 명세서
+  description: 대빵 언니 API 서버 명세서입니다.
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+tags: []
+paths: {}
+components:
+  schemas: {}
