@@ -6,6 +6,279 @@ info:
 servers:
 - url: http://localhost:8080
 tags: []
-paths: {}
+paths:
+  /v1/users:
+    get:
+      tags:
+      - User
+      summary: 회원 정보 조회
+      description: JWT 토큰으로 인증된 회원의 정보를 조회합니다.
+      operationId: user/get-user
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-users834243381'
+              examples:
+                user/get-user:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"id\":1,\"provider\":\"LOCAL\",\"loginId\"\
+                    :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
+                    ,\"userPhoneNumber\":\"010-****-5678\",\"createdAt\":\"2025-01-01T00:00:00\"\
+                    ,\"lastLoginAt\":null}}"
+    post:
+      tags:
+      - User
+      summary: 회원 가입
+      description: 새로운 회원을 등록합니다. 전화번호 인증 완료 후 가입이 가능합니다.
+      operationId: user/join-user
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-users657403634'
+            examples:
+              user/join-user:
+                value: "{\"name\":\"홍길동\",\"loginId\":\"testuser123\",\"password\"\
+                  :\"Password123!\",\"phoneNumber\":\"01012345678\",\"email\":\"test@example.com\"\
+                  }"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-users938806120'
+              examples:
+                user/join-user:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"회원 가입에 성공\
+                    하였습니다.\",\"data\":null}"
+  /v1/sms/send:
+    post:
+      tags:
+      - SMS
+      summary: SMS 인증번호 발송
+      description: 입력한 전화번호로 6자리 인증번호를 발송합니다. 이미 가입된 전화번호는 사용할 수 없습니다.
+      operationId: sms/send-auth-code
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-sms-send-1473349984'
+            examples:
+              sms/send-auth-code:
+                value: "{\"phoneNumber\":\"01012345678\"}"
+              sms/send-auth-code-duplicate:
+                value: "{\"phoneNumber\":\"01012345678\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-sms-send-703185799'
+              examples:
+                sms/send-auth-code:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
+                    니다.\",\"data\":{\"authCode\":\"123456\"}}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-sms-send1776962902'
+              examples:
+                sms/send-auth-code-duplicate:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 사용 중인\
+                    \ 핸드폰 번호입니다.\",\"data\":null}"
+  /v1/sms/verify:
+    post:
+      tags:
+      - SMS
+      summary: SMS 인증번호 검증
+      description: 발송된 인증번호가 올바른지 검증합니다. 인증 성공 시 이후 회원 가입이 가능합니다.
+      operationId: sms/verify-auth-code
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-sms-verify-1036657631'
+            examples:
+              sms/verify-auth-code:
+                value: "{\"phoneNumber\":\"01012345678\",\"authCode\":\"123456\"}"
+              sms/verify-auth-code-expired:
+                value: "{\"phoneNumber\":\"01012345678\",\"authCode\":\"123456\"}"
+              sms/verify-auth-code-mismatch:
+                value: "{\"phoneNumber\":\"01012345678\",\"authCode\":\"000000\"}"
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-users938806120'
+              examples:
+                sms/verify-auth-code:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"핸드폰 인증에 성\
+                    공하였습니다.\",\"data\":null}"
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-sms-verify-2135561122'
+              examples:
+                sms/verify-auth-code-expired:
+                  value: "{\"success\":false,\"status\":401,\"message\":\"인증번호가 만료\
+                    되었거나 일치하지 않습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-sms-verify-416340797'
+              examples:
+                sms/verify-auth-code-mismatch:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"인증번호 코드가\
+                    \ 일치하지 않습니다.\",\"data\":null}"
 components:
-  schemas: {}
+  schemas:
+    v1-sms-verify-1036657631:
+      type: object
+      properties:
+        authCode:
+          type: string
+          description: 잘못된 인증번호
+        phoneNumber:
+          type: string
+          description: 전화번호
+    v1-sms-verify-2135561122:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 성공 여부 (false)
+        message:
+          type: string
+          description: 오류 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드 (401)
+    v1-users834243381:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              description: 가입 일시
+            loginId:
+              type: string
+              description: 로그인 ID
+            provider:
+              type: string
+              description: "로그인 제공자 (LOCAL, KAKAO)"
+            userPhoneNumber:
+              type: string
+              description: "전화번호 (마스킹 처리, 예: 010-****-5678)"
+            userEmail:
+              type: string
+              description: 이메일 주소
+            id:
+              type: number
+              description: 회원 고유 ID
+            userName:
+              type: string
+              description: 회원 이름
+          description: 회원 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    v1-sms-verify-416340797:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 성공 여부 (false)
+        message:
+          type: string
+          description: 오류 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드 (400)
+    v1-sms-send1776962902:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 성공 여부 (false)
+        message:
+          type: string
+          description: 오류 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드 (409)
+    v1-users657403634:
+      type: object
+      properties:
+        password:
+          type: string
+          description: 비밀번호
+        phoneNumber:
+          type: string
+          description: 전화번호
+        loginId:
+          type: string
+          description: 로그인 ID
+        name:
+          type: string
+          description: 회원 이름
+        email:
+          type: string
+          description: 이메일 주소
+    v1-users938806120:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    v1-sms-send-1473349984:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          description: 이미 가입된 전화번호
+    v1-sms-send-703185799:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            authCode:
+              type: string
+              description: 발송된 인증번호 (6자리)
+          description: 발송 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드

@@ -22,7 +22,13 @@ dependencies {
     // oauth2
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
+    // test
+    testRuntimeOnly("com.h2database:h2")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
+    testImplementation("org.springframework.boot:spring-boot-webmvc-test")
+    testImplementation("org.springframework.boot:spring-boot-restdocs")
+    testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
+    testImplementation("com.epages:restdocs-api-spec-mockmvc:0.18.2")
 }
 
 tasks.named<BootJar>("bootJar") {
