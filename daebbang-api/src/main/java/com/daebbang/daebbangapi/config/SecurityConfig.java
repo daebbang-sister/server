@@ -16,6 +16,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,12 +37,27 @@ public class SecurityConfig {
     private final CustomUserDetailsService userService;
     private final Oauth2UserDetailsService oauth2Service;
 
+    private static final String[] SWAGGER_URI = {
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/v3/api-docs/**",
+        "/swagger-resources/**",
+        "/webjars/**"
+    };
+
     @Bean
     public AuthenticationManager authenticationManager(CustomUserDetailsService service, PasswordEncoder encoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(service);
         provider.setPasswordEncoder(encoder);
         return new ProviderManager(provider);
     }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+            .requestMatchers(SWAGGER_URI);
+    }
+
 
     @Bean
     public SecurityFilterChain doChain(HttpSecurity http) throws Exception {
@@ -59,6 +75,7 @@ public class SecurityConfig {
 
         http
             .authorizeHttpRequests((auth) -> auth
+                .requestMatchers(SWAGGER_URI).permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/sms/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
