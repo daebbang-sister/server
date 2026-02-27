@@ -4,7 +4,10 @@ info:
   description: 대빵 언니 API 서버 명세서입니다.
   version: 1.0.0
 servers:
+- url: https://api.daebbang-sister.shop
+  description: 운영 서버
 - url: http://localhost:8080
+  description: 로컬 개발 서버
 tags: []
 paths:
   /v1/users:
