@@ -20,6 +20,7 @@ import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
+import com.daebbang.daebbangapi.domain.users.dto.vo.AddressVO;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangapi.provider.TokenProvider;
@@ -29,6 +30,8 @@ import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+import static com.epages.restdocs.apispec.ResourceDocumentation.headerWithName;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -101,6 +104,7 @@ class UserControllerTest {
         mockMvc.perform(get("/v1/users")
                 .with(authentication(new UsernamePasswordAuthenticationToken(
                     username, null, List.of(new SimpleGrantedAuthority("ROLE_USER")))))
+                .header("Authorization", "Bearer test-jwt-token")
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
@@ -115,6 +119,10 @@ class UserControllerTest {
                     .tag("User")
                     .summary("회원 정보 조회")
                     .description("JWT 토큰으로 인증된 회원의 정보를 조회합니다.")
+                    .responseSchema(Schema.schema("UserInfoResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰 (로그인 후 발급된 액세스 토큰)")
+                    )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
@@ -127,7 +135,7 @@ class UserControllerTest {
                         fieldWithPath("data.userEmail").type(JsonFieldType.STRING).description("이메일 주소"),
                         fieldWithPath("data.userPhoneNumber").type(JsonFieldType.STRING).description("전화번호 (마스킹 처리, 예: 010-****-5678)"),
                         fieldWithPath("data.createdAt").type(JsonFieldType.STRING).description("가입 일시"),
-                        fieldWithPath("data.lastLoginAt").type(JsonFieldType.NULL).optional().description("마지막 로그인 일시 (없으면 null)")
+                        fieldWithPath("data.lastLoginAt").type(JsonFieldType.VARIES).optional().description("마지막 로그인 일시 (ISO 8601, 미로그인 시 null)")
                     )
                     .build()
                 )));
@@ -150,8 +158,12 @@ class UserControllerTest {
             "홍길동",
             "testuser123",
             "Password123!",
-            "01012345678",
-            "test@example.com"
+            "010-1234-5678",
+            "test@example.com",
+            new AddressVO(null,
+                "123-4567",
+                "테스트시 테스트구 테스트동",
+                "테스트 오피스텔 2층")
         );
 
         willDoNothing().given(userService).join(any(UserJoinCommand.class));
@@ -171,18 +183,25 @@ class UserControllerTest {
                     .tag("User")
                     .summary("회원 가입")
                     .description("새로운 회원을 등록합니다. 전화번호 인증 완료 후 가입이 가능합니다.")
+                    .requestSchema(Schema.schema("JoinUserRequest"))
+                    .responseSchema(Schema.schema("SuccessResponse"))
                     .requestFields(
                         fieldWithPath("name").type(JsonFieldType.STRING).description("회원 이름"),
                         fieldWithPath("loginId").type(JsonFieldType.STRING).description("로그인 ID"),
                         fieldWithPath("password").type(JsonFieldType.STRING).description("비밀번호"),
                         fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("전화번호"),
-                        fieldWithPath("email").type(JsonFieldType.STRING).description("이메일 주소")
+                        fieldWithPath("email").type(JsonFieldType.STRING).description("이메일 주소"),
+                        fieldWithPath("address").type(JsonFieldType.OBJECT).optional().description("회원 주소 정보 (null 가능)"),
+                        fieldWithPath("address.alias").type(JsonFieldType.VARIES).optional().description("주소 별칭 (null 가능)"),
+                        fieldWithPath("address.zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("address.address").type(JsonFieldType.STRING).description("도로명 주소"),
+                        fieldWithPath("address.detailAddress").type(JsonFieldType.STRING).description("상세 주소")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));

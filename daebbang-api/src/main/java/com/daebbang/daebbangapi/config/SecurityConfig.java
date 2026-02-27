@@ -1,5 +1,6 @@
 package com.daebbang.daebbangapi.config;
 
+import com.daebbang.daebbangapi.filter.CustomExceptionFilter;
 import com.daebbang.daebbangapi.filter.JwtAuthenticationFilter;
 import com.daebbang.daebbangapi.domain.users.filter.UserLoginFilter;
 import com.daebbang.daebbangapi.handler.OAuth2LoginSuccessHandler;
@@ -79,6 +80,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/v1/sms/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/users/find/**").permitAll()
                 .anyRequest().authenticated()
             );
 
@@ -90,6 +92,7 @@ public class SecurityConfig {
             );
 
         http
+            .addFilterBefore(new CustomExceptionFilter(mapper), UserLoginFilter.class)
             .addFilterAt(new UserLoginFilter(manager, mapper, tokenProvider), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, mapper), UsernamePasswordAuthenticationFilter.class);
 

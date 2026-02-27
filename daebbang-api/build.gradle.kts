@@ -39,17 +39,35 @@ tasks.named<Jar>("jar") {
     enabled = false
 }
 
-tasks.register<Copy>("copyOasToSwagger") {
-    delete("src/main/resources/static/swagger-ui/openapi3.yaml")
-    from(layout.buildDirectory.file("api-spec/openapi3.yaml"))
-    into("src/main/resources/static/swagger-ui/.")
-    dependsOn("openapi3")
-}
-
 openapi3 {
     setServer("http://localhost:8080")
     title = "대빵 언니 API 서버 API 명세서"
     description = "대빵 언니 API 서버 명세서입니다."
     version = "1.0.0"
     format = "yaml"
+}
+
+// openapi3 생성 후 운영 서버 URL을 servers 목록 맨 앞에 추가
+tasks.register("patchOpenApiServers") {
+    dependsOn("openapi3")
+    doLast {
+        val file = layout.buildDirectory.file("api-spec/openapi3.yaml").get().asFile
+        val content = file.readText().replace("\r\n", "\n")
+        val modified = content.replace(
+            "servers:\n- url: http://localhost:8080\n",
+            "servers:\n" +
+            "- url: https://api.daebbang-sister.shop\n" +
+            "  description: 운영 서버\n" +
+            "- url: http://localhost:8080\n" +
+            "  description: 로컬 개발 서버\n"
+        )
+        file.writeText(modified)
+    }
+}
+
+tasks.register<Copy>("copyOasToSwagger") {
+    delete("src/main/resources/static/swagger-ui/openapi3.yaml")
+    from(layout.buildDirectory.file("api-spec/openapi3.yaml"))
+    into("src/main/resources/static/swagger-ui/.")
+    dependsOn("patchOpenApiServers")
 }

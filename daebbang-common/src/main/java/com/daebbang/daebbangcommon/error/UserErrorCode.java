@@ -16,10 +16,18 @@ public enum UserErrorCode implements ErrorCode {
     OAUTH2_AUTHENTICATION_FAILED(401, "소셜 로그인 인증에 실패했습니다."),
 
     INVALID_PHONE_NUMBER(400, "전화번호 형식이 올바르지 않습니다."),
+    INVALID_USER_ID_FORMAT(400, "아이디 형식이 올바르지 않습니다."),
+    INVALID_USER_PASSWORD_FORMAT(400, "비밀번호 형식이 올바르지 않습니다."),
+    INVALID_USERNAME_FORMAT(400, "회원 이름 형식이 올바르지 않습니다."),
     AUTH_CODE_MISMATCH(400, "인증번호 코드가 일치하지 않습니다."),
     AUTH_CODE_EXPIRED(401, "인증번호가 만료되었거나 일치하지 않습니다."),
     EXCEEDED_SENDING_LIMIT(429, "인증번호 발송 횟수가 초과되었습니다. 잠시 후 다시 시도해주세요."),
     SMS_SEND_FAILED(500, "인증문자 발송에 실패했습니다. 관리자에게 문의하세요."),
+
+    INVALID_EMAIL_FORMAT(400, "유효하지 않은 이메일 형식입니다."),
+    EMAIL_SEND_TIMEOUT(408, "이메일 발송 시간이 초과되었습니다."),
+    DAILY_EMAIL_LIMIT_EXCEEDED(429, "일일 이메일 발송 횟수가 초과되었습니다."),
+    EMAIL_SEND_FAILED(500, "이메일 발송에 실패했습니다. 관리자에게 문의하세요."),
 
     INVALID_PHONE_NUMBER_FORMAT(400, "유효하지 않은 전화번호 형식입니다."),
     INVALID_LOGIN_INFO(401, "아이디 또는 비밀번호가 일치하지 않습니다."),
