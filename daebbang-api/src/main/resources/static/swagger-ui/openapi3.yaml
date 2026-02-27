@@ -14,6 +14,14 @@ paths:
       summary: 회원 정보 조회
       description: JWT 토큰으로 인증된 회원의 정보를 조회합니다.
       operationId: user/get-user
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰 (로그인 후 발급된 액세스 토큰)
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
       responses:
         "200":
           description: "200"
@@ -169,7 +177,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/v1-users-find-id558101555'
+                $ref: '#/components/schemas/FindUserIdResponse'
               examples:
                 user-info/find-login-id:
                   value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
@@ -178,6 +186,33 @@ paths:
                 user-info/find-login-id-empty:
                   value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
                     하였습니다.\",\"data\":{\"userIds\":[]}}"
+  /v1/users/find/password:
+    post:
+      tags:
+      - UserInfo
+      summary: 비밀번호 찾기 이메일 발송
+      description: "이름, 로그인 ID, 이메일로 본인 확인 후 비밀번호 재설정 이메일을 발송합니다."
+      operationId: user-info/find-password
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/FindPasswordRequest'
+            examples:
+              user-info/find-password:
+                value: "{\"username\":\"홍길동\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"test@example.com\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user-info/find-password:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"이메일 전송에 성\
+                    공하였습니다.\",\"data\":null}"
 components:
   schemas:
     SmsVerifyRequest:
@@ -186,10 +221,10 @@ components:
       properties:
         authCode:
           type: string
-          description: 잘못된 인증번호
+          description: 수신한 6자리 인증번호
         phoneNumber:
           type: string
-          description: 전화번호
+          description: 인증번호를 받은 전화번호
     UserInfoResponse:
       title: UserInfoResponse
       type: object
@@ -200,6 +235,9 @@ components:
             createdAt:
               type: string
               description: 가입 일시
+            lastLoginAt:
+              type: object
+              description: "마지막 로그인 일시 (ISO 8601, 미로그인 시 null)"
             loginId:
               type: string
               description: 로그인 ID
@@ -228,7 +266,8 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-users-find-id558101555:
+    FindUserIdResponse:
+      title: FindUserIdResponse
       type: object
       properties:
         data:
@@ -236,7 +275,7 @@ components:
           properties:
             userIds:
               type: array
-              description: 아이디 목록 (없으면 빈 배열)
+              description: 아이디 목록 (일치하는 회원이 없으면 빈 배열)
               items:
                 type: object
                 properties:
@@ -256,26 +295,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    ErrorResponse:
-      title: ErrorResponse
-      type: object
-      properties:
-        success:
-          type: boolean
-          description: 성공 여부 (false)
-        message:
-          type: string
-          description: 오류 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드 (400)
-    SmsSendRequest:
-      title: SmsSendRequest
-      type: object
-      properties:
-        phoneNumber:
-          type: string
-          description: 이미 가입된 전화번호
     JoinUserRequest:
       title: JoinUserRequest
       type: object
@@ -295,6 +314,42 @@ components:
         email:
           type: string
           description: 이메일 주소
+    SmsSendRequest:
+      title: SmsSendRequest
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          description: "인증번호를 받을 전화번호 (예: 01012345678)"
+    FindPasswordRequest:
+      title: FindPasswordRequest
+      type: object
+      properties:
+        userEmail:
+          type: string
+          description: 이메일 주소
+        userId:
+          type: string
+          description: 로그인 ID
+        username:
+          type: string
+          description: 회원 이름
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부 (false)
+        message:
+          type: string
+          description: 오류 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드 (401)
     SmsSendResponse:
       title: SmsSendResponse
       type: object
@@ -319,6 +374,9 @@ components:
       title: SuccessResponse
       type: object
       properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
         success:
           type: boolean
           description: 성공 여부

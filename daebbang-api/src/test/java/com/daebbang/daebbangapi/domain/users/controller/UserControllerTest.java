@@ -30,6 +30,7 @@ import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
+import static com.epages.restdocs.apispec.ResourceDocumentation.headerWithName;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -102,6 +103,7 @@ class UserControllerTest {
         mockMvc.perform(get("/v1/users")
                 .with(authentication(new UsernamePasswordAuthenticationToken(
                     username, null, List.of(new SimpleGrantedAuthority("ROLE_USER")))))
+                .header("Authorization", "Bearer test-jwt-token")
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
@@ -117,6 +119,9 @@ class UserControllerTest {
                     .summary("회원 정보 조회")
                     .description("JWT 토큰으로 인증된 회원의 정보를 조회합니다.")
                     .responseSchema(Schema.schema("UserInfoResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰 (로그인 후 발급된 액세스 토큰)")
+                    )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
@@ -129,7 +134,7 @@ class UserControllerTest {
                         fieldWithPath("data.userEmail").type(JsonFieldType.STRING).description("이메일 주소"),
                         fieldWithPath("data.userPhoneNumber").type(JsonFieldType.STRING).description("전화번호 (마스킹 처리, 예: 010-****-5678)"),
                         fieldWithPath("data.createdAt").type(JsonFieldType.STRING).description("가입 일시"),
-                        fieldWithPath("data.lastLoginAt").type(JsonFieldType.NULL).optional().description("마지막 로그인 일시 (없으면 null)")
+                        fieldWithPath("data.lastLoginAt").type(JsonFieldType.VARIES).optional().description("마지막 로그인 일시 (ISO 8601, 미로그인 시 null)")
                     )
                     .build()
                 )));
@@ -186,7 +191,7 @@ class UserControllerTest {
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));

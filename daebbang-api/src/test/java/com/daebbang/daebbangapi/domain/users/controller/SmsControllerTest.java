@@ -122,13 +122,13 @@ class SmsControllerTest {
                     .requestSchema(Schema.schema("SmsSendRequest"))
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
-                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("이미 가입된 전화번호")
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받을 전화번호 (예: 01012345678)")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부 (false)"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드 (409)"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
@@ -167,7 +167,7 @@ class SmsControllerTest {
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
@@ -200,14 +200,14 @@ class SmsControllerTest {
                     .requestSchema(Schema.schema("SmsVerifyRequest"))
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
-                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("전화번호"),
-                        fieldWithPath("authCode").type(JsonFieldType.STRING).description("잘못된 인증번호")
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받은 전화번호"),
+                        fieldWithPath("authCode").type(JsonFieldType.STRING).description("수신한 6자리 인증번호")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부 (false)"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드 (400)"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
@@ -240,14 +240,14 @@ class SmsControllerTest {
                     .requestSchema(Schema.schema("SmsVerifyRequest"))
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
-                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("전화번호"),
-                        fieldWithPath("authCode").type(JsonFieldType.STRING).description("만료된 인증번호")
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받은 전화번호"),
+                        fieldWithPath("authCode").type(JsonFieldType.STRING).description("수신한 6자리 인증번호")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부 (false)"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드 (401)"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).optional().description("응답 데이터 (없음)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
