@@ -29,6 +29,7 @@ import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -115,6 +116,7 @@ class UserControllerTest {
                     .tag("User")
                     .summary("회원 정보 조회")
                     .description("JWT 토큰으로 인증된 회원의 정보를 조회합니다.")
+                    .responseSchema(Schema.schema("UserInfoResponse"))
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
@@ -171,6 +173,8 @@ class UserControllerTest {
                     .tag("User")
                     .summary("회원 가입")
                     .description("새로운 회원을 등록합니다. 전화번호 인증 완료 후 가입이 가능합니다.")
+                    .requestSchema(Schema.schema("JoinUserRequest"))
+                    .responseSchema(Schema.schema("SuccessResponse"))
                     .requestFields(
                         fieldWithPath("name").type(JsonFieldType.STRING).description("회원 이름"),
                         fieldWithPath("loginId").type(JsonFieldType.STRING).description("로그인 ID"),

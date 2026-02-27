@@ -15,17 +15,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
-import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.dto.request.SmsSendRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.SmsVerifyRequest;
-import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
-import com.daebbang.daebbangapi.provider.TokenProvider;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
-import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,18 +54,6 @@ class SmsControllerTest {
     @MockitoBean
     private UserService userService;
 
-    @MockitoBean
-    private JwtUtils jwtUtils;
-
-    @MockitoBean
-    private TokenProvider tokenProvider;
-
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
-
-    @MockitoBean
-    private Oauth2UserDetailsService oauth2UserDetailsService;
-
     @Test
     @DisplayName("POST /v1/sms/send - 인증번호 발송 성공")
     void sendAuthCode_success() throws Exception {
@@ -95,6 +80,8 @@ class SmsControllerTest {
                     .tag("SMS")
                     .summary("SMS 인증번호 발송")
                     .description("입력한 전화번호로 6자리 인증번호를 발송합니다. 이미 가입된 전화번호는 사용할 수 없습니다.")
+                    .requestSchema(Schema.schema("SmsSendRequest"))
+                    .responseSchema(Schema.schema("SmsSendResponse"))
                     .requestFields(
                         fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받을 전화번호 (예: 01012345678)")
                     )
@@ -132,6 +119,8 @@ class SmsControllerTest {
                     .tag("SMS")
                     .summary("SMS 인증번호 발송 - 중복 전화번호 오류")
                     .description("이미 가입된 전화번호로 인증번호 발송 시 409 Conflict를 반환합니다.")
+                    .requestSchema(Schema.schema("SmsSendRequest"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
                         fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("이미 가입된 전화번호")
                     )
@@ -168,6 +157,8 @@ class SmsControllerTest {
                     .tag("SMS")
                     .summary("SMS 인증번호 검증")
                     .description("발송된 인증번호가 올바른지 검증합니다. 인증 성공 시 이후 회원 가입이 가능합니다.")
+                    .requestSchema(Schema.schema("SmsVerifyRequest"))
+                    .responseSchema(Schema.schema("SuccessResponse"))
                     .requestFields(
                         fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받은 전화번호"),
                         fieldWithPath("authCode").type(JsonFieldType.STRING).description("수신한 6자리 인증번호")
@@ -206,6 +197,8 @@ class SmsControllerTest {
                     .tag("SMS")
                     .summary("SMS 인증번호 검증 - 불일치 오류")
                     .description("인증번호가 일치하지 않는 경우 400 Bad Request를 반환합니다.")
+                    .requestSchema(Schema.schema("SmsVerifyRequest"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
                         fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("전화번호"),
                         fieldWithPath("authCode").type(JsonFieldType.STRING).description("잘못된 인증번호")
@@ -244,6 +237,8 @@ class SmsControllerTest {
                     .tag("SMS")
                     .summary("SMS 인증번호 검증 - 만료 오류")
                     .description("인증번호가 만료된 경우 401 Unauthorized를 반환합니다.")
+                    .requestSchema(Schema.schema("SmsVerifyRequest"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
                         fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("전화번호"),
                         fieldWithPath("authCode").type(JsonFieldType.STRING).description("만료된 인증번호")
