@@ -58,7 +58,7 @@ class SmsControllerTest {
     @DisplayName("POST /v1/sms/send - 인증번호 발송 성공")
     void sendAuthCode_success() throws Exception {
         // given
-        SmsSendRequest request = new SmsSendRequest("01012345678");
+        SmsSendRequest request = new SmsSendRequest("010-1234-5678");
         String authCode = "123456";
 
         given(userService.existsByPhoneNumber(anyString())).willReturn(false);
@@ -83,7 +83,7 @@ class SmsControllerTest {
                     .requestSchema(Schema.schema("SmsSendRequest"))
                     .responseSchema(Schema.schema("SmsSendResponse"))
                     .requestFields(
-                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받을 전화번호 (예: 01012345678)")
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
@@ -100,7 +100,7 @@ class SmsControllerTest {
     @DisplayName("POST /v1/sms/send - 이미 가입된 전화번호로 발송 시 409 반환")
     void sendAuthCode_duplicatePhoneNumber() throws Exception {
         // given
-        SmsSendRequest request = new SmsSendRequest("01012345678");
+        SmsSendRequest request = new SmsSendRequest("010-1234-5678");
 
         given(userService.existsByPhoneNumber(anyString())).willReturn(true);
 
@@ -122,7 +122,7 @@ class SmsControllerTest {
                     .requestSchema(Schema.schema("SmsSendRequest"))
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
-                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받을 전화번호 (예: 01012345678)")
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부 (false)"),
@@ -138,7 +138,7 @@ class SmsControllerTest {
     @DisplayName("POST /v1/sms/verify - 인증번호 검증 성공")
     void verifyAuthCode_success() throws Exception {
         // given
-        SmsVerifyRequest request = new SmsVerifyRequest("01012345678", "123456");
+        SmsVerifyRequest request = new SmsVerifyRequest("010-1234-5678", "123456");
 
         willDoNothing().given(smsService).verifyAuthCode(anyString(), anyString());
 
@@ -177,7 +177,7 @@ class SmsControllerTest {
     @DisplayName("POST /v1/sms/verify - 인증번호 불일치 시 400 반환")
     void verifyAuthCode_mismatch() throws Exception {
         // given
-        SmsVerifyRequest request = new SmsVerifyRequest("01012345678", "000000");
+        SmsVerifyRequest request = new SmsVerifyRequest("010-1234-5678", "000000");
 
         willThrow(new BusinessException(UserErrorCode.AUTH_CODE_MISMATCH))
             .given(smsService).verifyAuthCode(anyString(), anyString());
@@ -217,7 +217,7 @@ class SmsControllerTest {
     @DisplayName("POST /v1/sms/verify - 인증번호 만료 시 401 반환")
     void verifyAuthCode_expired() throws Exception {
         // given
-        SmsVerifyRequest request = new SmsVerifyRequest("01012345678", "123456");
+        SmsVerifyRequest request = new SmsVerifyRequest("010-1234-5678", "123456");
 
         willThrow(new BusinessException(UserErrorCode.AUTH_CODE_EXPIRED))
             .given(smsService).verifyAuthCode(anyString(), anyString());

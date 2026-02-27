@@ -20,6 +20,7 @@ import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
+import com.daebbang.daebbangapi.domain.users.dto.vo.AddressVO;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangapi.provider.TokenProvider;
@@ -157,8 +158,12 @@ class UserControllerTest {
             "홍길동",
             "testuser123",
             "Password123!",
-            "01012345678",
-            "test@example.com"
+            "010-1234-5678",
+            "test@example.com",
+            new AddressVO(null,
+                "123-4567",
+                "테스트시 테스트구 테스트동",
+                "테스트 오피스텔 2층")
         );
 
         willDoNothing().given(userService).join(any(UserJoinCommand.class));
@@ -185,7 +190,12 @@ class UserControllerTest {
                         fieldWithPath("loginId").type(JsonFieldType.STRING).description("로그인 ID"),
                         fieldWithPath("password").type(JsonFieldType.STRING).description("비밀번호"),
                         fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("전화번호"),
-                        fieldWithPath("email").type(JsonFieldType.STRING).description("이메일 주소")
+                        fieldWithPath("email").type(JsonFieldType.STRING).description("이메일 주소"),
+                        fieldWithPath("address").type(JsonFieldType.OBJECT).optional().description("회원 주소 정보 (null 가능)"),
+                        fieldWithPath("address.alias").type(JsonFieldType.VARIES).optional().description("주소 별칭 (null 가능)"),
+                        fieldWithPath("address.zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("address.address").type(JsonFieldType.STRING).description("도로명 주소"),
+                        fieldWithPath("address.detailAddress").type(JsonFieldType.STRING).description("상세 주소")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),

@@ -50,8 +50,10 @@ paths:
             examples:
               user/join-user:
                 value: "{\"name\":\"홍길동\",\"loginId\":\"testuser123\",\"password\"\
-                  :\"Password123!\",\"phoneNumber\":\"01012345678\",\"email\":\"test@example.com\"\
-                  }"
+                  :\"Password123!\",\"phoneNumber\":\"010-1234-5678\",\"email\":\"\
+                  test@example.com\",\"address\":{\"alias\":null,\"zipCode\":\"123-4567\"\
+                  ,\"address\":\"테스트시 테스트구 테스트동\",\"detailAddress\":\"테스트 오피스텔 2층\"\
+                  }}"
       responses:
         "201":
           description: "201"
@@ -77,9 +79,9 @@ paths:
               $ref: '#/components/schemas/SmsSendRequest'
             examples:
               sms/send-auth-code:
-                value: "{\"phoneNumber\":\"01012345678\"}"
+                value: "{\"phoneNumber\":\"010-1234-5678\"}"
               sms/send-auth-code-duplicate:
-                value: "{\"phoneNumber\":\"01012345678\"}"
+                value: "{\"phoneNumber\":\"010-1234-5678\"}"
       responses:
         "201":
           description: "201"
@@ -115,11 +117,14 @@ paths:
               $ref: '#/components/schemas/SmsVerifyRequest'
             examples:
               sms/verify-auth-code:
-                value: "{\"phoneNumber\":\"01012345678\",\"authCode\":\"123456\"}"
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"123456\"\
+                  }"
               sms/verify-auth-code-expired:
-                value: "{\"phoneNumber\":\"01012345678\",\"authCode\":\"123456\"}"
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"123456\"\
+                  }"
               sms/verify-auth-code-mismatch:
-                value: "{\"phoneNumber\":\"01012345678\",\"authCode\":\"000000\"}"
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"000000\"\
+                  }"
       responses:
         "200":
           description: "200"
@@ -215,16 +220,6 @@ paths:
                     공하였습니다.\",\"data\":null}"
 components:
   schemas:
-    SmsVerifyRequest:
-      title: SmsVerifyRequest
-      type: object
-      properties:
-        authCode:
-          type: string
-          description: 수신한 6자리 인증번호
-        phoneNumber:
-          type: string
-          description: 인증번호를 받은 전화번호
     UserInfoResponse:
       title: UserInfoResponse
       type: object
@@ -266,6 +261,16 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    SmsVerifyRequest:
+      title: SmsVerifyRequest
+      type: object
+      properties:
+        authCode:
+          type: string
+          description: 수신한 6자리 인증번호
+        phoneNumber:
+          type: string
+          description: 인증번호를 받은 전화번호
     FindUserIdResponse:
       title: FindUserIdResponse
       type: object
@@ -295,32 +300,13 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    JoinUserRequest:
-      title: JoinUserRequest
-      type: object
-      properties:
-        password:
-          type: string
-          description: 비밀번호
-        phoneNumber:
-          type: string
-          description: 전화번호
-        loginId:
-          type: string
-          description: 로그인 ID
-        name:
-          type: string
-          description: 회원 이름
-        email:
-          type: string
-          description: 이메일 주소
     SmsSendRequest:
       title: SmsSendRequest
       type: object
       properties:
         phoneNumber:
           type: string
-          description: "인증번호를 받을 전화번호 (예: 01012345678)"
+          description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
     FindPasswordRequest:
       title: FindPasswordRequest
       type: object
@@ -370,6 +356,41 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    JoinUserRequest:
+      title: JoinUserRequest
+      type: object
+      properties:
+        password:
+          type: string
+          description: 비밀번호
+        address:
+          type: object
+          properties:
+            zipCode:
+              type: string
+              description: 우편번호
+            address:
+              type: string
+              description: 도로명 주소
+            detailAddress:
+              type: string
+              description: 상세 주소
+            alias:
+              type: object
+              description: 주소 별칭 (null 가능)
+          description: 회원 주소 정보 (null 가능)
+        phoneNumber:
+          type: string
+          description: 전화번호
+        loginId:
+          type: string
+          description: 로그인 ID
+        name:
+          type: string
+          description: 회원 이름
+        email:
+          type: string
+          description: 이메일 주소
     SuccessResponse:
       title: SuccessResponse
       type: object
