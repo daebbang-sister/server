@@ -3,6 +3,7 @@ package com.daebbang.daebbangcore.domain.user.repository;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;
 import com.daebbang.daebbangcore.domain.user.entity.UserStatus;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
+import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,16 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
     boolean existsActiveUser(String loginId, UserStatus excludeStatus);
 
     @Query("""
+    SELECT COUNT(u) > 0
+    FROM Users u
+    WHERE u.name = :username
+      AND u.loginId = :loginId
+      AND u.email = :email
+      AND u.status != :excludeStatus
+    """)
+    boolean existsActiveUser(String username, String loginId, String email, UserStatus excludeStatus);
+
+    @Query("""
     SELECT u
     FROM Users u
     WHERE u.loginId = :loginId
@@ -42,4 +53,13 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
       AND u.loginId = :loginId
     """)
     Optional<Users> findActiveUserByLoginId(String loginId, UserStatus excludeStatus);
+
+    @Query("""
+    SELECT u
+    FROM Users u
+    WHERE u.name = :username
+      AND u.email = :email
+      AND u.status != :excludeStatus
+    """)
+    List<Users> findActiveUserIdsByUsernameAndEmail(String username, String email, UserStatus excludeStatus);
 }

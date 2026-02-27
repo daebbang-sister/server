@@ -18,6 +18,11 @@ spring:
       host: ${REDIS_HOST}
       port: 6379
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: "classpath:db/migration"
+
   jwt:
     secret: ${SECRET_KEY}
     access: ${ACCESS_EXPIRATION}
@@ -27,6 +32,19 @@ spring:
     client-id: ${SMS_REST_API_KEY}
     client-secret: ${SMS_SECRET_KEY}
     sender: ${SENDER}
+
+  mail:
+    host: smtp.gmail.com
+    port: ${MAIL_PORT}
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
 
   security:
     oauth2:

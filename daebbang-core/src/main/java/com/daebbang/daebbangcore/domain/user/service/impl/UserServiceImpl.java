@@ -10,7 +10,9 @@ import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.event.UserJoinEvent;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
+import com.daebbang.daebbangcore.infra.service.RedisService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final UsersRepository userRepository;
 
     private final SmsService smsService;
+    private final RedisService redisService;
 
     @Override
     @Transactional
@@ -65,13 +68,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void updatePassword(String resetToken, String password) {
+
+    }
+
+    @Override
     public boolean existsByPhoneNumber(String phoneNumber) {
         return userRepository.existsPhoneNumber(phoneNumber, UserStatus.WITHDRAWN);
     }
 
     @Override
+    public boolean existsActiveUsers(String username, String userId, String email) {
+        return userRepository.existsActiveUser(username, userId, email, UserStatus.WITHDRAWN);
+    }
+
+    @Override
     public Users getUser(String loginId) {
         return findActiveLocalUserByLoginId(loginId);
+    }
+
+    @Override
+    public List<Users> getUsersByFindLoginId(String username, String email) {
+        return userRepository.findActiveUserIdsByUsernameAndEmail(username, email, UserStatus.WITHDRAWN);
     }
 
     private Users findActiveLocalUserByLoginId(String loginId) {

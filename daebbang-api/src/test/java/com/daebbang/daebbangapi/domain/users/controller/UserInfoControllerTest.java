@@ -17,6 +17,7 @@ import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.users.dto.request.UserPasswordFindRequest;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
+import com.daebbang.daebbangcore.infra.service.EmailService;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import java.util.List;
@@ -47,6 +48,9 @@ public class UserInfoControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private EmailService emailService;
 
     @Test
     @DisplayName("GET /v1/users/find/id - 아이디 찾기 성공")

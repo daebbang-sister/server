@@ -1,6 +1,7 @@
 package com.daebbang.daebbangapi.domain.users.controller;
 
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
+import com.daebbang.daebbangapi.domain.users.dto.request.PasswordResetRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,10 +38,18 @@ public class UserController {
     }
 
     @PostMapping
-    ResponseEntity<@NonNull CommonResponse<Void>> joinUser(@Valid @RequestBody JoinRequest joinRequest) {
+    public ResponseEntity<@NonNull CommonResponse<Void>> joinUser(@Valid @RequestBody JoinRequest joinRequest) {
         userService.join(JoinRequest.toCommand(joinRequest));
         return ResponseEntity
                             .status(HttpStatus.CREATED)
                             .body(CommonResponse.success(UserSuccessCode.USER_JOINED));
+    }
+
+    // TODO : 새로운 비밀번호 등록 controller
+    @PatchMapping("/password")
+    public CommonResponse<Void> updateUserPassword(@Valid @RequestBody PasswordResetRequest request) {
+
+
+        return CommonResponse.success(UserSuccessCode.USER_UPDATED_PASSWORD);
     }
 }

@@ -6,6 +6,7 @@ import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.util.ValidationUtils;
 import com.daebbang.daebbangcore.domain.user.dto.request.LoginRequest;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -47,6 +48,7 @@ public class UserLoginFilter extends UsernamePasswordAuthenticationFilter {
         LoginRequest login = null;
         try {
             login = mapper.readValue(request.getInputStream(), LoginRequest.class);
+            ValidationUtils.validateLoginRequest(login.id(), login.password());
         } catch (IOException e) {
             throw new BusinessException(CommonErrorCode.JSON_CONVERT_ERROR);
         }
