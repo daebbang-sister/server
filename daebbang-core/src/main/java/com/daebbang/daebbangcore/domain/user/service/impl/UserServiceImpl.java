@@ -68,11 +68,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updatePassword(String resetToken, String password) {
-
-    }
-
-    @Override
     public boolean existsByPhoneNumber(String phoneNumber) {
         return userRepository.existsPhoneNumber(phoneNumber, UserStatus.WITHDRAWN);
     }

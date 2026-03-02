@@ -2,16 +2,23 @@ package com.daebbang.daebbangcore.infra.service;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.infra.util.EmailUtils;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileCopyUtils;
 
 @Slf4j
 @Service
@@ -19,10 +26,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class EmailService {
 
-    private final RedisService redisService;
     private final JavaMailSender emailSender;
+    private final ResourceLoader resourceLoader;
 
-    public void senEmail(String email, String title, String content) throws MessagingException {
+    @Async
+    public void sendTemporaryPassword(String email) {
+        try {
+            Resource resource = resourceLoader.getResource("classpath:static/mail/email_temporary_password.html");
+            InputStreamReader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
+            String content = FileCopyUtils.copyToString(reader);
+
+            content = content.replace("{temporary_password}", EmailUtils.generateTemporaryPassword());
+            sendEmail(email, "[대빵언니] 임시 비밀번호 안내입니다.", content);
+        } catch (Exception e) {
+            log.error("[Email 템플릿 읽기 오류] : {}", e.getMessage());
+            throw new BusinessException(UserErrorCode.EMAIL_SEND_FAILED);
+        }
+    }
+
+    public void sendEmail(String email, String title, String content) throws MessagingException {
         try {
             MimeMessage message = emailSender.createMimeMessage();
 

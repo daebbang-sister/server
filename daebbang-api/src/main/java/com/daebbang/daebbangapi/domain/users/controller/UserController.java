@@ -44,12 +44,4 @@ public class UserController {
                             .status(HttpStatus.CREATED)
                             .body(CommonResponse.success(UserSuccessCode.USER_JOINED));
     }
-
-    // TODO : 새로운 비밀번호 등록 controller
-    @PatchMapping("/password")
-    public CommonResponse<Void> updateUserPassword(@Valid @RequestBody PasswordResetRequest request) {
-
-
-        return CommonResponse.success(UserSuccessCode.USER_UPDATED_PASSWORD);
-    }
 }
