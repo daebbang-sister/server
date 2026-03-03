@@ -32,9 +32,7 @@ public class SmsController {
     public ResponseEntity<@NonNull CommonResponse<SmsSendAuthCode>> generateAuthCode(
         @Valid @RequestBody SmsSendRequest request
     ) {
-        if (userService.existsByPhoneNumber(request.phoneNumber())) {
-            throw new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER);
-        }
+        userService.existsByPhoneNumber(request.phoneNumber());
         String authCode = smsService.sendAuthMessage(request.phoneNumber());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS, SmsSendAuthCode.toDto(authCode)));

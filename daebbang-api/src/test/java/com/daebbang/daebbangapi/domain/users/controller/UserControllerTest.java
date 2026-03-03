@@ -1,10 +1,13 @@
 package com.daebbang.daebbangapi.domain.users.controller;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
+import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -18,6 +21,8 @@ import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
+import com.daebbang.daebbangcommon.error.BusinessException;
+import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
 import com.daebbang.daebbangapi.domain.users.dto.vo.AddressVO;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
@@ -201,6 +206,143 @@ class UserControllerTest {
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/users/check/id - 아이디 사용 가능 시 200 반환")
+    void checkDuplicationId_success() throws Exception {
+        // given
+        willDoNothing().given(userService).existsActiveUsers(anyString());
+
+        // when & then
+        mockMvc.perform(get("/v1/users/check/id")
+                .param("loginId", "available123")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("사용 가능한 아이디입니다."))
+            .andDo(document("user/check-login-id",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("아이디 중복 확인")
+                    .description("입력한 로그인 ID가 이미 사용 중인지 확인합니다. 사용 가능하면 200, 중복이면 409를 반환합니다.")
+                    .responseSchema(Schema.schema("SuccessResponse"))
+                    .queryParameters(
+                        parameterWithName("loginId").description("중복 확인할 로그인 ID (4~16자)")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/users/check/id - 이미 사용 중인 아이디 시 409 반환")
+    void checkDuplicationId_duplicateId() throws Exception {
+        // given
+        willThrow(new BusinessException(UserErrorCode.DUPLICATE_LOGIN_ID))
+            .given(userService).existsActiveUsers(anyString());
+
+        // when & then
+        mockMvc.perform(get("/v1/users/check/id")
+                .param("loginId", "takenuser1")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.message").value("이미 사용 중인 아이디입니다."))
+            .andDo(document("user/check-login-id-duplicate",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("아이디 중복 확인 - 중복 오류")
+                    .description("이미 사용 중인 로그인 ID인 경우 409 Conflict를 반환합니다.")
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .queryParameters(
+                        parameterWithName("loginId").description("중복 확인할 로그인 ID (4~16자)")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/users/check/id - loginId가 빈 값일 때 400 반환")
+    void checkDuplicationId_blankLoginId() throws Exception {
+        // when & then
+        mockMvc.perform(get("/v1/users/check/id")
+                .param("loginId", "")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."))
+            .andDo(document("user/check-login-id-blank",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("아이디 중복 확인 - loginId 누락 오류")
+                    .description("loginId가 빈 값인 경우 400 Bad Request를 반환합니다.")
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .queryParameters(
+                        parameterWithName("loginId").description("중복 확인할 로그인 ID (4~16자)")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)"),
+                        fieldWithPath("errors").type(JsonFieldType.ARRAY).optional().description("필드 유효성 검증 오류 목록"),
+                        fieldWithPath("errors[].field").type(JsonFieldType.STRING).optional().description("오류 필드명"),
+                        fieldWithPath("errors[].message").type(JsonFieldType.STRING).optional().description("오류 메시지")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/users/check/id - loginId가 4자 미만일 때 400 반환")
+    void checkDuplicationId_invalidLoginId() throws Exception {
+        // when & then
+        mockMvc.perform(get("/v1/users/check/id")
+                .param("loginId", "abc")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."))
+            .andDo(document("user/check-login-id-invalid",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("아이디 중복 확인 - loginId 형식 오류")
+                    .description("loginId가 4자 미만이거나 16자 초과인 경우 400 Bad Request를 반환합니다.")
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .queryParameters(
+                        parameterWithName("loginId").description("중복 확인할 로그인 ID (4~16자)")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)"),
+                        fieldWithPath("errors").type(JsonFieldType.ARRAY).optional().description("필드 유효성 검증 오류 목록"),
+                        fieldWithPath("errors[].field").type(JsonFieldType.STRING).optional().description("오류 필드명"),
+                        fieldWithPath("errors[].message").type(JsonFieldType.STRING).optional().description("오류 메시지")
                     )
                     .build()
                 )));

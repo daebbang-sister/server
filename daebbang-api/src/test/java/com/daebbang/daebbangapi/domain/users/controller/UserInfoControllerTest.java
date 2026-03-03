@@ -218,7 +218,7 @@ public class UserInfoControllerTest {
         // given
         UserPasswordFindRequest request = new UserPasswordFindRequest("홍길동", "testuser123", "test@example.com");
 
-        given(userService.existsActiveUsers("홍길동", "testuser123", "test@example.com")).willReturn(true);
+        willDoNothing().given(userService).existsActiveUsers("홍길동", "testuser123", "test@example.com");
         willDoNothing().given(emailService).sendTemporaryPassword("test@example.com");
 
         // when & then
@@ -382,7 +382,8 @@ public class UserInfoControllerTest {
         // given
         UserPasswordFindRequest request = new UserPasswordFindRequest("홍길동", "testuser123", "test@example.com");
 
-        given(userService.existsActiveUsers("홍길동", "testuser123", "test@example.com")).willReturn(false);
+        willThrow(new BusinessException(UserErrorCode.USER_NOT_FOUND))
+            .given(userService).existsActiveUsers("홍길동", "testuser123", "test@example.com");
 
         // when & then
         mockMvc.perform(post("/v1/users/find/password")

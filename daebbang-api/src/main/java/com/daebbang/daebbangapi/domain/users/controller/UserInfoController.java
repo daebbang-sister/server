@@ -41,12 +41,8 @@ public class UserInfoController {
     public ResponseEntity<@NonNull CommonResponse<Void>> findUserPasswordByUserInfo(
         @Valid @RequestBody UserPasswordFindRequest request
     ) {
-        if (!userService.existsActiveUsers(request.username(), request.userId(), request.userEmail())) {
-            throw new BusinessException(UserErrorCode.USER_NOT_FOUND);
-        }
-
+        userService.existsActiveUsers(request.username(), request.userId(), request.userEmail());
         emailService.sendTemporaryPassword(request.userEmail());
-
         return ResponseEntity
                             .status(HttpStatus.CREATED)
                             .body(CommonResponse.success(UserSuccessCode.SEND_EMAIL));
