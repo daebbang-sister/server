@@ -4,6 +4,8 @@ import com.daebbang.daebbangapi.domain.users.dto.request.UserIdFindRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.UserPasswordFindRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserIdFind;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
+import com.daebbang.daebbangcommon.error.BusinessException;
+import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.service.EmailService;
@@ -31,21 +33,22 @@ public class UserInfoController {
     public CommonResponse<UserIdFind> findUserIdListByUsernameAndEmail(
         @ModelAttribute @Valid UserIdFindRequest request
     ) {
-        UserIdFind ids = UserIdFind.toDto(userService.getUsersByFindLoginId(request.name(), request.email()));
+        UserIdFind ids = UserIdFind.toDto(userService.getUsersByFindLoginId(request.username(), request.userEmail()));
         return CommonResponse.success(UserSuccessCode.USER_RETRIEVED,ids);
     }
 
-    // TODO : 이메일 인증 보내기 Controller
     @PostMapping("/password")
     public ResponseEntity<@NonNull CommonResponse<Void>> findUserPasswordByUserInfo(
         @Valid @RequestBody UserPasswordFindRequest request
     ) {
+        if (!userService.existsActiveUsers(request.username(), request.userId(), request.userEmail())) {
+            throw new BusinessException(UserErrorCode.USER_NOT_FOUND);
+        }
+
+        emailService.sendTemporaryPassword(request.userEmail());
 
         return ResponseEntity
                             .status(HttpStatus.CREATED)
                             .body(CommonResponse.success(UserSuccessCode.SEND_EMAIL));
     }
-
-    // TODO : 이메일 인증 검증 Controller
-
 }

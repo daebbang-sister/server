@@ -81,6 +81,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/users/find/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/users/find/password").permitAll()
                 .anyRequest().authenticated()
             );
 
