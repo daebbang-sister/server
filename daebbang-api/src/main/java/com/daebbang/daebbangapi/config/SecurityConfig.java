@@ -23,6 +23,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final ObjectMapper mapper;
     private final TokenProvider tokenProvider;
     private final PasswordConfig passwordConfig;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     private final CustomUserDetailsService userService;
     private final Oauth2UserDetailsService oauth2Service;
@@ -75,7 +77,7 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable);
 
         http
-            .cors(cors -> cors.configurationSource(new CorsConfig().corsConfigurationSource()));
+            .cors(cors -> cors.configurationSource(corsConfigurationSource));
 
         http
             .authorizeHttpRequests((auth) -> auth
