@@ -68,13 +68,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean existsByPhoneNumber(String phoneNumber) {
-        return userRepository.existsPhoneNumber(phoneNumber, UserStatus.WITHDRAWN);
+    public void existsByPhoneNumber(String phoneNumber) {
+        if (userRepository.existsPhoneNumber(phoneNumber, UserStatus.WITHDRAWN)) {
+            throw new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER);
+        }
     }
 
     @Override
-    public boolean existsActiveUsers(String username, String userId, String email) {
-        return userRepository.existsActiveUser(username, userId, email, UserStatus.WITHDRAWN);
+    public void existsActiveUsers(String loginId) {
+        if (userRepository.existsActiveUser(loginId, UserStatus.WITHDRAWN)) {
+            throw new BusinessException(UserErrorCode.DUPLICATE_LOGIN_ID);
+        }
+    }
+
+    @Override
+    public void existsActiveUsers(String username, String userId, String email) {
+        if (userRepository.existsActiveUser(username, userId, email, UserStatus.WITHDRAWN)) {
+            throw new BusinessException(UserErrorCode.USER_NOT_FOUND);
+        }
     }
 
     @Override

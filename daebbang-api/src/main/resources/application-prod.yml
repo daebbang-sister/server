@@ -46,6 +46,9 @@ spring:
           starttls:
             enable: true
 
+  cors:
+    origins: ${LOCAL_SERVER}, ${DOMAIN_SERVER}, ${ADMIN_SERVER}
+
   security:
     oauth2:
       client:

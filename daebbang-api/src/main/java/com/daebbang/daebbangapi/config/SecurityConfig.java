@@ -75,6 +75,9 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable);
 
         http
+            .cors(cors -> cors.configurationSource(new CorsConfig().corsConfigurationSource()));
+
+        http
             .authorizeHttpRequests((auth) -> auth
                 .requestMatchers(SWAGGER_URI).permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/sms/**").permitAll()
@@ -82,6 +85,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/users/find/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/users/find/password").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/users/check/**").permitAll()
                 .anyRequest().authenticated()
             );
 

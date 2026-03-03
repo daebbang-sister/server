@@ -26,6 +26,9 @@ spring:
     access: 600000
     refresh: 604800000
 
+  cors:
+    origins: http://localhost:8080
+
   sms:
     client-id: ertsgsdfgsdfgfs
     client-secret: sdfgsdfgsdfgsdf

@@ -1,5 +1,6 @@
 package com.daebbang.daebbangapi.domain.users.controller;
 
+import com.daebbang.daebbangapi.domain.users.dto.request.CheckDuplicationIdRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.PasswordResetRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,5 +45,14 @@ public class UserController {
         return ResponseEntity
                             .status(HttpStatus.CREATED)
                             .body(CommonResponse.success(UserSuccessCode.USER_JOINED));
+    }
+
+    @GetMapping("/check/id")
+    public CommonResponse<Void> checkDuplicationLoginId(@Valid @ModelAttribute
+        CheckDuplicationIdRequest request) {
+
+        userService.existsActiveUsers(request.loginId());
+
+        return CommonResponse.success(UserSuccessCode.USER_ID_AVAILABLE);
     }
 }

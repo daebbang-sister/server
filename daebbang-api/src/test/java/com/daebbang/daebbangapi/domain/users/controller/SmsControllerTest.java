@@ -61,7 +61,7 @@ class SmsControllerTest {
         SmsSendRequest request = new SmsSendRequest("010-1234-5678");
         String authCode = "123456";
 
-        given(userService.existsByPhoneNumber(anyString())).willReturn(false);
+        willDoNothing().given(userService).existsByPhoneNumber(anyString());
         given(smsService.sendAuthMessage(anyString())).willReturn(authCode);
 
         // when & then
@@ -102,7 +102,8 @@ class SmsControllerTest {
         // given
         SmsSendRequest request = new SmsSendRequest("010-1234-5678");
 
-        given(userService.existsByPhoneNumber(anyString())).willReturn(true);
+        willThrow(new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER))
+            .given(userService).existsByPhoneNumber(anyString());
 
         // when & then
         mockMvc.perform(post("/v1/sms/send")
