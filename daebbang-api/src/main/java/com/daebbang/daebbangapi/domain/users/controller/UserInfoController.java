@@ -4,8 +4,6 @@ import com.daebbang.daebbangapi.domain.users.dto.request.UserIdFindRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.UserPasswordFindRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserIdFind;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
-import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.service.EmailService;
@@ -41,7 +39,7 @@ public class UserInfoController {
     public ResponseEntity<@NonNull CommonResponse<Void>> findUserPasswordByUserInfo(
         @Valid @RequestBody UserPasswordFindRequest request
     ) {
-        userService.existsActiveUsers(request.username(), request.userId(), request.userEmail());
+        userService.verifyUserActiveToFindPassword(request.username(), request.userId(), request.userEmail());
         emailService.sendTemporaryPassword(request.userEmail());
         return ResponseEntity
                             .status(HttpStatus.CREATED)

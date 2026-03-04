@@ -10,7 +10,6 @@ import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.event.UserJoinEvent;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
-import com.daebbang.daebbangcore.infra.service.RedisService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +33,6 @@ public class UserServiceImpl implements UserService {
     private final UsersRepository userRepository;
 
     private final SmsService smsService;
-    private final RedisService redisService;
 
     @Override
     @Transactional
@@ -82,8 +80,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void existsActiveUsers(String username, String userId, String email) {
-        if (userRepository.existsActiveUser(username, userId, email, UserStatus.WITHDRAWN)) {
+    public void verifyUserActiveToFindPassword(String username, String userId, String email) {
+        if (!userRepository.existsActiveUser(username, userId, email, UserStatus.WITHDRAWN)) {
             throw new BusinessException(UserErrorCode.USER_NOT_FOUND);
         }
     }
