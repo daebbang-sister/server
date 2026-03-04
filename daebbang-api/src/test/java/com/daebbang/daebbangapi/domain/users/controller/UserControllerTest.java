@@ -212,6 +212,64 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("POST /v1/users - loginId가 영문 소문자/숫자 외 문자 포함 시 400 반환")
+    void joinUser_invalidLoginIdPattern() throws Exception {
+        // given
+        JoinRequest request = new JoinRequest(
+            "홍길동",
+            "TestUser123",
+            "Password123!",
+            "010-1234-5678",
+            "test@example.com",
+            new AddressVO(null,
+                "123-4567",
+                "테스트시 테스트구 테스트동",
+                "테스트 오피스텔 2층")
+        );
+
+        // when & then
+        mockMvc.perform(post("/v1/users")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."))
+            .andDo(document("user/join-user-invalid-login-id",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("회원 가입 - loginId 형식 오류")
+                    .description("loginId에 영문 소문자/숫자 외 문자(대문자, 특수문자 등)가 포함된 경우 400 Bad Request를 반환합니다.")
+                    .requestSchema(Schema.schema("JoinUserRequest"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .requestFields(
+                        fieldWithPath("name").type(JsonFieldType.STRING).description("회원 이름"),
+                        fieldWithPath("loginId").type(JsonFieldType.STRING).description("로그인 ID"),
+                        fieldWithPath("password").type(JsonFieldType.STRING).description("비밀번호"),
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).description("전화번호"),
+                        fieldWithPath("email").type(JsonFieldType.STRING).description("이메일 주소"),
+                        fieldWithPath("address").type(JsonFieldType.OBJECT).optional().description("회원 주소 정보 (null 가능)"),
+                        fieldWithPath("address.alias").type(JsonFieldType.VARIES).optional().description("주소 별칭 (null 가능)"),
+                        fieldWithPath("address.zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("address.address").type(JsonFieldType.STRING).description("도로명 주소"),
+                        fieldWithPath("address.detailAddress").type(JsonFieldType.STRING).description("상세 주소")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)"),
+                        fieldWithPath("errors").type(JsonFieldType.ARRAY).optional().description("필드 유효성 검증 오류 목록"),
+                        fieldWithPath("errors[].field").type(JsonFieldType.STRING).optional().description("오류 필드명"),
+                        fieldWithPath("errors[].message").type(JsonFieldType.STRING).optional().description("오류 메시지")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
     @DisplayName("GET /v1/users/check/id - 아이디 사용 가능 시 200 반환")
     void checkDuplicationId_success() throws Exception {
         // given

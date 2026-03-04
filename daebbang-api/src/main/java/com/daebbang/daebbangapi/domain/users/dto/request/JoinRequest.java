@@ -15,6 +15,10 @@ public record JoinRequest(
 
     @NotBlank(message = "아이디는 비어있어서는 안됩니다.")
     @Size(min = 4, max = 16, message = "아이디는 4자에서 16자 사이여야 합니다.")
+    @Pattern(
+        regexp = "^[a-z0-9]+$",
+        message = "아이디는 영문 소문자와 숫자만 입력 가능하며, 특수문자는 사용할 수 없습니다."
+    )
     String loginId,
 
     @NotBlank(message = "비밀번호는 비어있어서는 안됩니다.")
