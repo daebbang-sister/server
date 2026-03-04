@@ -1,0 +1,519 @@
+openapi: 3.0.1
+info:
+  title: 대빵 언니 API 서버 API 명세서
+  description: 대빵 언니 API 서버 명세서입니다.
+  version: 1.0.0
+servers:
+- url: https://api.daebbang-sister.shop
+  description: 운영 서버
+- url: http://localhost:8080
+  description: 로컬 개발 서버
+tags: []
+paths:
+  /v1/users:
+    get:
+      tags:
+      - User
+      summary: 회원 정보 조회
+      description: JWT 토큰으로 인증된 회원의 정보를 조회합니다.
+      operationId: user/get-user
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰 (로그인 후 발급된 액세스 토큰)
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+              examples:
+                user/get-user:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"id\":1,\"provider\":\"LOCAL\",\"loginId\"\
+                    :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
+                    ,\"userPhoneNumber\":\"010-****-5678\",\"createdAt\":\"2025-01-01T00:00:00\"\
+                    ,\"lastLoginAt\":null}}"
+    post:
+      tags:
+      - User
+      summary: 회원 가입
+      description: 새로운 회원을 등록합니다. 전화번호 인증 완료 후 가입이 가능합니다.
+      operationId: user/join-user
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/JoinUserRequest'
+            examples:
+              user/join-user:
+                value: "{\"name\":\"홍길동\",\"loginId\":\"testuser123\",\"password\"\
+                  :\"Password123!\",\"phoneNumber\":\"010-1234-5678\",\"email\":\"\
+                  test@example.com\",\"address\":{\"alias\":null,\"zipCode\":\"123-4567\"\
+                  ,\"address\":\"테스트시 테스트구 테스트동\",\"detailAddress\":\"테스트 오피스텔 2층\"\
+                  }}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user/join-user:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"회원 가입에 성공\
+                    하였습니다.\",\"data\":null}"
+  /v1/sms/send:
+    post:
+      tags:
+      - SMS
+      summary: SMS 인증번호 발송
+      description: 입력한 전화번호로 6자리 인증번호를 발송합니다. 이미 가입된 전화번호는 사용할 수 없습니다.
+      operationId: sms/send-auth-code
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/SmsSendRequest'
+            examples:
+              sms/send-auth-code:
+                value: "{\"phoneNumber\":\"010-1234-5678\"}"
+              sms/send-auth-code-duplicate:
+                value: "{\"phoneNumber\":\"010-1234-5678\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSendResponse'
+              examples:
+                sms/send-auth-code:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
+                    니다.\",\"data\":{\"authCode\":\"123456\"}}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/send-auth-code-duplicate:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 사용 중인\
+                    \ 핸드폰 번호입니다.\",\"data\":null}"
+  /v1/sms/verify:
+    post:
+      tags:
+      - SMS
+      summary: SMS 인증번호 검증
+      description: 발송된 인증번호가 올바른지 검증합니다. 인증 성공 시 이후 회원 가입이 가능합니다.
+      operationId: sms/verify-auth-code
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/SmsVerifyRequest'
+            examples:
+              sms/verify-auth-code:
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"123456\"\
+                  }"
+              sms/verify-auth-code-expired:
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"123456\"\
+                  }"
+              sms/verify-auth-code-mismatch:
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"000000\"\
+                  }"
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                sms/verify-auth-code:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"핸드폰 인증에 성\
+                    공하였습니다.\",\"data\":null}"
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/verify-auth-code-expired:
+                  value: "{\"success\":false,\"status\":401,\"message\":\"인증번호가 만료\
+                    되었거나 일치하지 않습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/verify-auth-code-mismatch:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"인증번호 코드가\
+                    \ 일치하지 않습니다.\",\"data\":null}"
+  /v1/users/check/id:
+    get:
+      tags:
+      - User
+      summary: 아이디 중복 확인
+      description: "입력한 로그인 ID가 이미 사용 중인지 확인합니다. 사용 가능하면 200, 중복이면 409를 반환합니다."
+      operationId: user/check-login-id
+      parameters:
+      - name: loginId
+        in: query
+        description: 중복 확인할 로그인 ID (4~16자)
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user/check-login-id:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"사용 가능한 아이\
+                    디입니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user/check-login-id-blank:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                user/check-login-id-invalid:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"}]}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user/check-login-id-duplicate:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 사용 중인\
+                    \ 아이디입니다.\",\"data\":null}"
+  /v1/users/find/id:
+    get:
+      tags:
+      - UserInfo
+      summary: 아이디 찾기
+      description: 이름과 이메일로 마스킹 처리된 로그인 아이디 목록을 조회합니다.
+      operationId: user-info/find-login-id
+      parameters:
+      - name: username
+        in: query
+        description: 회원 이름
+        required: true
+        schema:
+          type: string
+      - name: userEmail
+        in: query
+        description: 이메일 주소
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FindUserIdResponse'
+              examples:
+                user-info/find-login-id:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"userIds\":[{\"id\":\"tes********\",\"provider\"\
+                    :\"LOCAL\"}]}}"
+                user-info/find-login-id-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"userIds\":[]}}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user-info/find-login-id-blank-username:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"username\",\"message\"\
+                    :\"회원 이름은 필수 입력값입니다.\"}]}"
+                user-info/find-login-id-invalid-email:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"userEmail\",\"message\"\
+                    :\"올바른 이메일 형식을 입력해야 합니다.\"}]}"
+  /v1/users/find/password:
+    post:
+      tags:
+      - UserInfo
+      summary: 비밀번호 찾기 이메일 발송
+      description: "이름, 로그인 ID, 이메일로 본인 확인 후 비밀번호 재설정 이메일을 발송합니다."
+      operationId: user-info/find-password
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/FindPasswordRequest'
+            examples:
+              user-info/find-password:
+                value: "{\"username\":\"홍길동\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"test@example.com\"}"
+              user-info/find-password-blank-username:
+                value: "{\"username\":\"\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"test@example.com\"}"
+              user-info/find-password-invalid-email:
+                value: "{\"username\":\"홍길동\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"invalid-email\"}"
+              user-info/find-password-invalid-user-id:
+                value: "{\"username\":\"홍길동\",\"userId\":\"abc\",\"userEmail\":\"\
+                  test@example.com\"}"
+              user-info/find-password-not-found:
+                value: "{\"username\":\"홍길동\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"test@example.com\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user-info/find-password:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"이메일 전송에 성\
+                    공하였습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user-info/find-password-blank-username:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"username\",\"message\"\
+                    :\"회원 이름은 비어있어서는 안됩니다.\"}]}"
+                user-info/find-password-invalid-email:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"userEmail\",\"message\"\
+                    :\"올바른 이메일 형식을 입력해야 합니다.\"}]}"
+                user-info/find-password-invalid-user-id:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"userId\",\"message\"\
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"}]}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user-info/find-password-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 사용자입니다.\",\"data\":null}"
+components:
+  schemas:
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 오류 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    UserInfoResponse:
+      title: UserInfoResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              description: 가입 일시
+            lastLoginAt:
+              type: object
+              description: "마지막 로그인 일시 (ISO 8601, 미로그인 시 null)"
+            loginId:
+              type: string
+              description: 로그인 ID
+            provider:
+              type: string
+              description: "로그인 제공자 (LOCAL, KAKAO)"
+            userPhoneNumber:
+              type: string
+              description: "전화번호 (마스킹 처리, 예: 010-****-5678)"
+            userEmail:
+              type: string
+              description: 이메일 주소
+            id:
+              type: number
+              description: 회원 고유 ID
+            userName:
+              type: string
+              description: 회원 이름
+          description: 회원 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    SmsVerifyRequest:
+      title: SmsVerifyRequest
+      type: object
+      properties:
+        authCode:
+          type: string
+          description: 수신한 6자리 인증번호
+        phoneNumber:
+          type: string
+          description: 인증번호를 받은 전화번호
+    FindUserIdResponse:
+      title: FindUserIdResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            userIds:
+              type: array
+              description: 아이디 목록 (일치하는 회원이 없으면 빈 배열)
+              items:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                    description: "로그인 제공자 (LOCAL, KAKAO)"
+                  id:
+                    type: string
+                    description: "마스킹 처리된 로그인 아이디 (앞 3자리 + ********, 예: tes********)"
+          description: 아이디 찾기 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    SmsSendRequest:
+      title: SmsSendRequest
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
+    SuccessResponse:
+      title: SuccessResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    FindPasswordRequest:
+      title: FindPasswordRequest
+      type: object
+      properties:
+        userEmail:
+          type: string
+          description: 이메일 주소
+        userId:
+          type: string
+          description: 로그인 ID
+        username:
+          type: string
+          description: 회원 이름
+    SmsSendResponse:
+      title: SmsSendResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            authCode:
+              type: string
+              description: 발송된 인증번호 (6자리)
+          description: 발송 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    JoinUserRequest:
+      title: JoinUserRequest
+      type: object
+      properties:
+        password:
+          type: string
+          description: 비밀번호
+        address:
+          type: object
+          properties:
+            zipCode:
+              type: string
+              description: 우편번호
+            address:
+              type: string
+              description: 도로명 주소
+            detailAddress:
+              type: string
+              description: 상세 주소
+            alias:
+              type: object
+              description: 주소 별칭 (null 가능)
+          description: 회원 주소 정보 (null 가능)
+        phoneNumber:
+          type: string
+          description: 전화번호
+        loginId:
+          type: string
+          description: 로그인 ID
+        name:
+          type: string
+          description: 회원 이름
+        email:
+          type: string
+          description: 이메일 주소
