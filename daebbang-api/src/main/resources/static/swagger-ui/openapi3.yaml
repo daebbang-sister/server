@@ -57,6 +57,12 @@ paths:
                   test@example.com\",\"address\":{\"alias\":null,\"zipCode\":\"123-4567\"\
                   ,\"address\":\"테스트시 테스트구 테스트동\",\"detailAddress\":\"테스트 오피스텔 2층\"\
                   }}"
+              user/join-user-invalid-login-id:
+                value: "{\"name\":\"홍길동\",\"loginId\":\"TestUser123\",\"password\"\
+                  :\"Password123!\",\"phoneNumber\":\"010-1234-5678\",\"email\":\"\
+                  test@example.com\",\"address\":{\"alias\":null,\"zipCode\":\"123-4567\"\
+                  ,\"address\":\"테스트시 테스트구 테스트동\",\"detailAddress\":\"테스트 오피스텔 2층\"\
+                  }}"
       responses:
         "201":
           description: "201"
@@ -68,6 +74,17 @@ paths:
                 user/join-user:
                   value: "{\"success\":true,\"status\":201,\"message\":\"회원 가입에 성공\
                     하였습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user/join-user-invalid-login-id:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 영문 소문자와 숫자만 입력 가능하며, 특수문자는 사용할 수 없습니다.\"}]}"
   /v1/sms/send:
     post:
       tags:
