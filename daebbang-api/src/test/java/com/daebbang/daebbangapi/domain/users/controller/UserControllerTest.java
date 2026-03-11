@@ -27,7 +27,6 @@ import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
 import com.daebbang.daebbangapi.domain.users.dto.vo.AddressVO;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
-import com.daebbang.daebbangapi.provider.TokenProvider;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
@@ -73,9 +72,6 @@ class UserControllerTest {
 
     @MockitoBean
     private JwtUtils jwtUtils;
-
-    @MockitoBean
-    private TokenProvider tokenProvider;
 
     @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
