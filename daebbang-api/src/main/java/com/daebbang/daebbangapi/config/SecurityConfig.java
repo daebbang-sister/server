@@ -1,12 +1,15 @@
 package com.daebbang.daebbangapi.config;
 
+import com.daebbang.daebbangapi.domain.security.dto.SecurityConstants;
 import com.daebbang.daebbangapi.filter.CustomExceptionFilter;
 import com.daebbang.daebbangapi.filter.JwtAuthenticationFilter;
 import com.daebbang.daebbangapi.domain.users.filter.UserLoginFilter;
+import com.daebbang.daebbangapi.handler.OAuth2LoginFailureHandler;
 import com.daebbang.daebbangapi.handler.OAuth2LoginSuccessHandler;
-import com.daebbang.daebbangapi.provider.TokenProvider;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
+import com.daebbang.daebbangapi.utils.CookieUtils;
+import com.daebbang.daebbangcore.domain.auth.service.AuthService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +24,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
@@ -33,20 +38,16 @@ public class SecurityConfig {
 
     private final JwtUtils jwtUtils;
     private final ObjectMapper mapper;
-    private final TokenProvider tokenProvider;
     private final PasswordConfig passwordConfig;
+    private final AccessDeniedHandler accessDeniedHandler;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
 
+    private final CookieUtils cookieUtils;
+
+    private final AuthService authService;
     private final CustomUserDetailsService userService;
     private final Oauth2UserDetailsService oauth2Service;
-
-    private static final String[] SWAGGER_URI = {
-        "/swagger-ui/**",
-        "/swagger-ui.html",
-        "/v3/api-docs/**",
-        "/swagger-resources/**",
-        "/webjars/**"
-    };
 
     @Bean
     public AuthenticationManager authenticationManager(CustomUserDetailsService service, PasswordEncoder encoder) {
@@ -58,7 +59,7 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
-            .requestMatchers(SWAGGER_URI);
+            .requestMatchers(SecurityConstants.SWAGGER_URI);
     }
 
 
@@ -81,13 +82,9 @@ public class SecurityConfig {
 
         http
             .authorizeHttpRequests((auth) -> auth
-                .requestMatchers(SWAGGER_URI).permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/sms/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
-                .requestMatchers(HttpMethod.GET, "/v1/users/find/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/users/find/password").permitAll()
-                .requestMatchers(HttpMethod.GET, "/v1/users/check/**").permitAll()
+                .requestMatchers(SecurityConstants.SWAGGER_URI).permitAll()
+                .requestMatchers(HttpMethod.POST, SecurityConstants.PUBLIC_POST_URI).permitAll()
+                .requestMatchers(HttpMethod.GET, SecurityConstants.PUBLIC_GET_URI).permitAll()
                 .anyRequest().authenticated()
             );
 
@@ -95,12 +92,18 @@ public class SecurityConfig {
             .oauth2Login((oauth2) -> oauth2
                 .userInfoEndpoint((config) -> config
                     .userService(oauth2Service))
-                .successHandler(new OAuth2LoginSuccessHandler(mapper, tokenProvider))
+                .successHandler(new OAuth2LoginSuccessHandler(cookieUtils, authService))
+                .failureHandler(new OAuth2LoginFailureHandler())
             );
 
         http
+            .exceptionHandling(conf -> conf
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler));
+
+        http
             .addFilterBefore(new CustomExceptionFilter(mapper), UserLoginFilter.class)
-            .addFilterAt(new UserLoginFilter(manager, mapper, tokenProvider), UsernamePasswordAuthenticationFilter.class)
+            .addFilterAt(new UserLoginFilter(manager, mapper, cookieUtils, authService), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, mapper), UsernamePasswordAuthenticationFilter.class);
 
         http

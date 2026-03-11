@@ -2,7 +2,6 @@ package com.daebbang.daebbangapi.domain.users.controller;
 
 import com.daebbang.daebbangapi.domain.users.dto.request.CheckDuplicationIdRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
-import com.daebbang.daebbangapi.domain.users.dto.request.PasswordResetRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
@@ -16,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
