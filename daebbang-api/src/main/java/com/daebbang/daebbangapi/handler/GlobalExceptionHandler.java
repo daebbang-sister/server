@@ -9,6 +9,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -27,6 +28,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<@NonNull CommonResponse<Object>> handlerBindException(BindException e) {
         ErrorCode errorCode = CommonErrorCode.INVALID_INPUT_DATA;
         CommonResponse<Object> response = makeErrorResponse(errorCode, e);
+        return handleExceptionInternal(response);
+    }
+
+    @ExceptionHandler(value = MissingRequestCookieException.class)
+    public ResponseEntity<@NonNull CommonResponse<Object>> handlerMissingRequestCookieException(MissingRequestCookieException e) {
+        ErrorCode errorCode = CommonErrorCode.INVALID_INPUT_DATA;
+        CommonResponse<Object> response = makeErrorResponse(errorCode);
         return handleExceptionInternal(response);
     }
 

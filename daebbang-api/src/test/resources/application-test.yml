@@ -47,6 +47,10 @@ spring:
           starttls:
             enable: true
 
+  oauth2:
+    failure: http://localhost:3000/login?error
+    success: http://localhost:3000
+
   security:
     oauth2:
       client:
