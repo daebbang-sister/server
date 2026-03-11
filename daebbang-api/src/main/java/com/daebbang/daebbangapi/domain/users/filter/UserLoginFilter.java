@@ -1,12 +1,15 @@
 package com.daebbang.daebbangapi.domain.users.filter;
 
-import com.daebbang.daebbangapi.provider.TokenProvider;
+import com.daebbang.daebbangapi.utils.CookieUtils;
 import com.daebbang.daebbangcommon.dto.authority.TokenInfo;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.success.CommonSuccessCode;
+import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcommon.util.ValidationUtils;
+import com.daebbang.daebbangcore.domain.auth.service.AuthService;
 import com.daebbang.daebbangcore.domain.user.dto.request.LoginRequest;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,13 +33,15 @@ import tools.jackson.databind.ObjectMapper;
 public class UserLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final ObjectMapper mapper;
-    private final TokenProvider tokenProvider;
+    private final CookieUtils cookieUtils;
+    private final AuthService authService;
     private final AuthenticationManager authManager;
 
-    public UserLoginFilter(AuthenticationManager authManager, ObjectMapper mapper, TokenProvider tokenProvider) {
+    public UserLoginFilter(AuthenticationManager authManager, ObjectMapper mapper, CookieUtils cookieUtils, AuthService authService) {
         this.mapper = mapper;
         this.authManager = authManager;
-        this.tokenProvider = tokenProvider;
+        this.cookieUtils = cookieUtils;
+        this.authService = authService;
 
         setFilterProcessesUrl("/v1/auth/login");
     }
@@ -65,9 +70,18 @@ public class UserLoginFilter extends UsernamePasswordAuthenticationFilter {
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        CommonResponse<TokenInfo> success = tokenProvider.issueTokens(user);
+        String userRole = user.getAuthorities().iterator().next().getAuthority();
 
-        writeResponse(response, mapper, HttpStatus.OK, success);
+        TokenInfo info = authService.issueTokenAndSaveToken(user.getUsername(), userRole);
+
+        cookieUtils.addRefreshCookie(response, info.refreshToken());
+
+        writeResponse(
+            response, mapper,
+            HttpStatus.OK,
+            CommonResponse.success(
+                CommonSuccessCode.CREATE_SUCCESS,
+                TokenInfo.create(info.accessToken())));
     }
 
     @Override

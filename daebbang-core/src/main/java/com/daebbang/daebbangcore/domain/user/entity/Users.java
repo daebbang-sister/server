@@ -98,4 +98,8 @@ public class Users extends CreatedBase {
             this.phoneNumber = phoneNumber;
         }
     }
+
+    public void updatePassword(String newPwd) {
+        this.loginPwd = newPwd;
+    }
 }

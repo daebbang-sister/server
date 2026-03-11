@@ -5,8 +5,12 @@ public record TokenInfo(
     String accessToken,
     String refreshToken) {
 
-    public static TokenInfo create(String accessToken, String refreshToken) {
-        return new TokenInfo("bearer", accessToken, refreshToken);
+    public static TokenInfo create(String accessToken) {
+        return new TokenInfo("Bearer", accessToken, null);
+    }
+
+    public static TokenInfo create(String grantType, String accessToken) {
+        return new TokenInfo(grantType, accessToken, null);
     }
 
     public static TokenInfo create(String grantType, String accessToken, String refreshToken) {

@@ -1,7 +1,6 @@
 package com.daebbang.daebbangapi.domain.oauth.service.oauth2;
 
 import com.daebbang.daebbangapi.domain.oauth.dto.response.oauth2.OAuth2Response;
-import com.daebbang.daebbangapi.domain.oauth.factory.OAuth2ResponseFactoryImpl;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;
 import com.daebbang.daebbangcore.domain.user.factory.OAuth2ResponseFactory;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
