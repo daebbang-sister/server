@@ -36,6 +36,12 @@ dependencies {
     // mysql
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    // QueryDsl
+    implementation("io.github.openfeign.querydsl:querydsl-jpa:6.10.1")
+    annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:6.10.1:jpa")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+
     // test
     testImplementation("com.epages:restdocs-api-spec-mockmvc:0.18.2")
 }

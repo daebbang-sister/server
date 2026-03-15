@@ -219,6 +219,41 @@ paths:
                 auth/reissue-tokens-missing-cookie:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null}"
+  /v1/products/main/new:
+    get:
+      tags:
+      - Product
+      summary: 메인 신상품 조회
+      description: "메인 페이지 신상품 섹션 상품 목록을 조회합니다. 등록일 기준 최신순으로 반환되며, 할인 중인 상품은 할인가와\
+        \ 할인율이 함께 반환됩니다."
+      operationId: products/main-new
+      parameters:
+      - name: limit
+        in: query
+        description: 조회할 상품 수
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMainCardListResponse'
+              examples:
+                products/main-new:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20},{\"id\":2,\"\
+                    categoryName\":\"TOP\",\"productName\":\"오버핏 니트\",\"mainImageUrl\"\
+                    :\"http://example.com/main2.jpg\",\"hoverImageUrl\":null,\"originalPrice\"\
+                    :39000,\"sellingPrice\":39000,\"discountRate\":null}]}"
+                products/main-new-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
   /v1/users/check/id:
     get:
       tags:
@@ -388,6 +423,46 @@ paths:
                 user-info/find-password-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 사용자입니다.\",\"data\":null}"
+  /v1/products/main/category/{categoryId}:
+    get:
+      tags:
+      - Product
+      summary: 메인 카테고리별 상품 조회
+      description: 메인 페이지 카테고리별 상품 목록을 조회합니다. 등록일 기준 최신순으로 반환됩니다.
+      operationId: products/main-category
+      parameters:
+      - name: categoryId
+        in: path
+        description: 카테고리 ID
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: 조회할 상품 수
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMainCardListResponse'
+              examples:
+                products/main-category:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20},{\"id\":2,\"\
+                    categoryName\":\"TOP\",\"productName\":\"오버핏 니트\",\"mainImageUrl\"\
+                    :\"http://example.com/main2.jpg\",\"hoverImageUrl\":null,\"originalPrice\"\
+                    :39000,\"sellingPrice\":39000,\"discountRate\":null}]}"
+                products/main-category-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
 components:
   schemas:
     UserInfoResponse:
@@ -510,6 +585,49 @@ components:
               type: object
               description: "Refresh 토큰 (응답 바디에는 포함되지 않음, Set-Cookie로 전달)"
           description: 토큰 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductMainCardListResponse:
+      title: ProductMainCardListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 카테고리 상품 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              discountRate:
+                type: object
+                description: 할인율 % (할인 없을 시 null)
+              sellingPrice:
+                type: number
+                description: 판매가 (할인 미적용 시 정가와 동일)
+              originalPrice:
+                type: number
+                description: 정가
+              id:
+                type: number
+                description: 상품 ID
+              hoverImageUrl:
+                type: object
+                description: 호버 이미지 URL (없을 수 있음)
+              mainImageUrl:
+                type: string
+                description: 메인 이미지 URL
+              categoryName:
+                type: string
+                description: 카테고리명
+              productName:
+                type: string
+                description: 상품명
         success:
           type: boolean
           description: 성공 여부
