@@ -39,6 +39,7 @@ public class TestSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/v1/users/find/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/users/check/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/tokens/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/v1/products/**").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
