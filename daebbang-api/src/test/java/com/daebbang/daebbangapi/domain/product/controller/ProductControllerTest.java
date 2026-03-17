@@ -1,12 +1,12 @@
 package com.daebbang.daebbangapi.domain.product.controller;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
+import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,6 +20,7 @@ import com.daebbang.daebbangcore.domain.product.entity.ProductStatus;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
+import com.epages.restdocs.apispec.SimpleType;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -112,7 +113,7 @@ class ProductControllerTest {
                     .description("메인 페이지 신상품 섹션 상품 목록을 조회합니다. 등록일 기준 최신순으로 반환되며, 할인 중인 상품은 할인가와 할인율이 함께 반환됩니다.")
                     .responseSchema(Schema.schema("ProductMainCardListResponse"))
                     .queryParameters(
-                        parameterWithName("limit").description("조회할 상품 수")
+                        parameterWithName("limit").description("조회할 상품 수").type(SimpleType.INTEGER)
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
@@ -156,7 +157,7 @@ class ProductControllerTest {
                     .description("등록된 신상품이 없는 경우 빈 배열을 반환합니다.")
                     .responseSchema(Schema.schema("ProductMainCardListResponse"))
                     .queryParameters(
-                        parameterWithName("limit").description("조회할 상품 수")
+                        parameterWithName("limit").description("조회할 상품 수").type(SimpleType.INTEGER)
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
@@ -196,12 +197,12 @@ class ProductControllerTest {
                     .tag("Product")
                     .summary("메인 카테고리별 상품 조회")
                     .pathParameters(
-                        parameterWithName("categoryId").description("카테고리 ID")
+                        parameterWithName("categoryId").description("카테고리 ID").type(SimpleType.INTEGER)
                     )
                     .description("메인 페이지 카테고리별 상품 목록을 조회합니다. 등록일 기준 최신순으로 반환됩니다.")
                     .responseSchema(Schema.schema("ProductMainCardListResponse"))
                     .queryParameters(
-                        parameterWithName("limit").description("조회할 상품 수")
+                        parameterWithName("limit").description("조회할 상품 수").type(SimpleType.INTEGER)
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
@@ -245,7 +246,7 @@ class ProductControllerTest {
                     .description("해당 카테고리에 상품이 없는 경우 빈 배열을 반환합니다.")
                     .responseSchema(Schema.schema("ProductMainCardListResponse"))
                     .queryParameters(
-                        parameterWithName("limit").description("조회할 상품 수")
+                        parameterWithName("limit").description("조회할 상품 수").type(SimpleType.INTEGER)
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
