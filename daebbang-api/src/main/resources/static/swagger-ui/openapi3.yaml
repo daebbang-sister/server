@@ -233,7 +233,8 @@ paths:
         description: 조회할 상품 수
         required: true
         schema:
-          type: string
+          type: integer
+          format: int32
       responses:
         "200":
           description: "200"
@@ -436,13 +437,15 @@ paths:
         description: 카테고리 ID
         required: true
         schema:
-          type: string
+          type: integer
+          format: int32
       - name: limit
         in: query
         description: 조회할 상품 수
         required: true
         schema:
-          type: string
+          type: integer
+          format: int32
       responses:
         "200":
           description: "200"
