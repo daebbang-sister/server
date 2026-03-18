@@ -84,7 +84,7 @@ class ProductControllerTest {
     @DisplayName("GET /v1/products/main/new - 신상품 조회 성공")
     void getMainNewProductsOnSale_success() throws Exception {
         // given
-        given(productService.getNewProductsOnSale(anyInt()))
+        given(productService.getOnSaleNewProducts(anyInt()))
             .willReturn(createProductQueryResults());
 
         // when & then
@@ -137,7 +137,7 @@ class ProductControllerTest {
     @DisplayName("GET /v1/products/main/new - 신상품이 없는 경우 빈 배열 반환")
     void getMainNewProductsOnSale_empty() throws Exception {
         // given
-        given(productService.getNewProductsOnSale(anyInt()))
+        given(productService.getOnSaleNewProducts(anyInt()))
             .willReturn(List.of());
 
         // when & then
@@ -173,7 +173,7 @@ class ProductControllerTest {
     @DisplayName("GET /v1/products/main/category/{categoryId} - 카테고리별 상품 조회 성공")
     void getMainCategoryProductsOnSale_success() throws Exception {
         // given
-        given(productService.getCategoryProductsOnSale(anyLong(), anyInt()))
+        given(productService.getOnSaleCategoryProducts(anyLong(), anyInt()))
             .willReturn(createProductQueryResults());
 
         // when & then
@@ -226,7 +226,7 @@ class ProductControllerTest {
     @DisplayName("GET /v1/products/main/category/{categoryId} - 해당 카테고리 상품이 없는 경우 빈 배열 반환")
     void getMainCategoryProductsOnSale_empty() throws Exception {
         // given
-        given(productService.getCategoryProductsOnSale(anyLong(), anyInt()))
+        given(productService.getOnSaleCategoryProducts(anyLong(), anyInt()))
             .willReturn(List.of());
 
         // when & then
