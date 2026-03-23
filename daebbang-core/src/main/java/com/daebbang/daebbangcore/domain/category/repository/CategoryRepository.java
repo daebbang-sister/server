@@ -12,7 +12,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("""
     SELECT c
     FROM Category c
-    WHERE c.deletedAt != null
+    WHERE c.deletedAt is NULL
+      AND c.id = :id
     """)
     Optional<Category> findCategoryById(Long id);
 }

@@ -47,13 +47,29 @@ public class ProductController {
 
     @GetMapping("/new")
     public CommonResponse<PageResponse<ProductsCard>> getNewProductsOnSale(
-        @RequestParam(defaultValue = "ASC") SortDirection direction,
+        @RequestParam(defaultValue = "DESC") SortDirection direction,
         Pageable pageable) {
         return CommonResponse.success(
             CommonSuccessCode.SELECT_SUCCESS,
             PageResponse.from(
                 productService.getOnSaleProductsByCategory(null, ProductSortType.NEW, direction, pageable)
-                    .map(ProductsCard::of)
+                                .map(ProductsCard::of)
+            )
+        );
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public CommonResponse<PageResponse<ProductsCard>> getCategoryProductsOnSale(
+        @PathVariable Long categoryId,
+        @RequestParam(defaultValue = "NEW") ProductSortType sortType,
+        @RequestParam(defaultValue = "DESC") SortDirection direction,
+        Pageable pageable
+    ) {
+        return CommonResponse.success(
+            CommonSuccessCode.SELECT_SUCCESS,
+            PageResponse.from(
+                productService.getOnSaleProductsByCategory(categoryId, sortType, direction, pageable)
+                                .map(ProductsCard::of)
             )
         );
     }

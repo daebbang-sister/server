@@ -85,6 +85,57 @@ paths:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
                     :\"아이디는 영문 소문자와 숫자만 입력 가능하며, 특수문자는 사용할 수 없습니다.\"}]}"
+  /v1/products/new:
+    get:
+      tags:
+      - Product
+      summary: 신상품 전체 페이지 조회
+      description: 신상품 전체 페이지를 조회합니다. 등록일 기준 최신순으로 반환되며 페이징이 적용됩니다.
+      operationId: products/new
+      parameters:
+      - name: direction
+        in: query
+        description: "정렬 방향 (ASC: 오래된순, DESC: 최신순) - 기본값: DESC"
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: 페이지 번호 (0부터 시작)
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        description: 페이지 크기
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPageResponse'
+              examples:
+                products/new:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[{\"id\":1,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20},{\"id\":2,\"\
+                    categoryName\":\"TOP\",\"productName\":\"오버핏 니트\",\"mainImageUrl\"\
+                    :\"http://example.com/main2.jpg\",\"hoverImageUrl\":null,\"originalPrice\"\
+                    :39000,\"sellingPrice\":39000,\"discountRate\":null}],\"pageNumber\"\
+                    :0,\"pageSize\":8,\"totalElements\":2,\"totalPages\":1,\"last\"\
+                    :true}}"
+                products/new-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":8,\"\
+                    totalElements\":0,\"totalPages\":0,\"last\":true}}"
   /v1/sms/send:
     post:
       tags:
@@ -219,6 +270,71 @@ paths:
                 auth/reissue-tokens-missing-cookie:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null}"
+  /v1/products/category/{categoryId}:
+    get:
+      tags:
+      - Product
+      summary: 카테고리별 상품 전체 페이지 조회
+      description: 카테고리별 상품 전체 페이지를 조회합니다. 정렬 기준과 방향을 지정할 수 있으며 기본값은 신상품순(최신순)입니다.
+      operationId: products/category
+      parameters:
+      - name: categoryId
+        in: path
+        description: 카테고리 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: sortType
+        in: query
+        description: "정렬 기준 (NEW: 신상품순, LATEST: 최신순, NAME: 상품명순, PRICE: 가격순, POPULAR:\
+          \ 인기순) - 기본값: NEW"
+        required: true
+        schema:
+          type: string
+      - name: direction
+        in: query
+        description: "정렬 방향 (ASC: 오름차순, DESC: 내림차순) - 기본값: DESC"
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: 페이지 번호 (0부터 시작)
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        description: 페이지 크기
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPageResponse'
+              examples:
+                products/category:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[{\"id\":1,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20},{\"id\":2,\"\
+                    categoryName\":\"TOP\",\"productName\":\"오버핏 니트\",\"mainImageUrl\"\
+                    :\"http://example.com/main2.jpg\",\"hoverImageUrl\":null,\"originalPrice\"\
+                    :39000,\"sellingPrice\":39000,\"discountRate\":null}],\"pageNumber\"\
+                    :0,\"pageSize\":8,\"totalElements\":2,\"totalPages\":1,\"last\"\
+                    :true}}"
+                products/category-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":8,\"\
+                    totalElements\":0,\"totalPages\":0,\"last\":true}}"
   /v1/products/main/new:
     get:
       tags:
@@ -535,6 +651,67 @@ components:
         phoneNumber:
           type: string
           description: 인증번호를 받은 전화번호
+    ProductPageResponse:
+      title: ProductPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 상품 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: object
+                    description: 할인율 % (할인 없을 시 null)
+                  sellingPrice:
+                    type: number
+                    description: 판매가 (할인 미적용 시 정가와 동일)
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  id:
+                    type: number
+                    description: 상품 ID
+                  hoverImageUrl:
+                    type: object
+                    description: 호버 이미지 URL (없을 수 있음)
+                  mainImageUrl:
+                    type: string
+                    description: 메인 이미지 URL
+                  categoryName:
+                    type: string
+                    description: 카테고리명
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 상품 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     FindUserIdResponse:
       title: FindUserIdResponse
       type: object
