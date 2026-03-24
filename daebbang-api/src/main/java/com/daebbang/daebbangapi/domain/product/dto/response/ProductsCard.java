@@ -6,7 +6,7 @@ import com.daebbang.daebbangcore.domain.product.util.DiscountResult;
 import lombok.Builder;
 
 @Builder
-public record ProductMainCard(
+public record ProductsCard(
     Long id,
     String categoryName,
     String productName,
@@ -16,7 +16,7 @@ public record ProductMainCard(
     Integer sellingPrice,
     Integer discountRate
 ) {
-    public static ProductMainCard of(ProductCardQueryResult result) {
+    public static ProductsCard of(ProductCardQueryResult result) {
         DiscountResult discountResult = DiscountCalculator.calculate(
                                                                     result.originalPrice(),
                                                                     result.discountType(),
@@ -25,7 +25,7 @@ public record ProductMainCard(
                                                                     result.discountEndDate()
                                                                     );
 
-        return ProductMainCard.builder()
+        return ProductsCard.builder()
             .id(result.id())
             .categoryName(result.categoryName())
             .productName(result.productName())
