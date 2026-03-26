@@ -85,6 +85,6 @@ jobs:
           cp ./docker-compose-prod.yml /home/ec2-user/server/docker-compose-prod.yml
           cd /home/ec2-user/server
           echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-          docker-compose -f docker-compose-prod.yml pull api-server
-          docker-compose -f docker-compose-prod.yml up -d --remove-orphans
+          docker compose -f docker-compose-prod.yml pull api-server
+          docker compose -f docker-compose-prod.yml up -d --remove-orphans
           docker image prune -f
