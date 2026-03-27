@@ -80,3 +80,17 @@ spring:
       same-site: ${COOKIE_SAME_SITE}
       domain: ${COOKIE_DOMAIN}
       maxAge: ${COOKIE_MAX_AGE}
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ${AWS_S3_REGION}
+      s3:
+        bucket: ${AWS_S3_BUCKET}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
