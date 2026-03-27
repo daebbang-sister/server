@@ -73,7 +73,8 @@ class ProductControllerTest {
                 20,
                 LocalDate.now().minusDays(1),
                 LocalDate.now().plusDays(5),
-                ProductStatus.SALE
+                ProductStatus.SALE,
+                List.of("#000000", "#FFFFFF")
             ),
             new ProductCardQueryResult(
                 2L,
@@ -86,7 +87,8 @@ class ProductControllerTest {
                 null,
                 null,
                 null,
-                ProductStatus.SALE
+                ProductStatus.SALE,
+                List.of("#8B5A2B")
             )
         );
     }
@@ -114,9 +116,12 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.data[0].originalPrice").value(50000))
             .andExpect(jsonPath("$.data[0].sellingPrice").value(40000))
             .andExpect(jsonPath("$.data[0].discountRate").value(20))
+            .andExpect(jsonPath("$.data[0].colorCodes").isArray())
+            .andExpect(jsonPath("$.data[0].colorCodes[0]").value("#000000"))
             .andExpect(jsonPath("$.data[1].id").value(2L))
             .andExpect(jsonPath("$.data[1].sellingPrice").value(39000))
             .andExpect(jsonPath("$.data[1].discountRate").doesNotExist())
+            .andExpect(jsonPath("$.data[1].colorCodes[0]").value("#8B5A2B"))
             .andDo(document("products/main-new",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Product")
@@ -138,7 +143,8 @@ class ProductControllerTest {
                         fieldWithPath("data[].hoverImageUrl").type(JsonFieldType.VARIES).optional().description("호버 이미지 URL (없을 수 있음)"),
                         fieldWithPath("data[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
-                        fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)")
+                        fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록")
                     )
                     .build()
                 )));
@@ -203,6 +209,8 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.data[0].originalPrice").value(50000))
             .andExpect(jsonPath("$.data[0].sellingPrice").value(40000))
             .andExpect(jsonPath("$.data[0].discountRate").value(20))
+            .andExpect(jsonPath("$.data[0].colorCodes").isArray())
+            .andExpect(jsonPath("$.data[0].colorCodes[0]").value("#000000"))
             .andDo(document("products/main-category",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Product")
@@ -227,7 +235,8 @@ class ProductControllerTest {
                         fieldWithPath("data[].hoverImageUrl").type(JsonFieldType.VARIES).optional().description("호버 이미지 URL (없을 수 있음)"),
                         fieldWithPath("data[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
-                        fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)")
+                        fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록")
                     )
                     .build()
                 )));
@@ -259,8 +268,11 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.data.content[0].originalPrice").value(50000))
             .andExpect(jsonPath("$.data.content[0].sellingPrice").value(40000))
             .andExpect(jsonPath("$.data.content[0].discountRate").value(20))
+            .andExpect(jsonPath("$.data.content[0].colorCodes").isArray())
+            .andExpect(jsonPath("$.data.content[0].colorCodes[0]").value("#000000"))
             .andExpect(jsonPath("$.data.content[1].sellingPrice").value(39000))
             .andExpect(jsonPath("$.data.content[1].discountRate").doesNotExist())
+            .andExpect(jsonPath("$.data.content[1].colorCodes[0]").value("#8B5A2B"))
             .andExpect(jsonPath("$.data.pageNumber").value(0))
             .andExpect(jsonPath("$.data.pageSize").value(8))
             .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -290,6 +302,7 @@ class ProductControllerTest {
                         fieldWithPath("data.content[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data.content[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
                         fieldWithPath("data.content[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록"),
                         fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                         fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
                         fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 상품 수"),
@@ -371,8 +384,11 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.data.content[0].originalPrice").value(50000))
             .andExpect(jsonPath("$.data.content[0].sellingPrice").value(40000))
             .andExpect(jsonPath("$.data.content[0].discountRate").value(20))
+            .andExpect(jsonPath("$.data.content[0].colorCodes").isArray())
+            .andExpect(jsonPath("$.data.content[0].colorCodes[0]").value("#000000"))
             .andExpect(jsonPath("$.data.content[1].sellingPrice").value(39000))
             .andExpect(jsonPath("$.data.content[1].discountRate").doesNotExist())
+            .andExpect(jsonPath("$.data.content[1].colorCodes[0]").value("#8B5A2B"))
             .andExpect(jsonPath("$.data.pageNumber").value(0))
             .andExpect(jsonPath("$.data.pageSize").value(8))
             .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -406,6 +422,7 @@ class ProductControllerTest {
                         fieldWithPath("data.content[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data.content[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
                         fieldWithPath("data.content[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록"),
                         fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                         fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
                         fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 상품 수"),

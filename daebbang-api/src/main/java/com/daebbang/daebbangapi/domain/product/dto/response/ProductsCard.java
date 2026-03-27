@@ -3,6 +3,7 @@ package com.daebbang.daebbangapi.domain.product.dto.response;
 import com.daebbang.daebbangcore.domain.product.dto.ProductCardQueryResult;
 import com.daebbang.daebbangcore.domain.product.util.DiscountCalculator;
 import com.daebbang.daebbangcore.domain.product.util.DiscountResult;
+import java.util.List;
 import lombok.Builder;
 
 @Builder
@@ -14,7 +15,8 @@ public record ProductsCard(
     String hoverImageUrl,
     Integer originalPrice,
     Integer sellingPrice,
-    Integer discountRate
+    Integer discountRate,
+    List<String> colorCodes
 ) {
     public static ProductsCard of(ProductCardQueryResult result) {
         DiscountResult discountResult = DiscountCalculator.calculate(
@@ -34,6 +36,7 @@ public record ProductsCard(
             .originalPrice(result.originalPrice())
             .sellingPrice(discountResult.sellingPrice())
             .discountRate(discountResult.discountRate())
+            .colorCodes(result.colors())
             .build();
     }
 }

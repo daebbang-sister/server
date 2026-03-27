@@ -3,6 +3,7 @@ package com.daebbang.daebbangcore.domain.product.dto;
 import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
 import com.daebbang.daebbangcore.domain.product.entity.ProductStatus;
 import java.time.LocalDate;
+import java.util.List;
 
 public record ProductCardQueryResult(
     Long id,
@@ -15,8 +16,8 @@ public record ProductCardQueryResult(
     Integer discountRate,
     LocalDate discountStartDate,
     LocalDate discountEndDate,
-    ProductStatus productStatus
-//    List<String> colors
+    ProductStatus productStatus,
+    List<String> colors
 ) {
 
 }
