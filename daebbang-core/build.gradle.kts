@@ -36,6 +36,10 @@ dependencies {
     // mysql
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    // s3
+    implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:4.0.0"))
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
+
     // QueryDsl
     implementation("io.github.openfeign.querydsl:querydsl-jpa:6.10.1")
     annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:6.10.1:jpa")
