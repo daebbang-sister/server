@@ -34,21 +34,26 @@ public class ProductDetails extends DefaultBase {
     @Column(nullable = false, length = 50)
     private String size;
 
+    @Column(nullable = false, length = 50)
+    private String colorCode;
+
     @Column(nullable = false)
     private Integer stock;
 
     @Builder
-    private ProductDetails(Products product, String color, String size, Integer stock) {
+    private ProductDetails(Products product, String color, String size, String colorCode, Integer stock) {
         this.product = product;
         this.color = color;
         this.size = size;
+        this.colorCode = colorCode;
         this.stock = getDefaultValue(stock);
     }
 
-    public static ProductDetails create(Products product, String color, String size, Integer stock) {
+    public static ProductDetails create(Products product, String color, String colorCode, String size, Integer stock) {
         return ProductDetails.builder()
                             .product(product)
                             .color(color)
+                            .colorCode(colorCode)
                             .size(size)
                             .stock(stock)
                             .build();
