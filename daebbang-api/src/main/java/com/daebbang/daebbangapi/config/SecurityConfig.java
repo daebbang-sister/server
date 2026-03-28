@@ -4,12 +4,15 @@ import com.daebbang.daebbangapi.domain.security.dto.SecurityConstants;
 import com.daebbang.daebbangapi.filter.CustomExceptionFilter;
 import com.daebbang.daebbangapi.filter.JwtAuthenticationFilter;
 import com.daebbang.daebbangapi.domain.users.filter.UserLoginFilter;
+import com.daebbang.daebbangapi.handler.CustomLogoutHandler;
+import com.daebbang.daebbangapi.handler.CustomLogoutSuccessHandler;
 import com.daebbang.daebbangapi.handler.OAuth2LoginFailureHandler;
 import com.daebbang.daebbangapi.handler.OAuth2LoginSuccessHandler;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangapi.utils.CookieUtils;
 import com.daebbang.daebbangcore.domain.auth.service.AuthService;
+import com.daebbang.daebbangcore.infra.service.RedisService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +31,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
@@ -46,8 +50,12 @@ public class SecurityConfig {
     private final CookieUtils cookieUtils;
 
     private final AuthService authService;
+    private final RedisService redisService;
     private final CustomUserDetailsService userService;
     private final Oauth2UserDetailsService oauth2Service;
+
+    private final CustomLogoutHandler logoutHandler;
+    private final CustomLogoutSuccessHandler logoutSuccessHandler;
 
     @Bean
     public AuthenticationManager authenticationManager(CustomUserDetailsService service, PasswordEncoder encoder) {
@@ -97,6 +105,16 @@ public class SecurityConfig {
             );
 
         http
+            .logout(logout -> logout
+                .logoutRequestMatcher(
+                    PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.DELETE, "/v1/logout")
+                )
+                .addLogoutHandler(logoutHandler)
+                .logoutSuccessHandler(logoutSuccessHandler)
+                .permitAll()
+            );
+
+        http
             .exceptionHandling(conf -> conf
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler));
@@ -104,7 +122,7 @@ public class SecurityConfig {
         http
             .addFilterBefore(new CustomExceptionFilter(mapper), UserLoginFilter.class)
             .addFilterAt(new UserLoginFilter(manager, mapper, cookieUtils, authService), UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, mapper), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, mapper, redisService), UsernamePasswordAuthenticationFilter.class);
 
         http
             .sessionManagement((session) -> session

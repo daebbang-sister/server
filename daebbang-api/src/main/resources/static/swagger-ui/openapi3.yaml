@@ -10,6 +10,31 @@ servers:
   description: 로컬 개발 서버
 tags: []
 paths:
+  /v1/logout:
+    delete:
+      tags:
+      - Auth
+      summary: 로그아웃
+      description: "로그아웃 요청 시 access token 블랙리스트 등록, refresh token Redis 삭제, refresh\
+        \ 쿠키 만료 처리가 수행됩니다."
+      operationId: auth/logout
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+              examples:
+                auth/logout:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"로그아웃에 성공하\
+                    였습니다.\",\"data\":null}"
+                auth/logout-no-access-token:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"로그아웃에 성공하\
+                    였습니다.\",\"data\":null}"
+                auth/logout-no-refresh-cookie:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"로그아웃에 성공하\
+                    였습니다.\",\"data\":null}"
   /v1/users:
     get:
       tags:
@@ -588,6 +613,22 @@ paths:
                     니다.\",\"data\":[]}"
 components:
   schemas:
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 오류 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     UserInfoResponse:
       title: UserInfoResponse
       type: object
@@ -626,22 +667,6 @@ components:
         message:
           type: string
           description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    ErrorResponse:
-      title: ErrorResponse
-      type: object
-      properties:
-        data:
-          type: object
-          description: 응답 데이터 (없음)
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 오류 메시지
         status:
           type: number
           description: HTTP 상태 코드
@@ -859,6 +884,22 @@ components:
             totalElements:
               type: number
               description: 전체 상품 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    LogoutResponse:
+      title: LogoutResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
         success:
           type: boolean
           description: 성공 여부

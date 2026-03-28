@@ -25,4 +25,17 @@ public class CookieUtils {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
+
+    public void expireRefreshCookie(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("refresh", "")
+            .path("/")
+            .httpOnly(true)
+            .secure(properties.secure())
+            .domain(properties.domain())
+            .sameSite(properties.sameSite())
+            .maxAge(0)
+            .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
 }
