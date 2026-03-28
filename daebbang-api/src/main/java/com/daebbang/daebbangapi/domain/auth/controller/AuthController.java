@@ -29,7 +29,7 @@ public class AuthController {
 
         TokenInfo info = authService.rotateRefreshToken(refreshToken);
 
-        cookieUtils.addRefreshCookie(response, refreshToken);
+        cookieUtils.addRefreshCookie(response, info.refreshToken());
 
         return ResponseEntity
                             .status(HttpStatus.CREATED)

@@ -11,6 +11,7 @@ public abstract class SecurityConstants {
         "/v1/users",
         "/v1/sms/**",
         "/v1/auth/login",
+        "/v1/tokens/reissues",
         "/v1/users/find/password"
     };
 

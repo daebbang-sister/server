@@ -3,6 +3,7 @@ package com.daebbang.daebbangapi.filter;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.ErrorCode;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.infra.service.RedisService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -32,6 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
     private final ObjectMapper mapper;
 
+    private final RedisService redisService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response,
         @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -40,6 +43,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = jwtUtils.resolveToken(bearerToken);
         try {
             if (checkValidToken(token)) {
+                if (isBlackListUser(token)) {
+                    sendErrorResponse(response, UserErrorCode.EXPIRED_TOKEN);
+                    return;
+                }
+
                 Authentication authToken = getAuthentication(token);
                 if (Objects.nonNull(authToken)) {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -68,6 +76,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean checkValidToken(String token) {
         return Objects.nonNull(token) && jwtUtils.validateToken(token);
+    }
+
+    private boolean isBlackListUser(String token) {
+        return redisService.hasKey("BL:" + token);
     }
 
     private Authentication getAuthentication(String token) {
