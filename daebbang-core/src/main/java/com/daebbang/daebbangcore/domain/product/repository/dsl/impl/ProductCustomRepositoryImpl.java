@@ -3,6 +3,10 @@ package com.daebbang.daebbangcore.domain.product.repository.dsl.impl;
 import com.daebbang.daebbangcommon.sort.SortDirection;
 import com.daebbang.daebbangcore.domain.category.entity.Category;
 import com.daebbang.daebbangcore.domain.product.dto.ProductCardQueryResult;
+import com.daebbang.daebbangcore.domain.product.dto.ProductDetailQueryResult;
+import com.daebbang.daebbangcore.domain.product.dto.ProductGalleryImageResult;
+import com.daebbang.daebbangcore.domain.product.dto.ProductOptionRaw;
+import com.daebbang.daebbangcore.domain.product.entity.ImageType;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
 import com.daebbang.daebbangcore.domain.product.entity.ProductStatus;
 import com.daebbang.daebbangcore.domain.product.repository.dsl.ProductCustomRepository;
@@ -16,6 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +34,7 @@ import static com.daebbang.daebbangcore.domain.product.entity.QProducts.products
 import static com.daebbang.daebbangcore.domain.category.entity.QCategory.category;
 import static com.daebbang.daebbangcore.domain.product.entity.QProductCategory.productCategory;
 import static com.daebbang.daebbangcore.domain.product.entity.QProductDetails.productDetails;
+import static com.daebbang.daebbangcore.domain.product.entity.QProductImage.productImage;
 
 @Repository
 @RequiredArgsConstructor
@@ -158,6 +164,69 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .fetchOne();
 
         return new PageImpl<>(content, pageable, Objects.nonNull(total) ? total : 0L);
+    }
+
+    @Override
+    public Optional<ProductDetailQueryResult> findProductDetailById(Long productId) {
+        return Optional.ofNullable(
+            queryFactory
+                .select(Projections.constructor(ProductDetailQueryResult.class,
+                    products.id,
+                    category.categoryName,
+                    products.productName,
+                    products.simpleDescription,
+                    products.mainImageUrl,
+                    products.originalPrice,
+                    products.discountType,
+                    products.discountRate,
+                    products.discountStartDate,
+                    products.discountEndDate,
+                    products.descriptionHtml
+                ))
+                .from(products)
+                .innerJoin(productCategory).on(productCategory.product.eq(products))
+                .innerJoin(category).on(category.eq(productCategory.category))
+                .where(
+                    products.id.eq(productId),
+                    products.deletedAt.isNull()
+                )
+                .fetchOne()
+        );
+    }
+
+    @Override
+    public List<ProductGalleryImageResult> findGalleryImages(Long productId) {
+        return queryFactory
+            .select(Projections.constructor(ProductGalleryImageResult.class,
+                productImage.imageUrl,
+                productImage.imageOrder
+            ))
+            .from(productImage)
+            .where(
+                productImage.product.id.eq(productId),
+                productImage.imageType.eq(ImageType.DETAILS),
+                productImage.deletedAt.isNull()
+            )
+            .orderBy(productImage.imageOrder.asc())
+            .fetch();
+    }
+
+    @Override
+    public List<ProductOptionRaw> findProductOptions(Long productId) {
+        return queryFactory
+            .select(Projections.constructor(ProductOptionRaw.class,
+                productDetails.color,
+                productDetails.colorCode,
+                productDetails.size,
+                productDetails.stock
+            ))
+            .from(productDetails)
+            .where(
+                productDetails.product.id.eq(productId),
+                productDetails.deletedAt.isNull()
+            )
+            .orderBy(productDetails.color.asc(), productDetails.size.asc())
+            .fetch();
     }
 
     private OrderSpecifier<?> resolveSort(ProductSortType sort, SortDirection direction) {

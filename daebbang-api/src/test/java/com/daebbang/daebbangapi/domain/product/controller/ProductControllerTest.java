@@ -16,7 +16,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
+import com.daebbang.daebbangcommon.error.BusinessException;
+import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.domain.product.dto.ProductCardQueryResult;
+import com.daebbang.daebbangcore.domain.product.dto.ProductColorOption;
+import com.daebbang.daebbangcore.domain.product.dto.ProductDetailResult;
+import com.daebbang.daebbangcore.domain.product.dto.ProductGalleryImageResult;
+import com.daebbang.daebbangcore.domain.product.dto.ProductSizeOption;
 import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
 import com.daebbang.daebbangcore.domain.product.entity.ProductStatus;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
@@ -464,6 +470,136 @@ class ProductControllerTest {
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data").type(JsonFieldType.ARRAY).description("카테고리 상품 목록 (빈 배열)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId} - 상품 상세 조회 성공")
+    void getProductDetail_success() throws Exception {
+        // given
+        ProductDetailResult result = new ProductDetailResult(
+            1L,
+            "TOP",
+            "루즈핏 티셔츠",
+            "편안한 루즈핏 티셔츠",
+            "http://example.com/main1.jpg",
+            50000,
+            DiscountType.PERIOD,
+            20,
+            LocalDate.now().minusDays(1),
+            LocalDate.now().plusDays(5),
+            "<p>상품 상세 설명</p>",
+            List.of(
+                new ProductGalleryImageResult("http://example.com/detail1.jpg", (short) 1),
+                new ProductGalleryImageResult("http://example.com/detail2.jpg", (short) 2)
+            ),
+            List.of(
+                new ProductColorOption("블랙", "#000000", List.of(
+                    new ProductSizeOption("S", 10, false),
+                    new ProductSizeOption("M", 0, true)
+                )),
+                new ProductColorOption("화이트", "#FFFFFF", List.of(
+                    new ProductSizeOption("S", 5, false)
+                ))
+            )
+        );
+        given(productService.getProductDetail(anyLong())).willReturn(result);
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/{productId}", 1L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("조회에 성공하였습니다."))
+            .andExpect(jsonPath("$.data.id").value(1L))
+            .andExpect(jsonPath("$.data.categoryName").value("TOP"))
+            .andExpect(jsonPath("$.data.productName").value("루즈핏 티셔츠"))
+            .andExpect(jsonPath("$.data.simpleDescription").value("편안한 루즈핏 티셔츠"))
+            .andExpect(jsonPath("$.data.mainImageUrl").value("http://example.com/main1.jpg"))
+            .andExpect(jsonPath("$.data.originalPrice").value(50000))
+            .andExpect(jsonPath("$.data.sellingPrice").value(40000))
+            .andExpect(jsonPath("$.data.discountRate").value(20))
+            .andExpect(jsonPath("$.data.gallery").isArray())
+            .andExpect(jsonPath("$.data.gallery[0].imageUrl").value("http://example.com/detail1.jpg"))
+            .andExpect(jsonPath("$.data.gallery[0].imageOrder").value(1))
+            .andExpect(jsonPath("$.data.descriptionHtml").value("<p>상품 상세 설명</p>"))
+            .andExpect(jsonPath("$.data.options").isArray())
+            .andExpect(jsonPath("$.data.options[0].color").value("블랙"))
+            .andExpect(jsonPath("$.data.options[0].colorCode").value("#000000"))
+            .andExpect(jsonPath("$.data.options[0].sizes[0].size").value("S"))
+            .andExpect(jsonPath("$.data.options[0].sizes[0].stock").value(10))
+            .andExpect(jsonPath("$.data.options[0].sizes[0].soldOut").value(false))
+            .andExpect(jsonPath("$.data.options[0].sizes[1].soldOut").value(true))
+            .andDo(document("products/detail",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 상세 조회")
+                    .description("상품 ID로 상세 정보를 조회합니다. 갤러리 이미지, 색상/사이즈 옵션, 할인 정보가 포함됩니다.")
+                    .responseSchema(Schema.schema("ProductDetailResponse"))
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.id").type(JsonFieldType.NUMBER).description("상품 ID"),
+                        fieldWithPath("data.categoryName").type(JsonFieldType.STRING).description("카테고리명"),
+                        fieldWithPath("data.productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data.simpleDescription").type(JsonFieldType.STRING).description("간단 설명"),
+                        fieldWithPath("data.mainImageUrl").type(JsonFieldType.STRING).description("메인 이미지 URL"),
+                        fieldWithPath("data.originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data.sellingPrice").type(JsonFieldType.NUMBER).description("판매가"),
+                        fieldWithPath("data.discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data.gallery").type(JsonFieldType.ARRAY).description("갤러리 이미지 목록"),
+                        fieldWithPath("data.gallery[].imageUrl").type(JsonFieldType.STRING).description("갤러리 이미지 URL"),
+                        fieldWithPath("data.gallery[].imageOrder").type(JsonFieldType.NUMBER).description("갤러리 이미지 순서"),
+                        fieldWithPath("data.descriptionHtml").type(JsonFieldType.VARIES).optional().description("상품 상세 HTML"),
+                        fieldWithPath("data.options").type(JsonFieldType.ARRAY).description("색상 옵션 목록"),
+                        fieldWithPath("data.options[].color").type(JsonFieldType.STRING).description("색상명"),
+                        fieldWithPath("data.options[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
+                        fieldWithPath("data.options[].sizes").type(JsonFieldType.ARRAY).description("사이즈 옵션 목록"),
+                        fieldWithPath("data.options[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
+                        fieldWithPath("data.options[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
+                        fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId} - 존재하지 않는 상품 조회 시 404 반환")
+    void getProductDetail_notFound() throws Exception {
+        // given
+        given(productService.getProductDetail(anyLong()))
+            .willThrow(new BusinessException(UserErrorCode.PRODUCT_NOT_FOUND));
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/{productId}", 999L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.message").value("존재하지 않는 상품입니다."))
+            .andDo(document("products/detail-not-found",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 상세 조회 - 상품 없음")
+                    .description("존재하지 않는 상품 ID로 조회 시 404를 반환합니다.")
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));

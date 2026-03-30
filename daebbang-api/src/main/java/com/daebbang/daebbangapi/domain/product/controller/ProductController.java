@@ -1,5 +1,6 @@
 package com.daebbang.daebbangapi.domain.product.controller;
 
+import com.daebbang.daebbangapi.domain.product.dto.response.ProductDetailResponse;
 import com.daebbang.daebbangapi.domain.product.dto.response.ProductsCard;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.sort.SortDirection;
@@ -55,6 +56,14 @@ public class ProductController {
                 productService.getOnSaleProductsByCategory(null, ProductSortType.NEW, direction, pageable)
                                 .map(ProductsCard::of)
             )
+        );
+    }
+
+    @GetMapping("/{productId}")
+    public CommonResponse<ProductDetailResponse> getProductDetail(@PathVariable Long productId) {
+        return CommonResponse.success(
+            CommonSuccessCode.SELECT_SUCCESS,
+            ProductDetailResponse.of(productService.getProductDetail(productId))
         );
     }
 
