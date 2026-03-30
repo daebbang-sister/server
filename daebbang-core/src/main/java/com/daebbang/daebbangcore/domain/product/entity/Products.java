@@ -53,6 +53,9 @@ public class Products extends DefaultBase {
 
     private LocalDate discountEndDate;
 
+    @Column(columnDefinition = "TEXT")
+    private String descriptionHtml;
+
     @Builder
     private Products(ProductStatus status, String productName,
         Integer originalPrice,
