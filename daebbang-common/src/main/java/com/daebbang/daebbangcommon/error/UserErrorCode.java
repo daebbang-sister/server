@@ -37,7 +37,10 @@ public enum UserErrorCode implements ErrorCode {
     DUPLICATE_LOGIN_ID(409, "이미 사용 중인 아이디입니다."),
 
     CATEGORY_NOT_FOUND(404, "존재하지 않는 카테고리입니다."),
-    PRODUCT_NOT_FOUND(404, "존재하지 않는 상품입니다.");
+    PRODUCT_NOT_FOUND(404, "존재하지 않는 상품입니다."),
+    PRODUCT_DETAILS_NOT_FOUND(404, "존재하지 않는 상세 상품입니다."),
+
+    CART_NOT_FOUND(404, "존재하지 않는 카트 번호입니다.");
 
     private final int status;
     private final String message;

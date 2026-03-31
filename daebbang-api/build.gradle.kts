@@ -65,6 +65,12 @@ tasks.register("patchOpenApiServers") {
     }
 }
 
+afterEvaluate {
+    tasks.named("openapi3") {
+        dependsOn("test")
+    }
+}
+
 tasks.register<Copy>("copyOasToSwagger") {
     delete("src/main/resources/static/swagger-ui/openapi3.yaml")
     from(layout.buildDirectory.file("api-spec/openapi3.yaml"))

@@ -17,6 +17,10 @@ public enum UserSuccessCode implements SuccessCode {
 
     SEND_EMAIL(201, "이메일 전송에 성공하였습니다."),
 
+    ADD_CART(201, "장바구니 추가에 성공하였습니다."),
+    UPDATE_CART(200, "장바구니 수정에 성공하였습니다."),
+    DELETE_CART(200, "장바구니 삭제에 성공하였습니다."),
+
     VERIFY_AUTH_CODE(200, "핸드폰 인증에 성공하였습니다.");
 
     private final int status;

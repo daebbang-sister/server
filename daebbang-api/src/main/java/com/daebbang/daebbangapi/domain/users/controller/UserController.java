@@ -30,8 +30,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<@NonNull CommonResponse<UserInfo>> getUser(@AuthenticationPrincipal String username) {
-        UserInfo info = userMapper.toUserInfo(userService.getUser(username));
+    public ResponseEntity<@NonNull CommonResponse<UserInfo>> getUser(@AuthenticationPrincipal Long userId) {
+        UserInfo info = userMapper.toUserInfo(userService.getUserById(userId));
         return ResponseEntity
                             .status(HttpStatus.OK)
                             .body(CommonResponse.success(UserSuccessCode.USER_RETRIEVED, info));

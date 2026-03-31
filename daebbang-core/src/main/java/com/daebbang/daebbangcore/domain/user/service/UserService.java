@@ -12,5 +12,6 @@ public interface UserService {
     void existsActiveUsers(String loginId);
     void verifyUserActiveToFindPassword(String username, String userId, String email);
     Users getUser(String loginId);
+    Users getUserById(Long userId);
     List<Users> getUsersByFindLoginId(String username, String email);
 }

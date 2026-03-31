@@ -81,7 +81,9 @@ public class UserLoginFilter extends UsernamePasswordAuthenticationFilter {
             HttpStatus.OK,
             CommonResponse.success(
                 CommonSuccessCode.CREATE_SUCCESS,
-                TokenInfo.create(info.accessToken())));
+                TokenInfo.create(info.accessToken())
+            )
+        );
     }
 
     @Override
