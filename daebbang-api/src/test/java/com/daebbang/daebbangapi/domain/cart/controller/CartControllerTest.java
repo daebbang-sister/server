@@ -89,7 +89,6 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(post("/v1/carts")
                 .with(authentication(authToken()))
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requests)))
             .andDo(print())
@@ -132,7 +131,6 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(post("/v1/carts")
                 .with(authentication(authToken()))
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requests)))
             .andDo(print())
@@ -169,7 +167,6 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(post("/v1/carts")
                 .with(authentication(authToken()))
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requests)))
             .andDo(print())
@@ -205,7 +202,6 @@ class CartControllerTest {
         List<CartSaveRequest> requests = List.of(new CartSaveRequest(1L, 1));
 
         mockMvc.perform(post("/v1/carts")
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requests)))
             .andDo(print())
@@ -224,7 +220,6 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(patch("/v1/carts/{cartId}", 1L)
                 .with(authentication(authToken()))
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -267,7 +262,6 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(patch("/v1/carts/{cartId}", 999L)
                 .with(authentication(authToken()))
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -304,7 +298,6 @@ class CartControllerTest {
         CartUpdate request = new CartUpdate(2L, 3);
 
         mockMvc.perform(patch("/v1/carts/{cartId}", 1L)
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
@@ -322,7 +315,6 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(delete("/v1/carts?ids=1&ids=2&ids=3")
                 .with(authentication(authToken()))
-                .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
@@ -352,7 +344,6 @@ class CartControllerTest {
     @DisplayName("DELETE /v1/carts?ids= - 인증 없이 접근 시 401 반환")
     void deleteCarts_unauthorized() throws Exception {
         mockMvc.perform(delete("/v1/carts")
-                .with(csrf())
                 .param("ids", "1", "2")
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
@@ -370,7 +361,6 @@ class CartControllerTest {
         // when & then
         mockMvc.perform(delete("/v1/carts/all")
                 .with(authentication(authToken()))
-                .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
@@ -397,7 +387,6 @@ class CartControllerTest {
     @DisplayName("DELETE /v1/carts/all - 인증 없이 접근 시 401 반환")
     void deleteAllCarts_unauthorized() throws Exception {
         mockMvc.perform(delete("/v1/carts/all")
-                .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isUnauthorized());

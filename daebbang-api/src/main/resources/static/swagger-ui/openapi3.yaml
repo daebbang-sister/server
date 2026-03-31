@@ -68,14 +68,6 @@ paths:
         required: true
         schema:
           type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/v1-carts486549215'
-            examples:
-              cart/delete-carts:
-                value: _csrf=eKyrLMgZxBn75pmzZUTm7_5MM2V_fNkETHjWitwZsLtFQNJHTJqeFa0tpSDWg6HXA2nS2s55Hl1OROEpfEqzsuwvhot0Iud1
       responses:
         "200":
           description: "200"
@@ -194,14 +186,6 @@ paths:
       summary: 장바구니 전체 삭제
       description: 로그인한 회원의 장바구니를 전체 삭제합니다.
       operationId: cart/delete-all-carts
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/v1-carts486549215'
-            examples:
-              cart/delete-all-carts:
-                value: _csrf=hrR-WktdqoJhrDxyJRa5YMMBA91PfVtS2e4NKHkHN03JDN08soMba3xrkuZMmAgQEDuNAvE3LuV4Hmx_u9c5Tko0BizxaehZ
       responses:
         "200":
           description: "200"
@@ -628,8 +612,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -1140,8 +1124,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-carts486549215:
-      type: object
     UserInfoResponse:
       title: UserInfoResponse
       type: object
