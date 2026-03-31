@@ -4,6 +4,7 @@ import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.docume
 import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
@@ -83,13 +84,13 @@ class UserControllerTest {
     @DisplayName("GET /v1/users - 회원 정보 조회 성공")
     void getUser_success() throws Exception {
         // given
-        String username = "testuser";
-        Users mockUser = Users.createLocalUser(username, "encoded_password", "홍길동", "test@example.com", "01012345678");
+        Long userId = 1L;
+        Users mockUser = Users.createLocalUser("testuser", "encoded_password", "홍길동", "test@example.com", "01012345678");
 
         UserInfo mockUserInfo = UserInfo.builder()
-            .id(1L)
+            .id(userId)
             .provider(Provider.LOCAL)
-            .loginId(username)
+            .loginId("testuser")
             .userName("홍길동")
             .userEmail("test@example.com")
             .userPhoneNumber("010-****-5678")
@@ -97,13 +98,13 @@ class UserControllerTest {
             .lastLoginAt(null)
             .build();
 
-        given(userService.getUser(username)).willReturn(mockUser);
+        given(userService.getUserById(anyLong())).willReturn(mockUser);
         given(userMapper.toUserInfo(any(Users.class))).willReturn(mockUserInfo);
 
         // when & then
         mockMvc.perform(get("/v1/users")
                 .with(authentication(new UsernamePasswordAuthenticationToken(
-                    username, null, List.of(new SimpleGrantedAuthority("ROLE_USER")))))
+                    userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")))))
                 .header("Authorization", "Bearer test-jwt-token")
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
@@ -111,7 +112,7 @@ class UserControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.status").value(200))
             .andExpect(jsonPath("$.message").value("회원 조회에 성공하였습니다."))
-            .andExpect(jsonPath("$.data.loginId").value(username))
+            .andExpect(jsonPath("$.data.loginId").value("testuser"))
             .andExpect(jsonPath("$.data.userName").value("홍길동"))
             .andExpect(jsonPath("$.data.userEmail").value("test@example.com"))
             .andDo(document("user/get-user",

@@ -84,11 +84,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private Authentication getAuthentication(String token) {
         String role = jwtUtils.getRole(token);
-        String username = jwtUtils.getUserName(token);
+        Long userId = jwtUtils.getUserId(token);
 
-        if (Objects.nonNull(role) && Objects.nonNull(username)) {
+        if (Objects.nonNull(role) && Objects.nonNull(userId)) {
             List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
-            return new UsernamePasswordAuthenticationToken(username, null, authorities);
+            return new UsernamePasswordAuthenticationToken(userId, null, authorities);
         }
         return null;
     }

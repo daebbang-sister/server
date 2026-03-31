@@ -33,15 +33,6 @@ public class JwtUtils {
         this.refreshTokenExpirationTime = refreshExpirationTime;
     }
 
-    public String getUserName(String token) {
-        return Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
-                    .get("name", String.class);
-    }
-
     public String getRole(String token) {
         return Jwts.parser()
                     .verifyWith(key)
@@ -49,6 +40,15 @@ public class JwtUtils {
                     .parseSignedClaims(token)
                     .getPayload()
                     .get("role", String.class);
+    }
+
+    public Long getUserId(String token) {
+        return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("userId", Long.class);
     }
 
     public String resolveToken(String authHeader) {
@@ -66,20 +66,20 @@ public class JwtUtils {
         return true;
     }
 
-    public String createAccessToken(String name, String role) {
+    public String createAccessToken(String role, Long userId) {
         return Jwts.builder()
-                    .claim("name", name)
                     .claim("role", role)
+                    .claim("userId", userId)
                     .issuedAt(new Date(System.currentTimeMillis()))
                     .expiration(new Date(System.currentTimeMillis() + accessTokenExpirationTime))
                     .signWith(key)
                     .compact();
     }
 
-    public String createRefreshToken(String name, String role) {
+    public String createRefreshToken(String role, Long userId) {
         return Jwts.builder()
-            .claim("name", name)
             .claim("role", role)
+            .claim("userId", userId)
             .issuedAt(new Date(System.currentTimeMillis()))
             .expiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime))
             .signWith(key)

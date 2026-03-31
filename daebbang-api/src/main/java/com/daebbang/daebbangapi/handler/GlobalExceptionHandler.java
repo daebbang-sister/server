@@ -4,6 +4,7 @@ import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
 import com.daebbang.daebbangcommon.error.ErrorCode;
+import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<@NonNull CommonResponse<Object>> handlerBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
         CommonResponse<Object> response = makeErrorResponse(errorCode);
+        return handleExceptionInternal(response);
+    }
+
+    @ExceptionHandler(value = ConstraintViolationException.class)
+    public ResponseEntity<@NonNull CommonResponse<Object>> handlerConstraintViolationException(ConstraintViolationException e) {
+        ErrorCode errorCode = CommonErrorCode.INVALID_INPUT_DATA;
+        List<CommonResponse.ValidationError> errors = e.getConstraintViolations()
+            .stream()
+            .map(violation -> {
+                String path = violation.getPropertyPath().toString();
+                String field = path.contains(".") ? path.substring(path.lastIndexOf('.') + 1) : path;
+                return CommonResponse.ValidationError.builder()
+                    .field(field)
+                    .message(violation.getMessage())
+                    .build();
+            })
+            .toList();
+        CommonResponse<Object> response = CommonResponse.error(errorCode.getStatus(), errorCode.getMessage(), errors);
         return handleExceptionInternal(response);
     }
 

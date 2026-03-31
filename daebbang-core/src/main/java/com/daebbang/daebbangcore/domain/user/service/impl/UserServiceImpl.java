@@ -92,6 +92,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Users getUserById(Long userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
     public List<Users> getUsersByFindLoginId(String username, String email) {
         return userRepository.findActiveUserIdsByUsernameAndEmail(username, email, UserStatus.WITHDRAWN);
     }
