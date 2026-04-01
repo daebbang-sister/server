@@ -11,6 +11,74 @@ servers:
 tags: []
 paths:
   /v1/carts:
+    get:
+      tags:
+      - Cart
+      summary: 장바구니 조회
+      description: 로그인한 회원의 장바구니를 커서 기반 페이지네이션으로 조회합니다. cursor 생략 시 최신 항목부터 반환합니다.
+      operationId: cart/get-carts-
+      parameters:
+      - name: cursor
+        in: query
+        description: 마지막으로 조회한 cartId (첫 페이지 요청 시 생략)
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: "페이지 크기 (기본값: 8)"
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartPageResponse'
+              examples:
+                cart/get-carts-first-page:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"carts\":[{\"cartId\":10,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":9,\"quantity\"\
+                    :1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :8,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":7,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":6,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":5,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":4,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":3,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    }],\"nextCursor\":3,\"hasNext\":true}}"
+                cart/get-carts-last-page:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"carts\":[{\"cartId\":3,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":2,\"quantity\"\
+                    :1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :1,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    }],\"nextCursor\":null,\"hasNext\":false}}"
     post:
       tags:
       - Cart
@@ -1115,6 +1183,61 @@ components:
             totalElements:
               type: number
               description: 전체 상품 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    CartPageResponse:
+      title: CartPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            nextCursor:
+              type: object
+              description: 다음 페이지 cursor (null)
+            carts:
+              type: array
+              description: 장바구니 항목 목록
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: object
+                    description: 할인율 (%)
+                  quantity:
+                    type: number
+                    description: 수량
+                  size:
+                    type: string
+                    description: 사이즈
+                  color:
+                    type: string
+                    description: 색상
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  cartId:
+                    type: number
+                    description: 장바구니 항목 ID
+                  discountPrice:
+                    type: number
+                    description: 할인 적용가
+                  mainImageUrl:
+                    type: string
+                    description: 대표 이미지 URL
+                  productName:
+                    type: string
+                    description: 상품명
+            hasNext:
+              type: boolean
+              description: 다음 페이지 존재 여부
         success:
           type: boolean
           description: 성공 여부

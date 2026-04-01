@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,11 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final UserService userService;
     private final ProductDetailsService productDetailsService;
+
+    @Override
+    public List<Carts> getCarts(Long userId, Long cursor, int size) {
+        return cartRepository.findCartsByUserIdWithCursor(userId, cursor, PageRequest.of(0, size));
+    }
 
     @Override
     @Transactional
