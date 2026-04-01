@@ -4,14 +4,17 @@ import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.docume
 import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.mock;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -26,10 +29,16 @@ import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsSer
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.domain.cart.entity.Carts;
 import com.daebbang.daebbangcore.domain.cart.service.CartService;
+import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
+import com.daebbang.daebbangcore.domain.product.entity.ProductDetails;
+import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,6 +84,217 @@ class CartControllerTest {
     private UsernamePasswordAuthenticationToken authToken() {
         return new UsernamePasswordAuthenticationToken(
             USER_ID, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    }
+
+    /**
+     * DiscountType.NONE - 할인 없는 장바구니 항목 mock
+     * DiscountCalculator.calculate() → DiscountResult.noDiscount(originalPrice)
+     * sellingPrice = originalPrice, discountRate = null
+     */
+    private Carts mockCartNoDiscount(Long cartId, int quantity) {
+        Carts cart = mock(Carts.class);
+        ProductDetails productDetail = mock(ProductDetails.class);
+        Products product = mock(Products.class);
+
+        given(cart.getId()).willReturn(cartId);
+        given(cart.getQuantity()).willReturn(quantity);
+        given(cart.getProductDetail()).willReturn(productDetail);
+        given(productDetail.getProduct()).willReturn(product);
+        given(productDetail.getColor()).willReturn("블랙");
+        given(productDetail.getSize()).willReturn("M");
+        given(product.getProductName()).willReturn("테스트 상품");
+        given(product.getOriginalPrice()).willReturn(30000);
+        given(product.getDiscountType()).willReturn(DiscountType.NONE);
+        given(product.getDiscountRate()).willReturn(null);
+        given(product.getDiscountStartDate()).willReturn(null);
+        given(product.getDiscountEndDate()).willReturn(null);
+        given(product.getMainImageUrl()).willReturn("https://example.com/image.jpg");
+
+        return cart;
+    }
+
+    /**
+     * DiscountType.ALWAYS - 상시 할인 장바구니 항목 mock
+     * DiscountCalculator.calculate() → DiscountResult.discounted(sellingPrice, discountRate)
+     * sellingPrice = floor(30000 * (100 - 10) / 100.0) = 27000, discountRate = 10
+     */
+    private Carts mockCartAlwaysDiscount(Long cartId, int quantity) {
+        Carts cart = mock(Carts.class);
+        ProductDetails productDetail = mock(ProductDetails.class);
+        Products product = mock(Products.class);
+
+        given(cart.getId()).willReturn(cartId);
+        given(cart.getQuantity()).willReturn(quantity);
+        given(cart.getProductDetail()).willReturn(productDetail);
+        given(productDetail.getProduct()).willReturn(product);
+        given(productDetail.getColor()).willReturn("화이트");
+        given(productDetail.getSize()).willReturn("L");
+        given(product.getProductName()).willReturn("할인 상품");
+        given(product.getOriginalPrice()).willReturn(30000);
+        given(product.getDiscountType()).willReturn(DiscountType.ALWAYS);
+        given(product.getDiscountRate()).willReturn(10);
+        given(product.getDiscountStartDate()).willReturn(null);
+        given(product.getDiscountEndDate()).willReturn(null);
+        given(product.getMainImageUrl()).willReturn("https://example.com/sale-image.jpg");
+
+        return cart;
+    }
+
+    private List<Carts> mockCartsNoDiscount(int count, long startId) {
+        List<Carts> carts = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            carts.add(mockCartNoDiscount(startId - i, 1));
+        }
+        return carts;
+    }
+
+    // ======================== GET /v1/carts ========================
+
+    @Test
+    @DisplayName("GET /v1/carts - 첫 페이지 조회 성공 (cursor 없음, hasNext=true)")
+    void getCarts_firstPage_success() throws Exception {
+        // given - size=8이므로 service는 9개 요청, 9개 반환 → hasNext=true, nextCursor=마지막 id
+        List<Carts> mockResult = mockCartsNoDiscount(9, 10L); // id: 10,9,8,7,6,5,4,3,2
+        given(cartService.getCarts(anyLong(), any(), anyInt())).willReturn(mockResult);
+
+        // when & then
+        mockMvc.perform(get("/v1/carts")
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.data.carts.length()").value(8))
+            .andExpect(jsonPath("$.data.hasNext").value(true))
+            .andExpect(jsonPath("$.data.nextCursor").value(3))
+            .andExpect(jsonPath("$.data.carts[0].cartId").value(10))
+            .andExpect(jsonPath("$.data.carts[0].quantity").value(1))
+            .andExpect(jsonPath("$.data.carts[0].productName").value("테스트 상품"))
+            .andExpect(jsonPath("$.data.carts[0].originalPrice").value(30000))
+            .andExpect(jsonPath("$.data.carts[0].discountPrice").value(30000))
+            .andExpect(jsonPath("$.data.carts[0].discountRate").isEmpty())
+            .andDo(document("cart/get-carts-first-page",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Cart")
+                    .summary("장바구니 조회")
+                    .description("로그인한 회원의 장바구니를 커서 기반 페이지네이션으로 조회합니다. cursor 생략 시 최신 항목부터 반환합니다.")
+                    .responseSchema(Schema.schema("CartPageResponse"))
+                    .queryParameters(
+                        parameterWithName("cursor").description("마지막으로 조회한 cartId (첫 페이지 요청 시 생략)").optional(),
+                        parameterWithName("size").description("페이지 크기 (기본값: 8)").optional()
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.carts").type(JsonFieldType.ARRAY).description("장바구니 항목 목록"),
+                        fieldWithPath("data.carts[].cartId").type(JsonFieldType.NUMBER).description("장바구니 항목 ID"),
+                        fieldWithPath("data.carts[].quantity").type(JsonFieldType.NUMBER).description("수량"),
+                        fieldWithPath("data.carts[].productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data.carts[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data.carts[].discountPrice").type(JsonFieldType.NUMBER).description("할인 적용가 (할인 없으면 정가와 동일)"),
+                        fieldWithPath("data.carts[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 (%) - 할인 없으면 null"),
+                        fieldWithPath("data.carts[].color").type(JsonFieldType.STRING).description("색상"),
+                        fieldWithPath("data.carts[].size").type(JsonFieldType.STRING).description("사이즈"),
+                        fieldWithPath("data.carts[].mainImageUrl").type(JsonFieldType.STRING).description("대표 이미지 URL"),
+                        fieldWithPath("data.nextCursor").type(JsonFieldType.VARIES).optional().description("다음 페이지 요청 시 사용할 cursor 값 (마지막 페이지면 null)"),
+                        fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/carts - 마지막 페이지 조회 성공 (cursor 있음, hasNext=false)")
+    void getCarts_lastPage_success() throws Exception {
+        // given - 3개만 반환 → hasNext=false, nextCursor=null
+        List<Carts> mockResult = mockCartsNoDiscount(3, 3L); // id: 3,2,1
+        given(cartService.getCarts(anyLong(), anyLong(), anyInt())).willReturn(mockResult);
+
+        // when & then
+        mockMvc.perform(get("/v1/carts?cursor=4")
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.carts.length()").value(3))
+            .andExpect(jsonPath("$.data.hasNext").value(false))
+            .andExpect(jsonPath("$.data.nextCursor").isEmpty())
+            .andDo(document("cart/get-carts-last-page",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Cart")
+                    .summary("장바구니 조회 - 마지막 페이지")
+                    .description("cursor를 전달하여 이전 페이지 이후 항목을 조회합니다. hasNext가 false이면 더 이상 데이터가 없습니다.")
+                    .responseSchema(Schema.schema("CartPageResponse"))
+                    .queryParameters(
+                        parameterWithName("cursor").description("마지막으로 조회한 cartId").optional(),
+                        parameterWithName("size").description("페이지 크기 (기본값: 8)").optional()
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.carts").type(JsonFieldType.ARRAY).description("장바구니 항목 목록"),
+                        fieldWithPath("data.carts[].cartId").type(JsonFieldType.NUMBER).description("장바구니 항목 ID"),
+                        fieldWithPath("data.carts[].quantity").type(JsonFieldType.NUMBER).description("수량"),
+                        fieldWithPath("data.carts[].productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data.carts[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data.carts[].discountPrice").type(JsonFieldType.NUMBER).description("할인 적용가"),
+                        fieldWithPath("data.carts[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 (%)"),
+                        fieldWithPath("data.carts[].color").type(JsonFieldType.STRING).description("색상"),
+                        fieldWithPath("data.carts[].size").type(JsonFieldType.STRING).description("사이즈"),
+                        fieldWithPath("data.carts[].mainImageUrl").type(JsonFieldType.STRING).description("대표 이미지 URL"),
+                        fieldWithPath("data.nextCursor").type(JsonFieldType.VARIES).optional().description("다음 페이지 cursor (null)"),
+                        fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/carts - 상시 할인 상품이 포함된 경우 discountPrice 계산 검증")
+    void getCarts_withAlwaysDiscount_success() throws Exception {
+        // given - ALWAYS 10% 할인: floor(30000 * 90 / 100.0) = 27000
+        List<Carts> mockResult = List.of(mockCartAlwaysDiscount(1L, 2));
+        given(cartService.getCarts(anyLong(), any(), anyInt())).willReturn(mockResult);
+
+        // when & then
+        mockMvc.perform(get("/v1/carts")
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.carts[0].originalPrice").value(30000))
+            .andExpect(jsonPath("$.data.carts[0].discountPrice").value(27000))
+            .andExpect(jsonPath("$.data.carts[0].discountRate").value(10))
+            .andExpect(jsonPath("$.data.hasNext").value(false));
+    }
+
+    @Test
+    @DisplayName("GET /v1/carts - 장바구니가 비어있는 경우 빈 목록 반환")
+    void getCarts_emptyCart_success() throws Exception {
+        // given
+        given(cartService.getCarts(anyLong(), any(), anyInt())).willReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get("/v1/carts")
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.carts.length()").value(0))
+            .andExpect(jsonPath("$.data.hasNext").value(false))
+            .andExpect(jsonPath("$.data.nextCursor").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /v1/carts - 인증 없이 접근 시 401 반환")
+    void getCarts_unauthorized() throws Exception {
+        mockMvc.perform(get("/v1/carts")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
     }
 
     // ======================== POST /v1/carts ========================
