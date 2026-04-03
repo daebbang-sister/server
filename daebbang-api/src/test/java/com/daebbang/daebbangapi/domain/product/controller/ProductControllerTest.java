@@ -497,11 +497,11 @@ class ProductControllerTest {
             ),
             List.of(
                 new ProductColorOption("블랙", "#000000", List.of(
-                    new ProductSizeOption("S", 10, false),
-                    new ProductSizeOption("M", 0, true)
+                    new ProductSizeOption(1L, "S", 10, false),
+                    new ProductSizeOption(2L, "M", 0, true)
                 )),
                 new ProductColorOption("화이트", "#FFFFFF", List.of(
-                    new ProductSizeOption("S", 5, false)
+                    new ProductSizeOption(3L, "S", 5, false)
                 ))
             )
         );
@@ -563,6 +563,7 @@ class ProductControllerTest {
                         fieldWithPath("data.options[].color").type(JsonFieldType.STRING).description("색상명"),
                         fieldWithPath("data.options[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
                         fieldWithPath("data.options[].sizes").type(JsonFieldType.ARRAY).description("사이즈 옵션 목록"),
+                        fieldWithPath("data.options[].sizes[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (장바구니 담기 시 사용)"),
                         fieldWithPath("data.options[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
                         fieldWithPath("data.options[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
                         fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부")
@@ -647,6 +648,98 @@ class ProductControllerTest {
                         fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 상품 수"),
                         fieldWithPath("data.totalPages").type(JsonFieldType.NUMBER).description("전체 페이지 수"),
                         fieldWithPath("data.last").type(JsonFieldType.BOOLEAN).description("마지막 페이지 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/options - 상품 옵션 조회 성공")
+    void getProductOptions_success() throws Exception {
+        // given
+        List<ProductColorOption> options = List.of(
+            new ProductColorOption("블랙", "#000000", List.of(
+                new ProductSizeOption(1L, "S", 10, false),
+                new ProductSizeOption(2L, "M", 0, true)
+            )),
+            new ProductColorOption("화이트", "#FFFFFF", List.of(
+                new ProductSizeOption(3L, "S", 5, false),
+                new ProductSizeOption(4L, "L", 3, false)
+            ))
+        );
+
+        given(productService.getProductOptions(anyLong())).willReturn(options);
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/{productId}/options", 1L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data.length()").value(2))
+            .andExpect(jsonPath("$.data[0].color").value("블랙"))
+            .andExpect(jsonPath("$.data[0].colorCode").value("#000000"))
+            .andExpect(jsonPath("$.data[0].sizes[0].productDetailId").value(1))
+            .andExpect(jsonPath("$.data[0].sizes[0].size").value("S"))
+            .andExpect(jsonPath("$.data[0].sizes[0].stock").value(10))
+            .andExpect(jsonPath("$.data[0].sizes[0].soldOut").value(false))
+            .andExpect(jsonPath("$.data[0].sizes[1].productDetailId").value(2))
+            .andExpect(jsonPath("$.data[0].sizes[1].soldOut").value(true))
+            .andDo(document("products/options-success",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 옵션 조회")
+                    .description("상품 ID로 색상/사이즈 옵션 목록을 조회합니다. sizes[].productDetailId는 장바구니 담기/수정 시 사용합니다.")
+                    .responseSchema(Schema.schema("ProductOptionsResponse"))
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.ARRAY).description("색상 옵션 목록"),
+                        fieldWithPath("data[].color").type(JsonFieldType.STRING).description("색상명"),
+                        fieldWithPath("data[].colorCode").type(JsonFieldType.STRING).description("색상 코드 (HEX)"),
+                        fieldWithPath("data[].sizes").type(JsonFieldType.ARRAY).description("사이즈 옵션 목록"),
+                        fieldWithPath("data[].sizes[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (장바구니 담기/수정 시 사용)"),
+                        fieldWithPath("data[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
+                        fieldWithPath("data[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
+                        fieldWithPath("data[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/options - 옵션이 없는 상품 조회 시 빈 배열 반환")
+    void getProductOptions_empty() throws Exception {
+        // given
+        given(productService.getProductOptions(anyLong())).willReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/{productId}/options", 1L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data").isEmpty())
+            .andDo(document("products/options-empty",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 옵션 조회 - 옵션 없음")
+                    .description("등록된 옵션이 없는 상품 조회 시 빈 배열을 반환합니다.")
+                    .responseSchema(Schema.schema("ProductOptionsResponse"))
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.ARRAY).description("색상 옵션 목록 (빈 배열)")
                     )
                     .build()
                 )));

@@ -1,6 +1,7 @@
 package com.daebbang.daebbangapi.domain.product.controller;
 
 import com.daebbang.daebbangapi.domain.product.dto.response.ProductDetailResponse;
+import com.daebbang.daebbangapi.domain.product.dto.response.ProductOptionsResponse;
 import com.daebbang.daebbangapi.domain.product.dto.response.ProductsCard;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.sort.SortDirection;
@@ -64,6 +65,16 @@ public class ProductController {
         return CommonResponse.success(
             CommonSuccessCode.SELECT_SUCCESS,
             ProductDetailResponse.of(productService.getProductDetail(productId))
+        );
+    }
+
+    @GetMapping("/{productId}/options")
+    public CommonResponse<List<ProductOptionsResponse>> getProductOptions(@PathVariable Long productId) {
+        return CommonResponse.success(
+            CommonSuccessCode.SELECT_SUCCESS,
+            productService.getProductOptions(productId).stream()
+                .map(ProductOptionsResponse::from)
+                .toList()
         );
     }
 
