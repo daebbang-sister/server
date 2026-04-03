@@ -40,42 +40,47 @@ paths:
               examples:
                 cart/get-carts-first-page:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
-                    니다.\",\"data\":{\"carts\":[{\"cartId\":10,\"quantity\":1,\"productName\"\
+                    니다.\",\"data\":{\"carts\":[{\"cartId\":10,\"productId\":100,\"\
+                    quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"\
+                    discountPrice\":30000,\"discountRate\":null,\"color\":\"블랙\",\"\
+                    size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":9,\"productId\":100,\"quantity\":1,\"productName\"\
                     :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
                     discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
-                    :\"https://example.com/image.jpg\"},{\"cartId\":9,\"quantity\"\
-                    :1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
-                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
-                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
-                    :8,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":8,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
                     :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
                     :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":7,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    },{\"cartId\":7,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":6,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
                     :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
                     :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":6,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    },{\"cartId\":5,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":4,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
                     :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
                     :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":5,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
-                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
-                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":4,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
-                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
-                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":3,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
-                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
-                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    }],\"nextCursor\":3,\"hasNext\":true}}"
+                    },{\"cartId\":3,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"}],\"nextCursor\":3,\"hasNext\"\
+                    :true}}"
                 cart/get-carts-last-page:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
-                    니다.\",\"data\":{\"carts\":[{\"cartId\":3,\"quantity\":1,\"productName\"\
+                    니다.\",\"data\":{\"carts\":[{\"cartId\":3,\"productId\":100,\"\
+                    quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"\
+                    discountPrice\":30000,\"discountRate\":null,\"color\":\"블랙\",\"\
+                    size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":2,\"productId\":100,\"quantity\":1,\"productName\"\
                     :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
                     discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
-                    :\"https://example.com/image.jpg\"},{\"cartId\":2,\"quantity\"\
-                    :1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
-                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
-                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
-                    :1,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":1,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
                     :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
                     :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
                     }],\"nextCursor\":null,\"hasNext\":false}}"
@@ -394,9 +399,10 @@ paths:
                     ,\"imageOrder\":1},{\"imageUrl\":\"http://example.com/detail2.jpg\"\
                     ,\"imageOrder\":2}],\"descriptionHtml\":\"<p>상품 상세 설명</p>\",\"\
                     options\":[{\"color\":\"블랙\",\"colorCode\":\"#000000\",\"sizes\"\
-                    :[{\"size\":\"S\",\"stock\":10,\"soldOut\":false},{\"size\":\"\
-                    M\",\"stock\":0,\"soldOut\":true}]},{\"color\":\"화이트\",\"colorCode\"\
-                    :\"#FFFFFF\",\"sizes\":[{\"size\":\"S\",\"stock\":5,\"soldOut\"\
+                    :[{\"productDetailId\":1,\"size\":\"S\",\"stock\":10,\"soldOut\"\
+                    :false},{\"productDetailId\":2,\"size\":\"M\",\"stock\":0,\"soldOut\"\
+                    :true}]},{\"color\":\"화이트\",\"colorCode\":\"#FFFFFF\",\"sizes\"\
+                    :[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"soldOut\"\
                     :false}]}]}}"
         "404":
           description: "404"
@@ -680,8 +686,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -897,6 +903,64 @@ components:
         phoneNumber:
           type: string
           description: 인증번호를 받은 전화번호
+    CartPageResponse:
+      title: CartPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            nextCursor:
+              type: object
+              description: 다음 페이지 cursor (null)
+            carts:
+              type: array
+              description: 장바구니 항목 목록
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: object
+                    description: 할인율 (%)
+                  quantity:
+                    type: number
+                    description: 수량
+                  size:
+                    type: string
+                    description: 사이즈
+                  color:
+                    type: string
+                    description: 색상
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  productId:
+                    type: number
+                    description: 상품 ID
+                  cartId:
+                    type: number
+                    description: 장바구니 항목 ID
+                  discountPrice:
+                    type: number
+                    description: 할인 적용가
+                  mainImageUrl:
+                    type: string
+                    description: 대표 이미지 URL
+                  productName:
+                    type: string
+                    description: 상품명
+            hasNext:
+              type: boolean
+              description: 다음 페이지 존재 여부
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     SmsSendRequest:
       title: SmsSendRequest
       type: object
@@ -973,88 +1037,6 @@ components:
               productName:
                 type: string
                 description: 상품명
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    ProductDetailResponse:
-      title: ProductDetailResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            discountRate:
-              type: object
-              description: 할인율 % (할인 없을 시 null)
-            sellingPrice:
-              type: number
-              description: 판매가
-            originalPrice:
-              type: number
-              description: 정가
-            options:
-              type: array
-              description: 색상 옵션 목록
-              items:
-                type: object
-                properties:
-                  sizes:
-                    type: array
-                    description: 사이즈 옵션 목록
-                    items:
-                      type: object
-                      properties:
-                        size:
-                          type: string
-                          description: 사이즈
-                        stock:
-                          type: number
-                          description: 재고 수량
-                        soldOut:
-                          type: boolean
-                          description: 품절 여부
-                  color:
-                    type: string
-                    description: 색상명
-                  colorCode:
-                    type: string
-                    description: 색상 코드
-            simpleDescription:
-              type: string
-              description: 간단 설명
-            descriptionHtml:
-              type: object
-              description: 상품 상세 HTML
-            id:
-              type: number
-              description: 상품 ID
-            mainImageUrl:
-              type: string
-              description: 메인 이미지 URL
-            categoryName:
-              type: string
-              description: 카테고리명
-            gallery:
-              type: array
-              description: 갤러리 이미지 목록
-              items:
-                type: object
-                properties:
-                  imageUrl:
-                    type: string
-                    description: 갤러리 이미지 URL
-                  imageOrder:
-                    type: number
-                    description: 갤러리 이미지 순서
-            productName:
-              type: string
-              description: 상품명
         success:
           type: boolean
           description: 성공 여부
@@ -1192,61 +1174,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    CartPageResponse:
-      title: CartPageResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            nextCursor:
-              type: object
-              description: 다음 페이지 cursor (null)
-            carts:
-              type: array
-              description: 장바구니 항목 목록
-              items:
-                type: object
-                properties:
-                  discountRate:
-                    type: object
-                    description: 할인율 (%)
-                  quantity:
-                    type: number
-                    description: 수량
-                  size:
-                    type: string
-                    description: 사이즈
-                  color:
-                    type: string
-                    description: 색상
-                  originalPrice:
-                    type: number
-                    description: 정가
-                  cartId:
-                    type: number
-                    description: 장바구니 항목 ID
-                  discountPrice:
-                    type: number
-                    description: 할인 적용가
-                  mainImageUrl:
-                    type: string
-                    description: 대표 이미지 URL
-                  productName:
-                    type: string
-                    description: 상품명
-            hasNext:
-              type: boolean
-              description: 다음 페이지 존재 여부
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     UserInfoResponse:
       title: UserInfoResponse
       type: object
@@ -1324,6 +1251,91 @@ components:
         data:
           type: object
           description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductDetailResponse:
+      title: ProductDetailResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            discountRate:
+              type: object
+              description: 할인율 % (할인 없을 시 null)
+            sellingPrice:
+              type: number
+              description: 판매가
+            originalPrice:
+              type: number
+              description: 정가
+            options:
+              type: array
+              description: 색상 옵션 목록
+              items:
+                type: object
+                properties:
+                  sizes:
+                    type: array
+                    description: 사이즈 옵션 목록
+                    items:
+                      type: object
+                      properties:
+                        size:
+                          type: string
+                          description: 사이즈
+                        stock:
+                          type: number
+                          description: 재고 수량
+                        soldOut:
+                          type: boolean
+                          description: 품절 여부
+                        productDetailId:
+                          type: number
+                          description: 상품 상세 ID (장바구니 담기 시 사용)
+                  color:
+                    type: string
+                    description: 색상명
+                  colorCode:
+                    type: string
+                    description: 색상 코드
+            simpleDescription:
+              type: string
+              description: 간단 설명
+            descriptionHtml:
+              type: object
+              description: 상품 상세 HTML
+            id:
+              type: number
+              description: 상품 ID
+            mainImageUrl:
+              type: string
+              description: 메인 이미지 URL
+            categoryName:
+              type: string
+              description: 카테고리명
+            gallery:
+              type: array
+              description: 갤러리 이미지 목록
+              items:
+                type: object
+                properties:
+                  imageUrl:
+                    type: string
+                    description: 갤러리 이미지 URL
+                  imageOrder:
+                    type: number
+                    description: 갤러리 이미지 순서
+            productName:
+              type: string
+              description: 상품명
         success:
           type: boolean
           description: 성공 여부

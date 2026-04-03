@@ -83,6 +83,11 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
+    @Override
+    public List<ProductColorOption> getProductOptions(Long productId) {
+        return buildColorOptions(productRepository.findProductOptions(productId));
+    }
+
     private List<ProductColorOption> buildColorOptions(List<ProductOptionRaw> raws) {
         Map<String, List<ProductOptionRaw>> byColor = new LinkedHashMap<>();
         for (ProductOptionRaw raw : raws) {
@@ -94,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
                 group.get(0).color(),
                 group.get(0).colorCode(),
                 group.stream()
-                    .map(r -> new ProductSizeOption(r.size(), r.stock(), r.stock() == 0))
+                    .map(r -> new ProductSizeOption(r.productDetailId(), r.size(), r.stock(), r.stock() == 0))
                     .toList()
             ))
             .toList();

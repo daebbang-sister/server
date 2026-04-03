@@ -47,7 +47,7 @@ public record ProductDetailResponse(
                     o.color(),
                     o.colorCode(),
                     o.sizes().stream()
-                        .map(s -> new SizeOption(s.size(), s.stock(), s.soldOut()))
+                        .map(s -> new SizeOption(s.productDetailId(), s.size(), s.stock(), s.soldOut()))
                         .toList()
                 ))
                 .toList())
@@ -58,5 +58,5 @@ public record ProductDetailResponse(
 
     public record ColorOption(String color, String colorCode, List<SizeOption> sizes) {}
 
-    public record SizeOption(String size, Integer stock, boolean soldOut) {}
+    public record SizeOption(Long productDetailId, String size, Integer stock, boolean soldOut) {}
 }

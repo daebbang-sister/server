@@ -215,6 +215,7 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
     public List<ProductOptionRaw> findProductOptions(Long productId) {
         return queryFactory
             .select(Projections.constructor(ProductOptionRaw.class,
+                productDetails.id,
                 productDetails.color,
                 productDetails.colorCode,
                 productDetails.size,

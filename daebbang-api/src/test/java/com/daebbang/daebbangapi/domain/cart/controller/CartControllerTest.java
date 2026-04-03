@@ -102,6 +102,7 @@ class CartControllerTest {
         given(productDetail.getProduct()).willReturn(product);
         given(productDetail.getColor()).willReturn("블랙");
         given(productDetail.getSize()).willReturn("M");
+        given(product.getId()).willReturn(100L);
         given(product.getProductName()).willReturn("테스트 상품");
         given(product.getOriginalPrice()).willReturn(30000);
         given(product.getDiscountType()).willReturn(DiscountType.NONE);
@@ -129,6 +130,7 @@ class CartControllerTest {
         given(productDetail.getProduct()).willReturn(product);
         given(productDetail.getColor()).willReturn("화이트");
         given(productDetail.getSize()).willReturn("L");
+        given(product.getId()).willReturn(200L);
         given(product.getProductName()).willReturn("할인 상품");
         given(product.getOriginalPrice()).willReturn(30000);
         given(product.getDiscountType()).willReturn(DiscountType.ALWAYS);
@@ -169,6 +171,7 @@ class CartControllerTest {
             .andExpect(jsonPath("$.data.hasNext").value(true))
             .andExpect(jsonPath("$.data.nextCursor").value(3))
             .andExpect(jsonPath("$.data.carts[0].cartId").value(10))
+            .andExpect(jsonPath("$.data.carts[0].productId").value(100))
             .andExpect(jsonPath("$.data.carts[0].quantity").value(1))
             .andExpect(jsonPath("$.data.carts[0].productName").value("테스트 상품"))
             .andExpect(jsonPath("$.data.carts[0].originalPrice").value(30000))
@@ -190,6 +193,7 @@ class CartControllerTest {
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data.carts").type(JsonFieldType.ARRAY).description("장바구니 항목 목록"),
                         fieldWithPath("data.carts[].cartId").type(JsonFieldType.NUMBER).description("장바구니 항목 ID"),
+                        fieldWithPath("data.carts[].productId").type(JsonFieldType.NUMBER).description("상품 ID (색상/사이즈 변경 시 GET /v1/products/{productId}/options 호출에 사용)"),
                         fieldWithPath("data.carts[].quantity").type(JsonFieldType.NUMBER).description("수량"),
                         fieldWithPath("data.carts[].productName").type(JsonFieldType.STRING).description("상품명"),
                         fieldWithPath("data.carts[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
@@ -237,6 +241,7 @@ class CartControllerTest {
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data.carts").type(JsonFieldType.ARRAY).description("장바구니 항목 목록"),
                         fieldWithPath("data.carts[].cartId").type(JsonFieldType.NUMBER).description("장바구니 항목 ID"),
+                        fieldWithPath("data.carts[].productId").type(JsonFieldType.NUMBER).description("상품 ID"),
                         fieldWithPath("data.carts[].quantity").type(JsonFieldType.NUMBER).description("수량"),
                         fieldWithPath("data.carts[].productName").type(JsonFieldType.STRING).description("상품명"),
                         fieldWithPath("data.carts[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),

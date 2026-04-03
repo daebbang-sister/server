@@ -497,11 +497,11 @@ class ProductControllerTest {
             ),
             List.of(
                 new ProductColorOption("블랙", "#000000", List.of(
-                    new ProductSizeOption("S", 10, false),
-                    new ProductSizeOption("M", 0, true)
+                    new ProductSizeOption(1L, "S", 10, false),
+                    new ProductSizeOption(2L, "M", 0, true)
                 )),
                 new ProductColorOption("화이트", "#FFFFFF", List.of(
-                    new ProductSizeOption("S", 5, false)
+                    new ProductSizeOption(3L, "S", 5, false)
                 ))
             )
         );
@@ -563,6 +563,7 @@ class ProductControllerTest {
                         fieldWithPath("data.options[].color").type(JsonFieldType.STRING).description("색상명"),
                         fieldWithPath("data.options[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
                         fieldWithPath("data.options[].sizes").type(JsonFieldType.ARRAY).description("사이즈 옵션 목록"),
+                        fieldWithPath("data.options[].sizes[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (장바구니 담기 시 사용)"),
                         fieldWithPath("data.options[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
                         fieldWithPath("data.options[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
                         fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부")
