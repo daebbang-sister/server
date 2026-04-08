@@ -7,7 +7,6 @@ import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcommon.success.CommonSuccessCode;
-import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcommon.util.ValidationUtils;
 import com.daebbang.daebbangcore.domain.auth.service.AuthService;
 import com.daebbang.daebbangcore.domain.user.dto.request.LoginRequest;
