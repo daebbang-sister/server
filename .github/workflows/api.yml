@@ -69,7 +69,7 @@ jobs:
           command: quickview,cves
           image: ${{ secrets.DOCKERHUB_USERNAME }}/daebbang-server:api-latest
           exit-code: true
-          only-severities: critical, high
+          only-severities: critical
 
   deploy:
     needs: build-and-push

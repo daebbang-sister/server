@@ -62,6 +62,7 @@ public class ProductController {
 
     @GetMapping("/{productId}")
     public CommonResponse<ProductDetailResponse> getProductDetail(@PathVariable Long productId) {
+        // TODO : Wish List 찜 목록 여부 필드 값 추가 true/false 보내기
         return CommonResponse.success(
             CommonSuccessCode.SELECT_SUCCESS,
             ProductDetailResponse.of(productService.getProductDetail(productId))
