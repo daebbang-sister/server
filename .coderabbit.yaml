@@ -1,4 +1,5 @@
 reviews:
+  profile: assertive
   review_status: true
   request_changes_workflow: false
   high_level_summary: true
@@ -9,4 +10,22 @@ reviews:
     drafts: false
     base_branches:
       - main
+  path_instructions:
+    - path: "daebbang-api/src/main/java/**/controller/**"
+      instructions: "요청/응답 DTO 유효성 검사(@Valid, @Validated)가 적절히 적용되어 있는지, HTTP 메서드와 상태 코드가 RESTful 원칙에 맞는지 확인해주세요."
+    - path: "daebbang-api/src/main/java/**/filter/**"
+      instructions: "JWT 검증 로직의 보안 취약점(토큰 위변조, 만료 처리, 예외 누락)을 중점적으로 검토해주세요."
+    - path: "daebbang-api/src/main/java/**/config/**"
+      instructions: "Security 설정에서 인증/인가 누락 경로나 CORS 설정 오류 여부를 중점적으로 검토해주세요."
+    - path: "daebbang-core/src/main/java/**/service/**"
+      instructions: "@Transactional 적용 여부, readOnly 구분, 비즈니스 로직이 서비스 레이어에 올바르게 위치하는지 확인해주세요."
+    - path: "daebbang-core/src/main/java/**/repository/**"
+      instructions: "N+1 문제 가능성, 인덱스 미활용 쿼리, 불필요한 전체 조회 여부를 중점적으로 검토해주세요."
+    - path: "daebbang-core/src/main/java/**/entity/**"
+      instructions: "연관관계 매핑(FetchType, CascadeType)이 적절한지, 불필요한 양방향 관계는 없는지 확인해주세요."
+    - path: "**/src/test/**"
+      instructions: "테스트가 의미 있는 케이스를 커버하는지, 경계값과 예외 케이스가 포함되어 있는지 확인해주세요."
+
+tone_instructions: "보안 취약점과 성능 문제(N+1, 불필요한 쿼리)를 최우선으로 지적해주세요. 장기적인 유지보수성과 일관된 코드 스타일 유지 관점에서 피드백해주세요."
+
 language: ko-KR
