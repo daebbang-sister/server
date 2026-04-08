@@ -5,8 +5,10 @@ import java.util.Optional;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 @NullMarked
+@Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("""
