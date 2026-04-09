@@ -92,7 +92,7 @@ class CategoryControllerTest {
             .andExpect(jsonPath("$.data[1].children.length()").value(1))
             .andExpect(jsonPath("$.data[1].children[0].id").value(5))
             .andExpect(jsonPath("$.data[1].children[0].categoryName").value("청바지"))
-            .andDo(document("categories/list-success",
+            .andDo(document("categories/list-01-success",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Category")
                     .summary("전체 카테고리 계층 조회")
@@ -128,7 +128,7 @@ class CategoryControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data").isArray())
             .andExpect(jsonPath("$.data").isEmpty())
-            .andDo(document("categories/list-empty",
+            .andDo(document("categories/list-02-empty",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Category")
                     .summary("전체 카테고리 계층 조회 - 빈 목록")
@@ -162,7 +162,7 @@ class CategoryControllerTest {
             .andExpect(jsonPath("$.data[0].categoryName").value("상의"))
             .andExpect(jsonPath("$.data[0].children").isArray())
             .andExpect(jsonPath("$.data[0].children").isEmpty())
-            .andDo(document("categories/list-no-children",
+            .andDo(document("categories/list-03-no-children",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Category")
                     .summary("전체 카테고리 계층 조회 - 하위 카테고리 없음")

@@ -686,7 +686,7 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.data[0].sizes[0].soldOut").value(false))
             .andExpect(jsonPath("$.data[0].sizes[1].productDetailId").value(2))
             .andExpect(jsonPath("$.data[0].sizes[1].soldOut").value(true))
-            .andDo(document("products/options-success",
+            .andDo(document("products/options-01-success",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Product")
                     .summary("상품 옵션 조회")
@@ -726,7 +726,7 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data").isArray())
             .andExpect(jsonPath("$.data").isEmpty())
-            .andDo(document("products/options-empty",
+            .andDo(document("products/options-02-empty",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Product")
                     .summary("상품 옵션 조회 - 옵션 없음")
@@ -743,5 +743,140 @@ class ProductControllerTest {
                     )
                     .build()
                 )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/search - 키워드 검색 성공")
+    void searchProducts_success() throws Exception {
+        // given
+        given(productService.searchProducts(
+                any(String.class), any(ProductSortType.class), any(SortDirection.class), any(Pageable.class)))
+            .willReturn(createProductPage());
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/search")
+                .param("keyword", "바지")
+                .param("sortType", "NEW")
+                .param("direction", "DESC")
+                .param("page", "0")
+                .param("size", "8")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.content.length()").value(2))
+            .andExpect(jsonPath("$.data.content[0].productName").value("루즈핏 티셔츠"))
+            .andExpect(jsonPath("$.data.totalElements").value(2))
+            .andDo(document("products/search-01-success",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 키워드 검색")
+                    .description("상품명에 키워드가 포함된 상품을 검색합니다. (LIKE %keyword% 방식, 대소문자 구분 없음)")
+                    .responseSchema(Schema.schema("ProductSearchResponse"))
+                    .queryParameters(
+                        parameterWithName("keyword").description("검색 키워드 (예: 바지)").type(SimpleType.STRING),
+                        parameterWithName("sortType").description("정렬 기준 (NEW, LATEST, NAME, PRICE, POPULAR) - 기본값: NEW").type(SimpleType.STRING).optional(),
+                        parameterWithName("direction").description("정렬 방향 (ASC, DESC) - 기본값: DESC").type(SimpleType.STRING).optional(),
+                        parameterWithName("page").description("페이지 번호 (0부터 시작)").type(SimpleType.INTEGER).optional(),
+                        parameterWithName("size").description("페이지 크기").type(SimpleType.INTEGER).optional()
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.content").type(JsonFieldType.ARRAY).description("검색된 상품 목록"),
+                        fieldWithPath("data.content[].id").type(JsonFieldType.NUMBER).description("상품 ID"),
+                        fieldWithPath("data.content[].categoryName").type(JsonFieldType.STRING).description("카테고리명"),
+                        fieldWithPath("data.content[].productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data.content[].mainImageUrl").type(JsonFieldType.STRING).description("메인 이미지 URL"),
+                        fieldWithPath("data.content[].hoverImageUrl").type(JsonFieldType.STRING).optional().description("호버 이미지 URL (없을 수 있음)"),
+                        fieldWithPath("data.content[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data.content[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가"),
+                        fieldWithPath("data.content[].discountRate").type(JsonFieldType.NUMBER).optional().description("할인율 (없을 시 null)"),
+                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열)"),
+                        fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
+                        fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
+                        fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 검색 결과 수"),
+                        fieldWithPath("data.totalPages").type(JsonFieldType.NUMBER).description("전체 페이지 수"),
+                        fieldWithPath("data.last").type(JsonFieldType.BOOLEAN).description("마지막 페이지 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/search - 검색 결과가 없는 경우 빈 목록 반환")
+    void searchProducts_empty() throws Exception {
+        // given
+        given(productService.searchProducts(
+                any(String.class), any(ProductSortType.class), any(SortDirection.class), any(Pageable.class)))
+            .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 8), 0L));
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/search")
+                .param("keyword", "존재하지않는상품명")
+                .param("page", "0")
+                .param("size", "8")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.content").isEmpty())
+            .andExpect(jsonPath("$.data.totalElements").value(0))
+            .andDo(document("products/search-02-empty",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 키워드 검색 - 결과 없음")
+                    .description("검색 결과가 없는 경우 빈 목록을 반환합니다.")
+                    .responseSchema(Schema.schema("ProductSearchResponse"))
+                    .queryParameters(
+                        parameterWithName("keyword").description("검색 키워드").type(SimpleType.STRING),
+                        parameterWithName("page").description("페이지 번호").type(SimpleType.INTEGER).optional(),
+                        parameterWithName("size").description("페이지 크기").type(SimpleType.INTEGER).optional()
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.content").type(JsonFieldType.ARRAY).description("검색된 상품 목록 (빈 배열)"),
+                        fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
+                        fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
+                        fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 검색 결과 수"),
+                        fieldWithPath("data.totalPages").type(JsonFieldType.NUMBER).description("전체 페이지 수"),
+                        fieldWithPath("data.last").type(JsonFieldType.BOOLEAN).description("마지막 페이지 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/search - 빈 키워드 요청 시 400 반환")
+    void searchProducts_blankKeyword() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/search")
+                .param("keyword", "  ")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/search - 50자 초과 키워드 요청 시 400 반환")
+    void searchProducts_keywordTooLong() throws Exception {
+        String longKeyword = "a".repeat(51);
+
+        mockMvc.perform(get(BASE_URL + "/search")
+                .param("keyword", longKeyword)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."));
     }
 }

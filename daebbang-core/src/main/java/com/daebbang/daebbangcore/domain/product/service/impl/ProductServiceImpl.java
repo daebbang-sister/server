@@ -25,9 +25,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductServiceImpl implements ProductService {
 
     private static final int NEW_PRODUCT_DAYS = 30;
@@ -59,6 +61,11 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productRepository.findOnSaleProductsByCategory(selectCategory, sort, direction, pageable);
+    }
+
+    @Override
+    public Page<@NonNull ProductCardQueryResult> searchProducts(String keyword, ProductSortType sort, SortDirection direction, Pageable pageable) {
+        return productRepository.searchProducts(keyword, sort, direction, pageable);
     }
 
     @Override

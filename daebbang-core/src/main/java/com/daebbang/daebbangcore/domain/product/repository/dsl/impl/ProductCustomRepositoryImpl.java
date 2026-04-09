@@ -167,6 +167,33 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
     }
 
     @Override
+    public Page<@NonNull ProductCardQueryResult> searchProducts(String keyword, ProductSortType sort, SortDirection direction, Pageable pageable) {
+        BooleanBuilder condition = new BooleanBuilder();
+        condition.and(products.productName.containsIgnoreCase(keyword));
+        condition.and(products.productStatus.eq(ProductStatus.SALE));
+
+        List<ProductCardQueryResult> content = attachColors(
+            baseQuery()
+                .where(condition)
+                .orderBy(resolveSort(sort, direction))
+                .distinct()
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch()
+        );
+
+        Long total = queryFactory
+            .select(products.id.countDistinct())
+            .from(products)
+            .innerJoin(productCategory).on(productCategory.product.eq(products))
+            .innerJoin(category).on(category.eq(productCategory.category))
+            .where(condition)
+            .fetchOne();
+
+        return new PageImpl<>(content, pageable, Objects.nonNull(total) ? total : 0L);
+    }
+
+    @Override
     public Optional<ProductDetailQueryResult> findProductDetailById(Long productId) {
         return Optional.ofNullable(
             queryFactory

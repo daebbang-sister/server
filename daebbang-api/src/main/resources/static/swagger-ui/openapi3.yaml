@@ -156,9 +156,9 @@ paths:
     get:
       tags:
       - Category
-      summary: 전체 카테고리 계층 조회 - 빈 목록
-      description: 등록된 카테고리가 없는 경우 빈 배열을 반환합니다.
-      operationId: categories/list-
+      summary: 전체 카테고리 계층 조회
+      description: 상위 카테고리와 하위 카테고리를 계층 구조로 반환합니다. 단일 API 호출로 전체 카테고리 트리를 반환합니다.
+      operationId: categories/list-0
       responses:
         "200":
           description: "200"
@@ -167,20 +167,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/CategoryListResponse'
               examples:
-                categories/list-empty:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
-                    니다.\",\"data\":[]}"
-                categories/list-no-children:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
-                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"상의\",\"children\"\
-                    :[]}]}"
-                categories/list-success:
+                categories/list-01-success:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":[{\"id\":1,\"categoryName\":\"상의\",\"children\"\
                     :[{\"id\":3,\"categoryName\":\"반팔\",\"children\":[]},{\"id\":4,\"\
                     categoryName\":\"긴팔\",\"children\":[]}]},{\"id\":2,\"categoryName\"\
                     :\"하의\",\"children\":[{\"id\":5,\"categoryName\":\"청바지\",\"children\"\
                     :[]}]}]}"
+                categories/list-02-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+                categories/list-03-no-children:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"상의\",\"children\"\
+                    :[]}]}"
   /v1/logout:
     delete:
       tags:
@@ -393,6 +393,70 @@ paths:
                     pageNumber\":0,\"pageSize\":8,\"totalElements\":2,\"totalPages\"\
                     :1,\"last\":true}}"
                 products/new-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":8,\"\
+                    totalElements\":0,\"totalPages\":0,\"last\":true}}"
+  /v1/products/search:
+    get:
+      tags:
+      - Product
+      summary: 상품 키워드 검색
+      description: "상품명에 키워드가 포함된 상품을 검색합니다. (LIKE %keyword% 방식, 대소문자 구분 없음)"
+      operationId: products/search-0
+      parameters:
+      - name: keyword
+        in: query
+        description: "검색 키워드 (예: 바지)"
+        required: true
+        schema:
+          type: string
+      - name: sortType
+        in: query
+        description: "정렬 기준 (NEW, LATEST, NAME, PRICE, POPULAR) - 기본값: NEW"
+        required: false
+        schema:
+          type: string
+      - name: direction
+        in: query
+        description: "정렬 방향 (ASC, DESC) - 기본값: DESC"
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: 페이지 번호 (0부터 시작)
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        description: 페이지 크기
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSearchResponse'
+              examples:
+                products/search-01-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[{\"id\":1,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}],\"\
+                    pageNumber\":0,\"pageSize\":8,\"totalElements\":2,\"totalPages\"\
+                    :1,\"last\":true}}"
+                products/search-02-empty:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":8,\"\
                     totalElements\":0,\"totalPages\":0,\"last\":true}}"
@@ -684,9 +748,10 @@ paths:
     get:
       tags:
       - Product
-      summary: 상품 옵션 조회 - 옵션 없음
-      description: 등록된 옵션이 없는 상품 조회 시 빈 배열을 반환합니다.
-      operationId: products/options-
+      summary: 상품 옵션 조회
+      description: "상품 ID로 색상/사이즈 옵션 목록을 조회합니다. sizes[].productDetailId는 장바구니 담기/수\
+        정 시 사용합니다."
+      operationId: products/options-0
       parameters:
       - name: productId
         in: path
@@ -703,10 +768,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProductOptionsResponse'
               examples:
-                products/options-empty:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
-                    니다.\",\"data\":[]}"
-                products/options-success:
+                products/options-01-success:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":[{\"color\":\"블랙\",\"colorCode\":\"#000000\",\"\
                     sizes\":[{\"productDetailId\":1,\"size\":\"S\",\"stock\":10,\"\
@@ -715,6 +777,9 @@ paths:
                     ,\"sizes\":[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"\
                     soldOut\":false},{\"productDetailId\":4,\"size\":\"L\",\"stock\"\
                     :3,\"soldOut\":false}]}]}"
+                products/options-02-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
   /v1/users/check/id:
     get:
       tags:
@@ -1110,49 +1175,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    ProductOptionsResponse:
-      title: ProductOptionsResponse
-      type: object
-      properties:
-        data:
-          type: array
-          description: 색상 옵션 목록
-          items:
-            type: object
-            properties:
-              sizes:
-                type: array
-                description: 사이즈 옵션 목록
-                items:
-                  type: object
-                  properties:
-                    size:
-                      type: string
-                      description: 사이즈
-                    stock:
-                      type: number
-                      description: 재고 수량
-                    soldOut:
-                      type: boolean
-                      description: 품절 여부
-                    productDetailId:
-                      type: number
-                      description: 상품 상세 ID (장바구니 담기/수정 시 사용)
-              color:
-                type: string
-                description: 색상명
-              colorCode:
-                type: string
-                description: 색상 코드 (HEX)
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     FindPasswordRequest:
       title: FindPasswordRequest
       type: object
@@ -1367,6 +1389,76 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    ProductSearchResponse:
+      title: ProductSearchResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 검색된 상품 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  colorCodes:
+                    type: array
+                    description: 색상 코드 목록 (HEX 문자열 배열)
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+                  discountRate:
+                    type: number
+                    description: 할인율 (없을 시 null)
+                  sellingPrice:
+                    type: number
+                    description: 판매가
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  id:
+                    type: number
+                    description: 상품 ID
+                  hoverImageUrl:
+                    type: string
+                    description: 호버 이미지 URL (없을 수 있음)
+                  mainImageUrl:
+                    type: string
+                    description: 메인 이미지 URL
+                  categoryName:
+                    type: string
+                    description: 카테고리명
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 검색 결과 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     ProductDetailResponse:
       title: ProductDetailResponse
       type: object
@@ -1452,6 +1544,18 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    CartSaveRequest:
+      title: CartSaveRequest
+      type: array
+      items:
+        type: object
+        properties:
+          quantity:
+            type: number
+            description: 수량 (최소 1)
+          productDetailId:
+            type: number
+            description: 상품 상세 ID
     CategoryListResponse:
       title: CategoryListResponse
       type: object
@@ -1464,7 +1568,7 @@ components:
             properties:
               children:
                 type: array
-                description: 하위 카테고리 목록
+                description: 하위 카테고리 목록 (빈 배열)
                 items:
                   type: object
                   properties:
@@ -1498,18 +1602,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    CartSaveRequest:
-      title: CartSaveRequest
-      type: array
-      items:
-        type: object
-        properties:
-          quantity:
-            type: number
-            description: 수량 (최소 1)
-          productDetailId:
-            type: number
-            description: 상품 상세 ID
     LogoutResponse:
       title: LogoutResponse
       type: object
@@ -1537,6 +1629,49 @@ components:
               type: string
               description: 발송된 인증번호 (6자리)
           description: 발송 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductOptionsResponse:
+      title: ProductOptionsResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 색상 옵션 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              sizes:
+                type: array
+                description: 사이즈 옵션 목록
+                items:
+                  type: object
+                  properties:
+                    size:
+                      type: string
+                      description: 사이즈
+                    stock:
+                      type: number
+                      description: 재고 수량
+                    soldOut:
+                      type: boolean
+                      description: 품절 여부
+                    productDetailId:
+                      type: number
+                      description: 상품 상세 ID (장바구니 담기/수정 시 사용)
+              color:
+                type: string
+                description: 색상명
+              colorCode:
+                type: string
+                description: 색상 코드 (HEX)
         success:
           type: boolean
           description: 성공 여부
