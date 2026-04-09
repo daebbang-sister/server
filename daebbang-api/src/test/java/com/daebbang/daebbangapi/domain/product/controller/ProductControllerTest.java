@@ -851,4 +851,32 @@ class ProductControllerTest {
                     .build()
                 )));
     }
+
+    @Test
+    @DisplayName("GET /v1/products/search - 빈 키워드 요청 시 400 반환")
+    void searchProducts_blankKeyword() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/search")
+                .param("keyword", "  ")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/search - 50자 초과 키워드 요청 시 400 반환")
+    void searchProducts_keywordTooLong() throws Exception {
+        String longKeyword = "a".repeat(51);
+
+        mockMvc.perform(get(BASE_URL + "/search")
+                .param("keyword", longKeyword)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."));
+    }
 }
