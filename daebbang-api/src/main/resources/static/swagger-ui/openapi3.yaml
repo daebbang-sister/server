@@ -152,6 +152,42 @@ paths:
                 cart/delete-carts:
                   value: "{\"success\":true,\"status\":200,\"message\":\"장바구니 삭제에\
                     \ 성공하였습니다.\",\"data\":null}"
+  /v1/categories:
+    get:
+      tags:
+      - Category
+      summary: 전체 카테고리 계층 조회 - 빈 목록
+      description: 등록된 카테고리가 없는 경우 빈 배열을 반환합니다.
+      operationId: categories/
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+              examples:
+                categories/list-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+                categories/list-no-children:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"상의\",\"children\"\
+                    :[]}]}"
+                categories/list-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"상의\",\"children\"\
+                    :[{\"id\":3,\"categoryName\":\"반팔\",\"children\":[]},{\"id\":4,\"\
+                    categoryName\":\"긴팔\",\"children\":[]}]},{\"id\":2,\"categoryName\"\
+                    :\"하의\",\"children\":[{\"id\":5,\"categoryName\":\"청바지\",\"children\"\
+                    :[]}]}]}"
+                categories/super-list-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+                categories/super-list-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":null,\"categoryName\":\"상의\"},{\"id\"\
+                    :null,\"categoryName\":\"하의\"}]}"
   /v1/logout:
     delete:
       tags:
@@ -315,6 +351,47 @@ paths:
                 cart/update-cart-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 카트 번호입니다.\",\"data\":null}"
+  /v1/categories/{categoryId}:
+    get:
+      tags:
+      - Category
+      summary: 하위 카테고리 목록 조회 - 빈 목록
+      description: 하위 카테고리가 없는 경우 빈 배열을 반환합니다.
+      operationId: categories/child-list-
+      parameters:
+      - name: categoryId
+        in: path
+        description: 상위 카테고리 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChildCategoryListResponse'
+              examples:
+                categories/child-list-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+                categories/child-list-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":null,\"categoryName\":\"반팔\"},{\"id\"\
+                    :null,\"categoryName\":\"긴팔\"},{\"id\":null,\"categoryName\":\"\
+                    니트\"}]}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                categories/child-list-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 카테고리입니다.\",\"data\":null}"
   /v1/products/new:
     get:
       tags:
@@ -1338,6 +1415,31 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    ChildCategoryListResponse:
+      title: ChildCategoryListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 하위 카테고리 목록
+          items:
+            type: object
+            properties:
+              id:
+                type: object
+                description: 카테고리 ID
+              categoryName:
+                type: string
+                description: 카테고리명
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     ProductDetailResponse:
       title: ProductDetailResponse
       type: object
@@ -1462,6 +1564,52 @@ components:
               type: string
               description: 발송된 인증번호 (6자리)
           description: 발송 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    CategoryListResponse:
+      title: CategoryListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 상위 카테고리 목록
+          items:
+            type: object
+            properties:
+              children:
+                type: array
+                description: 하위 카테고리 목록
+                items:
+                  type: object
+                  properties:
+                    children:
+                      type: array
+                      description: "하위의 하위 카테고리 (현재 미사용, 빈 배열)"
+                      items:
+                        oneOf:
+                        - type: object
+                        - type: boolean
+                        - type: string
+                        - type: number
+                    id:
+                      type: object
+                      description: 하위 카테고리 ID
+                    categoryName:
+                      type: string
+                      description: 하위 카테고리명
+              id:
+                type: object
+                description: 카테고리 ID
+              categoryName:
+                type: string
+                description: 카테고리명
         success:
           type: boolean
           description: 성공 여부

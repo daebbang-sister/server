@@ -5,6 +5,7 @@ import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.domain.category.entity.Category;
 import com.daebbang.daebbangcore.domain.category.repository.CategoryRepository;
 import com.daebbang.daebbangcore.domain.category.service.CategoryService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +19,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category getActiveCategoryById(Long id) {
-        return getCategoryById(id);
-    }
-
-    private Category getCategoryById(Long id) {
         return categoryRepository.findCategoryById(id)
             .orElseThrow(() -> new BusinessException(UserErrorCode.CATEGORY_NOT_FOUND));
+    }
+
+    @Override
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAllCategories();
     }
 }

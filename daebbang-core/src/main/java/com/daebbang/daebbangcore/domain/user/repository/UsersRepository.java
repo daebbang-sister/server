@@ -8,10 +8,11 @@ import java.util.Optional;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull Long> {
+public interface UsersRepository extends JpaRepository<@NonNull Users, @NonNull Long> {
 
     @Query("""
     SELECT COUNT(u) > 0
@@ -19,7 +20,10 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
     WHERE u.phoneNumber = :phoneNumber
       AND u.status != :excludeStatus
     """)
-    boolean existsPhoneNumber(String phoneNumber, UserStatus excludeStatus);
+    boolean existsPhoneNumber(
+        @Param("phoneNumber") String phoneNumber,
+        @Param("excludeStatus") UserStatus excludeStatus
+    );
 
     @Query("""
     SELECT COUNT(u) > 0
@@ -27,7 +31,10 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
     WHERE u.loginId = :loginId
       AND u.status != :excludeStatus
     """)
-    boolean existsActiveUser(String loginId, UserStatus excludeStatus);
+    boolean existsActiveUser(
+        @Param("loginId") String loginId,
+        @Param("excludeStatus") UserStatus excludeStatus
+    );
 
     @Query("""
     SELECT COUNT(u) > 0
@@ -37,7 +44,12 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
       AND u.email = :email
       AND u.status != :excludeStatus
     """)
-    boolean existsActiveUser(String username, String loginId, String email, UserStatus excludeStatus);
+    boolean existsActiveUser(
+        @Param("username") String username,
+        @Param("loginId") String loginId,
+        @Param("email") String email,
+        @Param("excludeStatus") UserStatus excludeStatus
+    );
 
     @Query("""
     SELECT u
@@ -46,7 +58,11 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
       AND u.status != :excludeStatus
       AND u.provider = :provider
     """)
-    Optional<Users> findActiveUserByLoginIdAndProvider(String loginId, UserStatus excludeStatus, Provider provider);
+    Optional<Users> findActiveUserByLoginIdAndProvider(
+        @Param("loginId") String loginId,
+        @Param("excludeStatus") UserStatus excludeStatus,
+        @Param("provider") Provider provider
+    );
 
     @Query("""
     SELECT u
@@ -54,7 +70,10 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
     WHERE u.status != :excludeStatus
       AND u.loginId = :loginId
     """)
-    Optional<Users> findActiveUserByLoginId(String loginId, UserStatus excludeStatus);
+    Optional<Users> findActiveUserByLoginId(
+        @Param("loginId") String loginId,
+        @Param("excludeStatus") UserStatus excludeStatus
+    );
 
     @Query("""
     SELECT u
@@ -63,5 +82,9 @@ public interface UsersRepository extends JpaRepository<@NonNull Users,@NonNull L
       AND u.email = :email
       AND u.status != :excludeStatus
     """)
-    List<Users> findActiveUserIdsByUsernameAndEmail(String username, String email, UserStatus excludeStatus);
+    List<Users> findActiveUserIdsByUsernameAndEmail(
+        @Param("username") String username,
+        @Param("email") String email,
+        @Param("excludeStatus") UserStatus excludeStatus
+    );
 }
