@@ -3,7 +3,7 @@ package com.daebbang.daebbangapi.domain.category.controller;
 import com.daebbang.daebbangapi.domain.category.dto.response.CategoryList;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.CommonSuccessCode;
-import com.daebbang.daebbangcore.domain.category.entity.Category;
+import com.daebbang.daebbangcore.domain.category.dto.CategoryHierarchy;
 import com.daebbang.daebbangcore.domain.category.service.CategoryService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,17 +20,8 @@ public class CategoryController {
 
     @GetMapping
     public CommonResponse<List<CategoryList>> getCategories() {
-        List<Category> all = categoryService.getAllCategories();
-
-        List<Category> superCategories = all.stream()
-            .filter(c -> c.getSuperCategory() == null)
-            .toList();
-
-        List<Category> children = all.stream()
-            .filter(c -> c.getSuperCategory() != null)
-            .toList();
-
+        CategoryHierarchy hierarchy = categoryService.getCategoryHierarchy();
         return CommonResponse.success(CommonSuccessCode.SELECT_SUCCESS,
-            CategoryList.from(superCategories, children));
+            CategoryList.from(hierarchy.superCategories(), hierarchy.children()));
     }
 }

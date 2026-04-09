@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
+import com.daebbang.daebbangcore.domain.category.dto.CategoryHierarchy;
 import com.daebbang.daebbangcore.domain.category.entity.Category;
 import com.daebbang.daebbangcore.domain.category.service.CategoryService;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
@@ -65,29 +66,31 @@ class CategoryControllerTest {
         // given
         Category 상의 = mockSuperCategory(1L, "상의");
         Category 하의 = mockSuperCategory(2L, "하의");
-
         Category 반팔 = mockChildCategory(상의, 3L, "반팔");
         Category 긴팔 = mockChildCategory(상의, 4L, "긴팔");
         Category 청바지 = mockChildCategory(하의, 5L, "청바지");
 
-        given(categoryService.getAllCategories()).willReturn(List.of(상의, 하의, 반팔, 긴팔, 청바지));
+        given(categoryService.getCategoryHierarchy())
+            .willReturn(new CategoryHierarchy(List.of(상의, 하의), List.of(반팔, 긴팔, 청바지)));
 
         // when & then
-        mockMvc.perform(get(BASE_URL)
-                .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.status").value(200))
-            .andExpect(jsonPath("$.data").isArray())
             .andExpect(jsonPath("$.data.length()").value(2))
+            .andExpect(jsonPath("$.data[0].id").value(1))
             .andExpect(jsonPath("$.data[0].categoryName").value("상의"))
-            .andExpect(jsonPath("$.data[0].children").isArray())
             .andExpect(jsonPath("$.data[0].children.length()").value(2))
+            .andExpect(jsonPath("$.data[0].children[0].id").value(3))
             .andExpect(jsonPath("$.data[0].children[0].categoryName").value("반팔"))
+            .andExpect(jsonPath("$.data[0].children[1].id").value(4))
             .andExpect(jsonPath("$.data[0].children[1].categoryName").value("긴팔"))
+            .andExpect(jsonPath("$.data[1].id").value(2))
             .andExpect(jsonPath("$.data[1].categoryName").value("하의"))
             .andExpect(jsonPath("$.data[1].children.length()").value(1))
+            .andExpect(jsonPath("$.data[1].children[0].id").value(5))
             .andExpect(jsonPath("$.data[1].children[0].categoryName").value("청바지"))
             .andDo(document("categories/list-success",
                 resource(ResourceSnippetParameters.builder()
@@ -100,10 +103,10 @@ class CategoryControllerTest {
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data").type(JsonFieldType.ARRAY).description("상위 카테고리 목록"),
-                        fieldWithPath("data[].id").type(JsonFieldType.VARIES).description("상위 카테고리 ID"),
+                        fieldWithPath("data[].id").type(JsonFieldType.NUMBER).description("상위 카테고리 ID"),
                         fieldWithPath("data[].categoryName").type(JsonFieldType.STRING).description("상위 카테고리명"),
                         fieldWithPath("data[].children").type(JsonFieldType.ARRAY).description("하위 카테고리 목록"),
-                        fieldWithPath("data[].children[].id").type(JsonFieldType.VARIES).description("하위 카테고리 ID"),
+                        fieldWithPath("data[].children[].id").type(JsonFieldType.NUMBER).description("하위 카테고리 ID"),
                         fieldWithPath("data[].children[].categoryName").type(JsonFieldType.STRING).description("하위 카테고리명"),
                         fieldWithPath("data[].children[].children").type(JsonFieldType.ARRAY).description("하위의 하위 카테고리 (현재 미사용, 빈 배열)")
                     )
@@ -115,11 +118,11 @@ class CategoryControllerTest {
     @DisplayName("GET /v1/categories - 등록된 카테고리가 없는 경우 빈 목록 반환")
     void getCategories_empty() throws Exception {
         // given
-        given(categoryService.getAllCategories()).willReturn(List.of());
+        given(categoryService.getCategoryHierarchy())
+            .willReturn(new CategoryHierarchy(List.of(), List.of()));
 
         // when & then
-        mockMvc.perform(get(BASE_URL)
-                .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
@@ -147,15 +150,15 @@ class CategoryControllerTest {
         // given
         Category 상의 = mockSuperCategory(1L, "상의");
 
-        given(categoryService.getAllCategories()).willReturn(List.of(상의));
+        given(categoryService.getCategoryHierarchy())
+            .willReturn(new CategoryHierarchy(List.of(상의), List.of()));
 
         // when & then
-        mockMvc.perform(get(BASE_URL)
-                .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].id").value(1))
             .andExpect(jsonPath("$.data[0].categoryName").value("상의"))
             .andExpect(jsonPath("$.data[0].children").isArray())
             .andExpect(jsonPath("$.data[0].children").isEmpty())
@@ -170,11 +173,31 @@ class CategoryControllerTest {
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data").type(JsonFieldType.ARRAY).description("상위 카테고리 목록"),
-                        fieldWithPath("data[].id").type(JsonFieldType.VARIES).description("상위 카테고리 ID"),
+                        fieldWithPath("data[].id").type(JsonFieldType.NUMBER).description("상위 카테고리 ID"),
                         fieldWithPath("data[].categoryName").type(JsonFieldType.STRING).description("상위 카테고리명"),
                         fieldWithPath("data[].children").type(JsonFieldType.ARRAY).description("하위 카테고리 목록 (빈 배열)")
                     )
                     .build()
                 )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/categories - 여러 상위 카테고리 중 일부만 하위 카테고리가 있는 경우")
+    void getCategories_mixedChildren() throws Exception {
+        // given
+        Category 상의 = mockSuperCategory(1L, "상의");
+        Category 악세서리 = mockSuperCategory(2L, "악세서리");  // 하위 카테고리 없음
+        Category 반팔 = mockChildCategory(상의, 3L, "반팔");
+
+        given(categoryService.getCategoryHierarchy())
+            .willReturn(new CategoryHierarchy(List.of(상의, 악세서리), List.of(반팔)));
+
+        // when & then
+        mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.length()").value(2))
+            .andExpect(jsonPath("$.data[0].children.length()").value(1))
+            .andExpect(jsonPath("$.data[1].children").isEmpty());
     }
 }

@@ -2,10 +2,10 @@ package com.daebbang.daebbangcore.domain.category.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.domain.category.dto.CategoryHierarchy;
 import com.daebbang.daebbangcore.domain.category.entity.Category;
 import com.daebbang.daebbangcore.domain.category.repository.CategoryRepository;
 import com.daebbang.daebbangcore.domain.category.service.CategoryService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAllCategories();
+    public CategoryHierarchy getCategoryHierarchy() {
+        return CategoryHierarchy.from(categoryRepository.findAllCategories());
     }
 }
