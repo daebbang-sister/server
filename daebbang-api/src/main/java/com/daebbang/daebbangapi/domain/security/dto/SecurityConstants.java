@@ -4,7 +4,8 @@ public abstract class SecurityConstants {
     public static final String[] PUBLIC_GET_URI = {
         "/v1/users/find/**",
         "/v1/users/check/**",
-        "/v1/products/**"
+        "/v1/products/**",
+        "/v1/categories/**"
     };
 
     public static final String[] PUBLIC_POST_URI = {

@@ -36,14 +36,20 @@ public interface CartRepository extends JpaRepository<@NonNull Carts, @NonNull L
     WHERE c.user.id = :userId
       AND c.productDetail.id IN :productDetailIds
     """)
-    List<Carts> findByUserIdAndProductDetailIdIn(Long userId, List<Long> productDetailIds);
+    List<Carts> findByUserIdAndProductDetailIdIn(
+        @Param("userId") Long userId,
+        @Param("productDetailIds") List<Long> productDetailIds
+    );
 
     @Query("""
     SELECT c FROM Carts c
     WHERE c.id = :cartId
       AND c.user.id = :userId
     """)
-    Optional<Carts> findByIdAndUserId(Long cartId, Long userId);
+    Optional<Carts> findByIdAndUserId(
+        @Param("cartId") Long cartId,
+        @Param("userId") Long userId
+    );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -52,7 +58,10 @@ public interface CartRepository extends JpaRepository<@NonNull Carts, @NonNull L
     WHERE c.id IN :cartIds
       AND c.user.id = :userId
     """)
-    void deleteCartsByCartIds(List<Long> cartIds, Long userId);
+    void deleteCartsByCartIds(
+        @Param("cartIds") List<Long> cartIds,
+        @Param("userId") Long userId
+    );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -60,5 +69,5 @@ public interface CartRepository extends JpaRepository<@NonNull Carts, @NonNull L
     FROM Carts c
     WHERE c.user.id = :userId
     """)
-    void deleteAllCartsByUserId(Long userId);
+    void deleteAllCartsByUserId(@Param("userId") Long userId);
 }
