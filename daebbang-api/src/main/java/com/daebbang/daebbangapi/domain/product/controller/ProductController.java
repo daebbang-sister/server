@@ -79,6 +79,22 @@ public class ProductController {
         );
     }
 
+    @GetMapping("/search")
+    public CommonResponse<PageResponse<ProductsCard>> searchProducts(
+        @RequestParam String keyword,
+        @RequestParam(defaultValue = "NEW") ProductSortType sortType,
+        @RequestParam(defaultValue = "DESC") SortDirection direction,
+        Pageable pageable
+    ) {
+        return CommonResponse.success(
+            CommonSuccessCode.SELECT_SUCCESS,
+            PageResponse.from(
+                productService.searchProducts(keyword, sortType, direction, pageable)
+                              .map(ProductsCard::of)
+            )
+        );
+    }
+
     @GetMapping("/category/{categoryId}")
     public CommonResponse<PageResponse<ProductsCard>> getCategoryProductsOnSale(
         @PathVariable Long categoryId,

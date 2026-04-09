@@ -62,6 +62,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<@NonNull ProductCardQueryResult> searchProducts(String keyword, ProductSortType sort, SortDirection direction, Pageable pageable) {
+        return productRepository.searchProducts(keyword, sort, direction, pageable);
+    }
+
+    @Override
     public ProductDetailResult getProductDetail(Long productId) {
         ProductDetailQueryResult detail = productRepository.findProductDetailById(productId)
             .orElseThrow(() -> new BusinessException(UserErrorCode.PRODUCT_NOT_FOUND));

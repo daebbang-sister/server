@@ -20,6 +20,8 @@ public interface ProductCustomRepository {
     List<ProductCardQueryResult> findOnSaleCategoryProducts(Long categoryId, int limit);
     Page<@NonNull ProductCardQueryResult> findOnSaleProductsByCategory(Category category, ProductSortType sort, SortDirection direction, Pageable pageable);
 
+    Page<@NonNull ProductCardQueryResult> searchProducts(String keyword, ProductSortType sort, SortDirection direction, Pageable pageable);
+
     Optional<ProductDetailQueryResult> findProductDetailById(Long productId);
     List<ProductGalleryImageResult> findGalleryImages(Long productId);
     List<ProductOptionRaw> findProductOptions(Long productId);
