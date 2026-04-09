@@ -1175,76 +1175,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    ProductSearchResponse:
-      title: ProductSearchResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            pageNumber:
-              type: number
-              description: 현재 페이지 번호
-            last:
-              type: boolean
-              description: 마지막 페이지 여부
-            totalPages:
-              type: number
-              description: 전체 페이지 수
-            pageSize:
-              type: number
-              description: 페이지 크기
-            content:
-              type: array
-              description: 검색된 상품 목록 (빈 배열)
-              items:
-                type: object
-                properties:
-                  colorCodes:
-                    type: array
-                    description: 색상 코드 목록
-                    items:
-                      oneOf:
-                      - type: object
-                      - type: boolean
-                      - type: string
-                      - type: number
-                  discountRate:
-                    type: object
-                    description: 할인율 (없을 시 null)
-                  sellingPrice:
-                    type: number
-                    description: 판매가
-                  originalPrice:
-                    type: number
-                    description: 정가
-                  id:
-                    type: number
-                    description: 상품 ID
-                  hoverImageUrl:
-                    type: object
-                    description: 호버 이미지 URL (없을 수 있음)
-                  mainImageUrl:
-                    type: string
-                    description: 메인 이미지 URL
-                  categoryName:
-                    type: string
-                    description: 카테고리명
-                  productName:
-                    type: string
-                    description: 상품명
-            totalElements:
-              type: number
-              description: 전체 검색 결과 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     FindPasswordRequest:
       title: FindPasswordRequest
       type: object
@@ -1450,6 +1380,76 @@ components:
         data:
           type: object
           description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductSearchResponse:
+      title: ProductSearchResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 검색된 상품 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  colorCodes:
+                    type: array
+                    description: 색상 코드 목록 (HEX 문자열 배열)
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+                  discountRate:
+                    type: number
+                    description: 할인율 (없을 시 null)
+                  sellingPrice:
+                    type: number
+                    description: 판매가
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  id:
+                    type: number
+                    description: 상품 ID
+                  hoverImageUrl:
+                    type: string
+                    description: 호버 이미지 URL (없을 수 있음)
+                  mainImageUrl:
+                    type: string
+                    description: 메인 이미지 URL
+                  categoryName:
+                    type: string
+                    description: 카테고리명
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 검색 결과 수
         success:
           type: boolean
           description: 성공 여부

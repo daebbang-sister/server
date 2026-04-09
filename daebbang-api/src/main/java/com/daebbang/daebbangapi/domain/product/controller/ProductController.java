@@ -9,15 +9,19 @@ import com.daebbang.daebbangcommon.success.CommonSuccessCode;
 import com.daebbang.daebbangcore.domain.page.PageResponse;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/v1/products")
@@ -81,7 +85,7 @@ public class ProductController {
 
     @GetMapping("/search")
     public CommonResponse<PageResponse<ProductsCard>> searchProducts(
-        @RequestParam String keyword,
+        @RequestParam @NotBlank(message = "검색어를 입력해주세요.") @Size(max = 50, message = "검색어는 50자 이하로 입력해주세요.") String keyword,
         @RequestParam(defaultValue = "NEW") ProductSortType sortType,
         @RequestParam(defaultValue = "DESC") SortDirection direction,
         Pageable pageable

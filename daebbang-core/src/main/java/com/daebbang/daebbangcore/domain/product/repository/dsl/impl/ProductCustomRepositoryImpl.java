@@ -176,13 +176,14 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             baseQuery()
                 .where(condition)
                 .orderBy(resolveSort(sort, direction))
+                .distinct()
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch()
         );
 
         Long total = queryFactory
-            .select(products.count())
+            .select(products.id.countDistinct())
             .from(products)
             .innerJoin(productCategory).on(productCategory.product.eq(products))
             .innerJoin(category).on(category.eq(productCategory.category))
