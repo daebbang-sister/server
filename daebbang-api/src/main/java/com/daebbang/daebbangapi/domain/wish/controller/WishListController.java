@@ -9,6 +9,7 @@ import com.daebbang.daebbangcore.domain.page.PageResponse;
 import com.daebbang.daebbangcore.domain.wish.service.WishListService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +58,9 @@ public class WishListController {
     @DeleteMapping
     public CommonResponse<Void> deleteWishLists(
         @AuthenticationPrincipal Long userId,
-        @RequestParam(name = "ids") @NotEmpty(message = "삭제할 항목 ID를 하나 이상 입력해주세요.") List<Long> wishListIds
+        @RequestParam(name = "ids")
+        @NotEmpty(message = "삭제할 항목 ID를 하나 이상 입력해주세요.")
+        List<@Positive(message = "삭제할 항목 ID는 1 이상이어야 합니다.") Long> wishListIds
     ) {
         wishListService.deleteWishLists(userId, wishListIds);
         return CommonResponse.success(UserSuccessCode.DELETE_WISH_LIST);

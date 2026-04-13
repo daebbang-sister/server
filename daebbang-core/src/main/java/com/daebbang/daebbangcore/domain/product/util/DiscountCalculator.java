@@ -18,6 +18,9 @@ public class DiscountCalculator {
         }
 
         if (Objects.equals(discountType, DiscountType.PERIOD)) {
+            if (Objects.isNull(discountStartDate) || Objects.isNull(discountEndDate)) {
+                return DiscountResult.noDiscount(originalPrice);
+            }
             LocalDate today = LocalDate.now();
             if (today.isBefore(discountStartDate) || today.isAfter(discountEndDate)) {
                 return DiscountResult.noDiscount(originalPrice);

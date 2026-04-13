@@ -338,7 +338,10 @@ class WishListControllerTest {
             .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.status").value(400));
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."))
+            .andExpect(jsonPath("$.errors[0].field").value("productId"))
+            .andExpect(jsonPath("$.errors[0].message").value("상품 ID는 필수입니다."));
     }
 
     @Test

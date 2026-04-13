@@ -936,8 +936,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\

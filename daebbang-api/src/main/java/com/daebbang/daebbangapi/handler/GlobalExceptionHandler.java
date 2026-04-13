@@ -8,6 +8,7 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingRequestCookieException;
@@ -68,6 +69,13 @@ public class GlobalExceptionHandler {
                 .build()
         );
         CommonResponse<Object> response = CommonResponse.error(errorCode.getStatus(), errorCode.getMessage(), errors);
+        return handleExceptionInternal(response);
+    }
+
+    @ExceptionHandler(value = DataIntegrityViolationException.class)
+    public ResponseEntity<@NonNull CommonResponse<Object>> handlerDataIntegrityViolationException(DataIntegrityViolationException e) {
+        ErrorCode errorCode = CommonErrorCode.DUPLICATE_RESOURCE;
+        CommonResponse<Object> response = makeErrorResponse(errorCode);
         return handleExceptionInternal(response);
     }
 
