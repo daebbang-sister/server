@@ -175,37 +175,44 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
         condition.and(products.productStatus.eq(ProductStatus.SALE));
 
         List<Long> productIds = queryFactory
-            .select(products.id)
+            .select(products.id, products.createdAt, products.productName, products.originalPrice)
+            .distinct()
             .from(products)
+            .innerJoin(productCategory).on(productCategory.product.eq(products))
+            .innerJoin(category).on(category.eq(productCategory.category))
             .where(condition)
             .orderBy(resolveSort(sort, direction))
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
-            .fetch();
+            .fetch()
+            .stream()
+            .map(tuple -> tuple.get(products.id))
+            .toList();
 
-        if (productIds.isEmpty()) {
-            return new PageImpl<>(List.of(), pageable, 0L);
-        }
-
-        List<ProductCardQueryResult> content = attachColors(
-            baseQuery()
-                .where(products.id.in(productIds))
-                .orderBy(resolveSort(sort, direction))
-                .fetch()
-        ).stream()
-            .collect(Collectors.collectingAndThen(
-                Collectors.toMap(
-                    ProductCardQueryResult::id,
-                    r -> r,
-                    (a, b) -> a,
-                    LinkedHashMap::new
-                ),
-                m -> new ArrayList<>(m.values())
-            ));
+        List<ProductCardQueryResult> content = productIds.isEmpty()
+            ? List.of()
+            : attachColors(
+                baseQuery()
+                    .where(products.id.in(productIds))
+                    .orderBy(resolveSort(sort, direction), category.id.asc())
+                    .fetch()
+                    .stream()
+                    .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(
+                            ProductCardQueryResult::id,
+                            r -> r,
+                            (a, b) -> a,
+                            LinkedHashMap::new
+                        ),
+                        m -> new ArrayList<>(m.values())
+                    ))
+            );
 
         Long total = queryFactory
-            .select(products.id.count())
+            .select(products.id.countDistinct())
             .from(products)
+            .innerJoin(productCategory).on(productCategory.product.eq(products))
+            .innerJoin(category).on(category.eq(productCategory.category))
             .where(condition)
             .fetchOne();
 
