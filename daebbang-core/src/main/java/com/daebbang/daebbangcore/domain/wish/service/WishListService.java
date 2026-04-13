@@ -1,0 +1,17 @@
+package com.daebbang.daebbangcore.domain.wish.service;
+
+import com.daebbang.daebbangcore.domain.wish.dto.WishListQueryResult;
+import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+public interface WishListService {
+
+    Page<WishListQueryResult> getWishList(Long userId, Pageable pageable);
+
+    void addWishList(Long userId, Long productId);
+
+    void deleteWishLists(Long userId, List<Long> wishListIds);
+
+    void deleteAllWishLists(Long userId);
+}

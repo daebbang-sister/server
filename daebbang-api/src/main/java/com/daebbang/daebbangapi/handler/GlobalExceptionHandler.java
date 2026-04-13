@@ -8,9 +8,11 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingRequestCookieException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -53,6 +55,36 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = MissingRequestCookieException.class)
     public ResponseEntity<@NonNull CommonResponse<Object>> handlerMissingRequestCookieException(MissingRequestCookieException e) {
         ErrorCode errorCode = CommonErrorCode.INVALID_INPUT_DATA;
+        CommonResponse<Object> response = makeErrorResponse(errorCode);
+        return handleExceptionInternal(response);
+    }
+
+    @ExceptionHandler(value = MissingServletRequestParameterException.class)
+    public ResponseEntity<@NonNull CommonResponse<Object>> handlerMissingServletRequestParameterException(MissingServletRequestParameterException e) {
+        ErrorCode errorCode = CommonErrorCode.INVALID_INPUT_DATA;
+        List<CommonResponse.ValidationError> errors = List.of(
+            CommonResponse.ValidationError.builder()
+                .field(e.getParameterName())
+                .message(e.getParameterName() + " 입력값은 필수입니다.")
+                .build()
+        );
+        CommonResponse<Object> response = CommonResponse.error(errorCode.getStatus(), errorCode.getMessage(), errors);
+        return handleExceptionInternal(response);
+    }
+
+    @ExceptionHandler(value = DataIntegrityViolationException.class)
+    public ResponseEntity<@NonNull CommonResponse<Object>> handlerDataIntegrityViolationException(DataIntegrityViolationException e) {
+        log.warn("DataIntegrityViolationException 발생: {}", e.getMessage());
+
+        String causeMessage = e.getMostSpecificCause().getMessage();
+        if (causeMessage != null && (causeMessage.contains("Duplicate entry") || causeMessage.toLowerCase().contains("unique"))) {
+            ErrorCode errorCode = CommonErrorCode.DUPLICATE_RESOURCE;
+            CommonResponse<Object> response = makeErrorResponse(errorCode);
+            return handleExceptionInternal(response);
+        }
+
+        log.error("예상치 못한 데이터 무결성 위반: ", e);
+        ErrorCode errorCode = CommonErrorCode.INTERNAL_SERVER_ERROR;
         CommonResponse<Object> response = makeErrorResponse(errorCode);
         return handleExceptionInternal(response);
     }

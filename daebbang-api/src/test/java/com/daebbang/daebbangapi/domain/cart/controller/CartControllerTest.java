@@ -553,7 +553,7 @@ class CartControllerTest {
                     .description("선택한 장바구니 항목들을 삭제합니다. 본인 소유 항목만 삭제됩니다.")
                     .responseSchema(Schema.schema("SuccessResponse"))
                     .queryParameters(
-                        parameterWithName("ids").description("삭제할 장바구니 항목 ID 목록 (1개 이상)")
+                        parameterWithName("ids").description("삭제할 장바구니 항목 ID 목록 (반복 파라미터, 예: ?ids=1&ids=2, 1개 이상)")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
@@ -563,6 +563,20 @@ class CartControllerTest {
                     )
                     .build()
                 )));
+    }
+
+    @Test
+    @DisplayName("DELETE /v1/carts - ids 파라미터 없을 시 400 반환")
+    void deleteCarts_missingIds() throws Exception {
+        mockMvc.perform(delete("/v1/carts")
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."))
+            .andExpect(jsonPath("$.errors[0].field").value("ids"));
     }
 
     @Test

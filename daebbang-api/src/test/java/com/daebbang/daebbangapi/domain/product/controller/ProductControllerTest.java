@@ -150,7 +150,7 @@ class ProductControllerTest {
                         fieldWithPath("data[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
                         fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
-                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록")
+                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"])")
                     )
                     .build()
                 )));
@@ -242,7 +242,7 @@ class ProductControllerTest {
                         fieldWithPath("data[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
                         fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
-                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록")
+                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"])")
                     )
                     .build()
                 )));
@@ -308,7 +308,7 @@ class ProductControllerTest {
                         fieldWithPath("data.content[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data.content[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
                         fieldWithPath("data.content[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
-                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록"),
+                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"])"),
                         fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                         fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
                         fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 상품 수"),
@@ -428,7 +428,7 @@ class ProductControllerTest {
                         fieldWithPath("data.content[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data.content[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
                         fieldWithPath("data.content[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
-                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록"),
+                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"])"),
                         fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                         fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
                         fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 상품 수"),
@@ -795,7 +795,7 @@ class ProductControllerTest {
                         fieldWithPath("data.content[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
                         fieldWithPath("data.content[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가"),
                         fieldWithPath("data.content[].discountRate").type(JsonFieldType.NUMBER).optional().description("할인율 (없을 시 null)"),
-                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열)"),
+                        fieldWithPath("data.content[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"])"),
                         fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                         fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
                         fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 검색 결과 수"),

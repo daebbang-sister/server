@@ -10,6 +10,8 @@ import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.cart.entity.Carts;
 import com.daebbang.daebbangcore.domain.cart.service.CartService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -66,14 +68,16 @@ public class CartController {
 
     @PatchMapping("/{cartId}")
     public CommonResponse<Void> updateCarts(@AuthenticationPrincipal Long userId,
-        @PathVariable Long cartId, @RequestBody CartUpdate update) {
+        @PathVariable Long cartId, @RequestBody @Valid CartUpdate update) {
         cartService.updateCarts(userId, cartId, update.productDetailsId(), update.quantity());
         return CommonResponse.success(UserSuccessCode.UPDATE_CART);
     }
 
     @DeleteMapping
     public CommonResponse<Void> deleteCarts(@AuthenticationPrincipal Long userId,
-        @RequestParam(name = "ids") List<Long> cartIds) {
+        @RequestParam(name = "ids")
+        @NotEmpty(message = "삭제할 항목 ID를 하나 이상 입력해주세요.")
+        List<@Positive(message = "삭제할 항목 ID는 1 이상이어야 합니다.") Long> cartIds) {
         cartService.deleteCartsByCartsId(cartIds, userId);
         return CommonResponse.success(UserSuccessCode.DELETE_CART);
     }

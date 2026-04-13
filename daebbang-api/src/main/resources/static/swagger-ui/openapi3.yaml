@@ -1,0 +1,1873 @@
+openapi: 3.0.1
+info:
+  title: 대빵 언니 API 서버 API 명세서
+  description: 대빵 언니 API 서버 명세서입니다.
+  version: 1.0.0
+servers:
+- url: https://api.daebbang-sister.shop
+  description: 운영 서버
+- url: http://localhost:8080
+  description: 로컬 개발 서버
+tags: []
+paths:
+  /v1/carts:
+    get:
+      tags:
+      - Cart
+      summary: 장바구니 조회
+      description: 로그인한 회원의 장바구니를 커서 기반 페이지네이션으로 조회합니다. cursor 생략 시 최신 항목부터 반환합니다.
+      operationId: cart/get-carts-
+      parameters:
+      - name: cursor
+        in: query
+        description: 마지막으로 조회한 cartId (첫 페이지 요청 시 생략)
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: "페이지 크기 (기본값: 8)"
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartPageResponse'
+              examples:
+                cart/get-carts-first-page:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"carts\":[{\"cartId\":10,\"productId\":100,\"\
+                    quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"\
+                    discountPrice\":30000,\"discountRate\":null,\"color\":\"블랙\",\"\
+                    size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":9,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":8,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":7,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":6,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":5,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":4,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":3,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"}],\"nextCursor\":3,\"hasNext\"\
+                    :true}}"
+                cart/get-carts-last-page:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"carts\":[{\"cartId\":3,\"productId\":100,\"\
+                    quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"\
+                    discountPrice\":30000,\"discountRate\":null,\"color\":\"블랙\",\"\
+                    size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":2,\"productId\":100,\"quantity\":1,\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
+                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
+                    :\"https://example.com/image.jpg\"},{\"cartId\":1,\"productId\"\
+                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
+                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
+                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    }],\"nextCursor\":null,\"hasNext\":false}}"
+    post:
+      tags:
+      - Cart
+      summary: 장바구니 추가
+      description: 장바구니에 상품을 추가합니다. 이미 담긴 상품이면 수량을 합산합니다. 단건 또는 다건 모두 리스트 형태로 전달합니다.
+      operationId: cart/save-carts
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/CartSaveRequest'
+            examples:
+              cart/save-carts:
+                value: "[{\"productDetailId\":1,\"quantity\":2}]"
+              cart/save-carts-invalid-quantity:
+                value: "[{\"productDetailId\":1,\"quantity\":0}]"
+              cart/save-carts-multiple:
+                value: "[{\"productDetailId\":1,\"quantity\":2},{\"productDetailId\"\
+                  :2,\"quantity\":1},{\"productDetailId\":3,\"quantity\":3}]"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                cart/save-carts:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"장바구니 추가에\
+                    \ 성공하였습니다.\",\"data\":null}"
+                cart/save-carts-multiple:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"장바구니 추가에\
+                    \ 성공하였습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                cart/save-carts-invalid-quantity:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"quantity\",\"message\"\
+                    :\"수량은 최소 한 개 이상 선택해야 합니다.\"}]}"
+    delete:
+      tags:
+      - Cart
+      summary: 장바구니 선택 삭제
+      description: 선택한 장바구니 항목들을 삭제합니다. 본인 소유 항목만 삭제됩니다.
+      operationId: cart/delete-carts
+      parameters:
+      - name: ids
+        in: query
+        description: "삭제할 장바구니 항목 ID 목록 (반복 파라미터, 예: ?ids=1&ids=2, 1개 이상)"
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                cart/delete-carts:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"장바구니 삭제에\
+                    \ 성공하였습니다.\",\"data\":null}"
+  /v1/categories:
+    get:
+      tags:
+      - Category
+      summary: 전체 카테고리 계층 조회
+      description: 상위 카테고리와 하위 카테고리를 계층 구조로 반환합니다. 단일 API 호출로 전체 카테고리 트리를 반환합니다.
+      operationId: categories/list-0
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+              examples:
+                categories/list-01-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"상의\",\"children\"\
+                    :[{\"id\":3,\"categoryName\":\"반팔\",\"children\":[]},{\"id\":4,\"\
+                    categoryName\":\"긴팔\",\"children\":[]}]},{\"id\":2,\"categoryName\"\
+                    :\"하의\",\"children\":[{\"id\":5,\"categoryName\":\"청바지\",\"children\"\
+                    :[]}]}]}"
+                categories/list-02-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+                categories/list-03-no-children:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"상의\",\"children\"\
+                    :[]}]}"
+  /v1/logout:
+    delete:
+      tags:
+      - Auth
+      summary: 로그아웃
+      description: "로그아웃 요청 시 access token 블랙리스트 등록, refresh token Redis 삭제, refresh\
+        \ 쿠키 만료 처리가 수행됩니다."
+      operationId: auth/logout
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+              examples:
+                auth/logout:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"로그아웃에 성공하\
+                    였습니다.\",\"data\":null}"
+                auth/logout-no-access-token:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"로그아웃에 성공하\
+                    였습니다.\",\"data\":null}"
+                auth/logout-no-refresh-cookie:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"로그아웃에 성공하\
+                    였습니다.\",\"data\":null}"
+  /v1/users:
+    get:
+      tags:
+      - User
+      summary: 회원 정보 조회
+      description: JWT 토큰으로 인증된 회원의 정보를 조회합니다.
+      operationId: user/get-user
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰 (로그인 후 발급된 액세스 토큰)
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+              examples:
+                user/get-user:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"id\":1,\"provider\":\"LOCAL\",\"loginId\"\
+                    :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
+                    ,\"userPhoneNumber\":\"010-****-5678\",\"createdAt\":\"2025-01-01T00:00:00\"\
+                    ,\"lastLoginAt\":null}}"
+    post:
+      tags:
+      - User
+      summary: 회원 가입
+      description: 새로운 회원을 등록합니다. 전화번호 인증 완료 후 가입이 가능합니다.
+      operationId: user/join-user
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/JoinUserRequest'
+            examples:
+              user/join-user:
+                value: "{\"name\":\"홍길동\",\"loginId\":\"testuser123\",\"password\"\
+                  :\"Password123!\",\"phoneNumber\":\"010-1234-5678\",\"email\":\"\
+                  test@example.com\",\"address\":{\"alias\":null,\"zipCode\":\"123-4567\"\
+                  ,\"address\":\"테스트시 테스트구 테스트동\",\"detailAddress\":\"테스트 오피스텔 2층\"\
+                  }}"
+              user/join-user-invalid-login-id:
+                value: "{\"name\":\"홍길동\",\"loginId\":\"TestUser123\",\"password\"\
+                  :\"Password123!\",\"phoneNumber\":\"010-1234-5678\",\"email\":\"\
+                  test@example.com\",\"address\":{\"alias\":null,\"zipCode\":\"123-4567\"\
+                  ,\"address\":\"테스트시 테스트구 테스트동\",\"detailAddress\":\"테스트 오피스텔 2층\"\
+                  }}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user/join-user:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"회원 가입에 성공\
+                    하였습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user/join-user-invalid-login-id:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 영문 소문자와 숫자만 입력 가능하며, 특수문자는 사용할 수 없습니다.\"}]}"
+  /v1/wish-lists:
+    get:
+      tags:
+      - WishList
+      summary: 위시리스트 조회
+      description: 로그인한 회원의 위시리스트를 페이지네이션으로 조회합니다. 최신 추가 순으로 정렬됩니다.
+      operationId: wish-lists/list-0
+      parameters:
+      - name: page
+        in: query
+        description: "페이지 번호 (0부터 시작, 기본값: 0)"
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: "페이지 크기 (기본값: 20)"
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishListPageResponse'
+              examples:
+                wish-lists/list-01-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[{\"wishListId\":2,\"productId\":100,\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\",\"productName\"\
+                    :\"테스트 상품\",\"originalPrice\":30000,\"discountRate\":null,\"sellingPrice\"\
+                    :30000},{\"wishListId\":1,\"productId\":200,\"mainImageUrl\":\"\
+                    https://example.com/sale-image.jpg\",\"productName\":\"할인 상품\"\
+                    ,\"originalPrice\":50000,\"discountRate\":10,\"sellingPrice\"\
+                    :45000}],\"pageNumber\":0,\"pageSize\":10,\"totalElements\":2,\"\
+                    totalPages\":1,\"last\":true}}"
+                wish-lists/list-02-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":10,\"\
+                    totalElements\":0,\"totalPages\":0,\"last\":true}}"
+        "401":
+          description: "401"
+    post:
+      tags:
+      - WishList
+      summary: 위시리스트 추가
+      description: 상품 상세 페이지에서 상품을 위시리스트에 추가합니다. 이미 추가된 상품은 409를 반환합니다.
+      operationId: wish-lists/add-0
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/WishListSaveRequest'
+            examples:
+              wish-lists/add-01-success:
+                value: "{\"productId\":100}"
+              wish-lists/add-02-already-exists:
+                value: "{\"productId\":100}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                wish-lists/add-01-success:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"위시리스트 추가에\
+                    \ 성공하였습니다.\",\"data\":null}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                wish-lists/add-02-already-exists:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 위시리스트\
+                    에 추가된 상품입니다.\",\"data\":null}"
+    delete:
+      tags:
+      - WishList
+      summary: 위시리스트 선택 삭제
+      description: "선택한 위시리스트 항목들을 삭제합니다. 본인 소유 항목만 삭제되며, 단건 삭제도 동일하게 처리합니다."
+      operationId: wish-lists/delete-01-selected
+      parameters:
+      - name: ids
+        in: query
+        description: "삭제할 위시리스트 항목 ID 목록 (반복 파라미터, 예: ?ids=1&ids=2, 1개 이상)"
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                wish-lists/delete-01-selected:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 삭제에\
+                    \ 성공하였습니다.\",\"data\":null}"
+  /v1/carts/all:
+    delete:
+      tags:
+      - Cart
+      summary: 장바구니 전체 삭제
+      description: 로그인한 회원의 장바구니를 전체 삭제합니다.
+      operationId: cart/delete-all-carts
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                cart/delete-all-carts:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"장바구니 삭제에\
+                    \ 성공하였습니다.\",\"data\":null}"
+  /v1/carts/{cartId}:
+    patch:
+      tags:
+      - Cart
+      summary: 장바구니 수정
+      description: 장바구니 항목의 색상/사이즈(productDetailId)와 수량을 수정합니다.
+      operationId: cart/update-cart
+      parameters:
+      - name: cartId
+        in: path
+        description: 수정할 장바구니 항목 ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/CartUpdateRequest'
+            examples:
+              cart/update-cart:
+                value: "{\"productDetailsId\":2,\"quantity\":3}"
+              cart/update-cart-not-found:
+                value: "{\"productDetailsId\":2,\"quantity\":3}"
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                cart/update-cart:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"장바구니 수정에\
+                    \ 성공하였습니다.\",\"data\":null}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                cart/update-cart-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 카트 번호입니다.\",\"data\":null}"
+  /v1/products/new:
+    get:
+      tags:
+      - Product
+      summary: 신상품 전체 페이지 조회
+      description: 신상품 전체 페이지를 조회합니다. 등록일 기준 최신순으로 반환되며 페이징이 적용됩니다.
+      operationId: products/new
+      parameters:
+      - name: direction
+        in: query
+        description: "정렬 방향 (ASC: 오래된순, DESC: 최신순) - 기본값: DESC"
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: 페이지 번호 (0부터 시작)
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        description: 페이지 크기
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPageResponse'
+              examples:
+                products/new:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[{\"id\":1,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}],\"\
+                    pageNumber\":0,\"pageSize\":8,\"totalElements\":2,\"totalPages\"\
+                    :1,\"last\":true}}"
+                products/new-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":8,\"\
+                    totalElements\":0,\"totalPages\":0,\"last\":true}}"
+  /v1/products/search:
+    get:
+      tags:
+      - Product
+      summary: 상품 키워드 검색
+      description: "상품명에 키워드가 포함된 상품을 검색합니다. (LIKE %keyword% 방식, 대소문자 구분 없음)"
+      operationId: products/search-0
+      parameters:
+      - name: keyword
+        in: query
+        description: "검색 키워드 (예: 바지)"
+        required: true
+        schema:
+          type: string
+      - name: sortType
+        in: query
+        description: "정렬 기준 (NEW, LATEST, NAME, PRICE, POPULAR) - 기본값: NEW"
+        required: false
+        schema:
+          type: string
+      - name: direction
+        in: query
+        description: "정렬 방향 (ASC, DESC) - 기본값: DESC"
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: 페이지 번호 (0부터 시작)
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        description: 페이지 크기
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSearchResponse'
+              examples:
+                products/search-01-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[{\"id\":1,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}],\"\
+                    pageNumber\":0,\"pageSize\":8,\"totalElements\":2,\"totalPages\"\
+                    :1,\"last\":true}}"
+                products/search-02-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":8,\"\
+                    totalElements\":0,\"totalPages\":0,\"last\":true}}"
+  /v1/products/{productId}:
+    get:
+      tags:
+      - Product
+      summary: 상품 상세 조회
+      description: "상품 ID로 상세 정보를 조회합니다. 갤러리 이미지, 색상/사이즈 옵션, 할인 정보가 포함됩니다."
+      operationId: products/detail
+      parameters:
+      - name: productId
+        in: path
+        description: 상품 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetailResponse'
+              examples:
+                products/detail:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"simpleDescription\":\"편안한 루즈핏 티셔츠\",\"mainImageUrl\"\
+                    :\"http://example.com/main1.jpg\",\"originalPrice\":50000,\"sellingPrice\"\
+                    :40000,\"discountRate\":20,\"gallery\":[{\"imageUrl\":\"http://example.com/detail1.jpg\"\
+                    ,\"imageOrder\":1},{\"imageUrl\":\"http://example.com/detail2.jpg\"\
+                    ,\"imageOrder\":2}],\"descriptionHtml\":\"<p>상품 상세 설명</p>\",\"\
+                    options\":[{\"color\":\"블랙\",\"colorCode\":\"#000000\",\"sizes\"\
+                    :[{\"productDetailId\":1,\"size\":\"S\",\"stock\":10,\"soldOut\"\
+                    :false},{\"productDetailId\":2,\"size\":\"M\",\"stock\":0,\"soldOut\"\
+                    :true}]},{\"color\":\"화이트\",\"colorCode\":\"#FFFFFF\",\"sizes\"\
+                    :[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"soldOut\"\
+                    :false}]}]}}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                products/detail-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 상품입니다.\",\"data\":null}"
+  /v1/sms/send:
+    post:
+      tags:
+      - SMS
+      summary: SMS 인증번호 발송
+      description: 입력한 전화번호로 6자리 인증번호를 발송합니다. 이미 가입된 전화번호는 사용할 수 없습니다.
+      operationId: sms/send-auth-code
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/SmsSendRequest'
+            examples:
+              sms/send-auth-code:
+                value: "{\"phoneNumber\":\"010-1234-5678\"}"
+              sms/send-auth-code-duplicate:
+                value: "{\"phoneNumber\":\"010-1234-5678\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSendResponse'
+              examples:
+                sms/send-auth-code:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
+                    니다.\",\"data\":{\"authCode\":\"123456\"}}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/send-auth-code-duplicate:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 사용 중인\
+                    \ 핸드폰 번호입니다.\",\"data\":null}"
+  /v1/sms/verify:
+    post:
+      tags:
+      - SMS
+      summary: SMS 인증번호 검증
+      description: 발송된 인증번호가 올바른지 검증합니다. 인증 성공 시 이후 회원 가입이 가능합니다.
+      operationId: sms/verify-auth-code
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/SmsVerifyRequest'
+            examples:
+              sms/verify-auth-code:
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"123456\"\
+                  }"
+              sms/verify-auth-code-expired:
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"123456\"\
+                  }"
+              sms/verify-auth-code-mismatch:
+                value: "{\"phoneNumber\":\"010-1234-5678\",\"authCode\":\"000000\"\
+                  }"
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                sms/verify-auth-code:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"핸드폰 인증에 성\
+                    공하였습니다.\",\"data\":null}"
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/verify-auth-code-expired:
+                  value: "{\"success\":false,\"status\":401,\"message\":\"인증번호가 만료\
+                    되었거나 일치하지 않습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/verify-auth-code-mismatch:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"인증번호 코드가\
+                    \ 일치하지 않습니다.\",\"data\":null}"
+  /v1/tokens/reissues:
+    post:
+      tags:
+      - Auth
+      summary: 토큰 재발급
+      description: Refresh 토큰 쿠키를 이용해 새로운 Access 토큰과 Refresh 토큰을 재발급합니다. 새로운 Refresh
+        토큰은 Set-Cookie 헤더로 반환됩니다.
+      operationId: auth/reissue-tokens
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReissueTokenResponse'
+              examples:
+                auth/reissue-tokens:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
+                    니다.\",\"data\":{\"grantType\":\"Bearer\",\"accessToken\":\"new-access-token\"\
+                    ,\"refreshToken\":null}}"
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                auth/reissue-tokens-expired:
+                  value: "{\"success\":false,\"status\":401,\"message\":\"만료된 토큰입니\
+                    다.\",\"data\":null}"
+                auth/reissue-tokens-invalid:
+                  value: "{\"success\":false,\"status\":401,\"message\":\"유효하지 않은\
+                    \ 토큰입니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                auth/reissue-tokens-missing-cookie:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null}"
+  /v1/wish-lists/all:
+    delete:
+      tags:
+      - WishList
+      summary: 위시리스트 전체 삭제
+      description: 로그인한 회원의 위시리스트를 전체 삭제합니다.
+      operationId: wish-lists/delete-02-all
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                wish-lists/delete-02-all:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 삭제에\
+                    \ 성공하였습니다.\",\"data\":null}"
+  /v1/products/category/{categoryId}:
+    get:
+      tags:
+      - Product
+      summary: 카테고리별 상품 전체 페이지 조회
+      description: 카테고리별 상품 전체 페이지를 조회합니다. 정렬 기준과 방향을 지정할 수 있으며 기본값은 신상품순(최신순)입니다.
+      operationId: products/category
+      parameters:
+      - name: categoryId
+        in: path
+        description: 카테고리 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: sortType
+        in: query
+        description: "정렬 기준 (NEW: 신상품순, LATEST: 최신순, NAME: 상품명순, PRICE: 가격순, POPULAR:\
+          \ 인기순) - 기본값: NEW"
+        required: true
+        schema:
+          type: string
+      - name: direction
+        in: query
+        description: "정렬 방향 (ASC: 오름차순, DESC: 내림차순) - 기본값: DESC"
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: 페이지 번호 (0부터 시작)
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        description: 페이지 크기
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPageResponse'
+              examples:
+                products/category:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[{\"id\":1,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}],\"\
+                    pageNumber\":0,\"pageSize\":8,\"totalElements\":2,\"totalPages\"\
+                    :1,\"last\":true}}"
+                products/category-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":8,\"\
+                    totalElements\":0,\"totalPages\":0,\"last\":true}}"
+  /v1/products/main/new:
+    get:
+      tags:
+      - Product
+      summary: 메인 신상품 조회
+      description: "메인 페이지 신상품 섹션 상품 목록을 조회합니다. 등록일 기준 최신순으로 반환되며, 할인 중인 상품은 할인가와\
+        \ 할인율이 함께 반환됩니다."
+      operationId: products/main-new
+      parameters:
+      - name: limit
+        in: query
+        description: 조회할 상품 수
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMainCardListResponse'
+              examples:
+                products/main-new:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}]}"
+                products/main-new-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+  /v1/products/{productId}/options:
+    get:
+      tags:
+      - Product
+      summary: 상품 옵션 조회
+      description: "상품 ID로 색상/사이즈 옵션 목록을 조회합니다. sizes[].productDetailId는 장바구니 담기/수\
+        정 시 사용합니다."
+      operationId: products/options-0
+      parameters:
+      - name: productId
+        in: path
+        description: 상품 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductOptionsResponse'
+              examples:
+                products/options-01-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"color\":\"블랙\",\"colorCode\":\"#000000\",\"\
+                    sizes\":[{\"productDetailId\":1,\"size\":\"S\",\"stock\":10,\"\
+                    soldOut\":false},{\"productDetailId\":2,\"size\":\"M\",\"stock\"\
+                    :0,\"soldOut\":true}]},{\"color\":\"화이트\",\"colorCode\":\"#FFFFFF\"\
+                    ,\"sizes\":[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"\
+                    soldOut\":false},{\"productDetailId\":4,\"size\":\"L\",\"stock\"\
+                    :3,\"soldOut\":false}]}]}"
+                products/options-02-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+  /v1/users/check/id:
+    get:
+      tags:
+      - User
+      summary: 아이디 중복 확인
+      description: "입력한 로그인 ID가 이미 사용 중인지 확인합니다. 사용 가능하면 200, 중복이면 409를 반환합니다."
+      operationId: user/check-login-id
+      parameters:
+      - name: loginId
+        in: query
+        description: 중복 확인할 로그인 ID (4~16자)
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user/check-login-id:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"사용 가능한 아이\
+                    디입니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user/check-login-id-blank:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                user/check-login-id-invalid:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"}]}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user/check-login-id-duplicate:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 사용 중인\
+                    \ 아이디입니다.\",\"data\":null}"
+  /v1/users/find/id:
+    get:
+      tags:
+      - UserInfo
+      summary: 아이디 찾기
+      description: 이름과 이메일로 마스킹 처리된 로그인 아이디 목록을 조회합니다.
+      operationId: user-info/find-login-id
+      parameters:
+      - name: username
+        in: query
+        description: 회원 이름
+        required: true
+        schema:
+          type: string
+      - name: userEmail
+        in: query
+        description: 이메일 주소
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FindUserIdResponse'
+              examples:
+                user-info/find-login-id:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"userIds\":[{\"id\":\"tes********\",\"provider\"\
+                    :\"LOCAL\"}]}}"
+                user-info/find-login-id-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"userIds\":[]}}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user-info/find-login-id-blank-username:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"username\",\"message\"\
+                    :\"회원 이름은 필수 입력값입니다.\"}]}"
+                user-info/find-login-id-invalid-email:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"userEmail\",\"message\"\
+                    :\"올바른 이메일 형식을 입력해야 합니다.\"}]}"
+  /v1/users/find/password:
+    post:
+      tags:
+      - UserInfo
+      summary: 비밀번호 찾기 이메일 발송
+      description: "이름, 로그인 ID, 이메일로 본인 확인 후 비밀번호 재설정 이메일을 발송합니다."
+      operationId: user-info/find-password
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/FindPasswordRequest'
+            examples:
+              user-info/find-password:
+                value: "{\"username\":\"홍길동\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"test@example.com\"}"
+              user-info/find-password-blank-username:
+                value: "{\"username\":\"\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"test@example.com\"}"
+              user-info/find-password-invalid-email:
+                value: "{\"username\":\"홍길동\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"invalid-email\"}"
+              user-info/find-password-invalid-user-id:
+                value: "{\"username\":\"홍길동\",\"userId\":\"abc\",\"userEmail\":\"\
+                  test@example.com\"}"
+              user-info/find-password-not-found:
+                value: "{\"username\":\"홍길동\",\"userId\":\"testuser123\",\"userEmail\"\
+                  :\"test@example.com\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user-info/find-password:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"이메일 전송에 성\
+                    공하였습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user-info/find-password-blank-username:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"username\",\"message\"\
+                    :\"회원 이름은 비어있어서는 안됩니다.\"}]}"
+                user-info/find-password-invalid-email:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"userEmail\",\"message\"\
+                    :\"올바른 이메일 형식을 입력해야 합니다.\"}]}"
+                user-info/find-password-invalid-user-id:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"userId\",\"message\"\
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"}]}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user-info/find-password-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 사용자입니다.\",\"data\":null}"
+  /v1/products/main/category/{categoryId}:
+    get:
+      tags:
+      - Product
+      summary: 메인 카테고리별 상품 조회
+      description: 메인 페이지 카테고리별 상품 목록을 조회합니다. 등록일 기준 최신순으로 반환됩니다.
+      operationId: products/main-category
+      parameters:
+      - name: categoryId
+        in: path
+        description: 카테고리 ID
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: 조회할 상품 수
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMainCardListResponse'
+              examples:
+                products/main-category:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}]}"
+                products/main-category-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
+components:
+  schemas:
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부 (false)
+        message:
+          type: string
+          description: 오류 메시지
+        errors:
+          type: array
+          description: 필드 유효성 검증 오류 목록
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: 오류 필드명
+              message:
+                type: string
+                description: 오류 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드 (400)
+    SmsVerifyRequest:
+      title: SmsVerifyRequest
+      type: object
+      properties:
+        authCode:
+          type: string
+          description: 수신한 6자리 인증번호
+        phoneNumber:
+          type: string
+          description: 인증번호를 받은 전화번호
+    CartPageResponse:
+      title: CartPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            nextCursor:
+              type: object
+              description: 다음 페이지 cursor (null)
+            carts:
+              type: array
+              description: 장바구니 항목 목록
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: object
+                    description: 할인율 (%)
+                  quantity:
+                    type: number
+                    description: 수량
+                  size:
+                    type: string
+                    description: 사이즈
+                  color:
+                    type: string
+                    description: 색상
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  productId:
+                    type: number
+                    description: 상품 ID
+                  cartId:
+                    type: number
+                    description: 장바구니 항목 ID
+                  discountPrice:
+                    type: number
+                    description: 할인 적용가
+                  mainImageUrl:
+                    type: string
+                    description: 대표 이미지 URL
+                  productName:
+                    type: string
+                    description: 상품명
+            hasNext:
+              type: boolean
+              description: 다음 페이지 존재 여부
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    SmsSendRequest:
+      title: SmsSendRequest
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
+    ProductPageResponse:
+      title: ProductPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 신상품 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  colorCodes:
+                    type: array
+                    description: "색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"\
+                      ])"
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+                  discountRate:
+                    type: object
+                    description: 할인율 % (할인 없을 시 null)
+                  sellingPrice:
+                    type: number
+                    description: 판매가 (할인 미적용 시 정가와 동일)
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  id:
+                    type: number
+                    description: 상품 ID
+                  hoverImageUrl:
+                    type: object
+                    description: 호버 이미지 URL (없을 수 있음)
+                  mainImageUrl:
+                    type: string
+                    description: 메인 이미지 URL
+                  categoryName:
+                    type: string
+                    description: 카테고리명
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 상품 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ReissueTokenResponse:
+      title: ReissueTokenResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              description: 새로 발급된 Access 토큰
+            grantType:
+              type: string
+              description: 토큰 타입 (Bearer)
+            refreshToken:
+              type: object
+              description: "Refresh 토큰 (응답 바디에는 포함되지 않음, Set-Cookie로 전달)"
+          description: 토큰 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    FindPasswordRequest:
+      title: FindPasswordRequest
+      type: object
+      properties:
+        userEmail:
+          type: string
+          description: 이메일 주소
+        userId:
+          type: string
+          description: 로그인 ID
+        username:
+          type: string
+          description: 회원 이름
+    JoinUserRequest:
+      title: JoinUserRequest
+      type: object
+      properties:
+        password:
+          type: string
+          description: 비밀번호
+        address:
+          type: object
+          properties:
+            zipCode:
+              type: string
+              description: 우편번호
+            address:
+              type: string
+              description: 도로명 주소
+            detailAddress:
+              type: string
+              description: 상세 주소
+            alias:
+              type: object
+              description: 주소 별칭 (null 가능)
+          description: 회원 주소 정보 (null 가능)
+        phoneNumber:
+          type: string
+          description: 전화번호
+        loginId:
+          type: string
+          description: 로그인 ID
+        name:
+          type: string
+          description: 회원 이름
+        email:
+          type: string
+          description: 이메일 주소
+    ProductMainCardListResponse:
+      title: ProductMainCardListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 신상품 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              colorCodes:
+                type: array
+                description: "색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"])"
+                items:
+                  oneOf:
+                  - type: object
+                  - type: boolean
+                  - type: string
+                  - type: number
+              discountRate:
+                type: object
+                description: 할인율 % (할인 없을 시 null)
+              sellingPrice:
+                type: number
+                description: 판매가 (할인 미적용 시 정가와 동일)
+              originalPrice:
+                type: number
+                description: 정가
+              id:
+                type: number
+                description: 상품 ID
+              hoverImageUrl:
+                type: object
+                description: 호버 이미지 URL (없을 수 있음)
+              mainImageUrl:
+                type: string
+                description: 메인 이미지 URL
+              categoryName:
+                type: string
+                description: 카테고리명
+              productName:
+                type: string
+                description: 상품명
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    CartUpdateRequest:
+      title: CartUpdateRequest
+      type: object
+      properties:
+        productDetailsId:
+          type: number
+          description: 변경할 상품 상세 ID
+        quantity:
+          type: number
+          description: 변경할 수량
+    WishListPageResponse:
+      title: WishListPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 위시리스트 항목 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: object
+                    description: 할인율 (%) - 할인 없으면 null
+                  sellingPrice:
+                    type: number
+                    description: 판매가 (할인 없으면 정가와 동일)
+                  wishListId:
+                    type: number
+                    description: 위시리스트 항목 ID (삭제 시 사용)
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  productId:
+                    type: number
+                    description: 상품 ID
+                  mainImageUrl:
+                    type: string
+                    description: 대표 이미지 URL
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 항목 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    WishListSaveRequest:
+      title: WishListSaveRequest
+      type: object
+      properties:
+        productId:
+          type: number
+          description: 추가할 상품 ID
+    UserInfoResponse:
+      title: UserInfoResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              description: 가입 일시
+            lastLoginAt:
+              type: object
+              description: "마지막 로그인 일시 (ISO 8601, 미로그인 시 null)"
+            loginId:
+              type: string
+              description: 로그인 ID
+            provider:
+              type: string
+              description: "로그인 제공자 (LOCAL, KAKAO)"
+            userPhoneNumber:
+              type: string
+              description: "전화번호 (마스킹 처리, 예: 010-****-5678)"
+            userEmail:
+              type: string
+              description: 이메일 주소
+            id:
+              type: number
+              description: 회원 고유 ID
+            userName:
+              type: string
+              description: 회원 이름
+          description: 회원 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    FindUserIdResponse:
+      title: FindUserIdResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            userIds:
+              type: array
+              description: 아이디 목록 (일치하는 회원이 없으면 빈 배열)
+              items:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                    description: "로그인 제공자 (LOCAL, KAKAO)"
+                  id:
+                    type: string
+                    description: "마스킹 처리된 로그인 아이디 (앞 3자리 + ********, 예: tes********)"
+          description: 아이디 찾기 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    SuccessResponse:
+      title: SuccessResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductDetailResponse:
+      title: ProductDetailResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            discountRate:
+              type: object
+              description: 할인율 % (할인 없을 시 null)
+            sellingPrice:
+              type: number
+              description: 판매가
+            originalPrice:
+              type: number
+              description: 정가
+            options:
+              type: array
+              description: 색상 옵션 목록
+              items:
+                type: object
+                properties:
+                  sizes:
+                    type: array
+                    description: 사이즈 옵션 목록
+                    items:
+                      type: object
+                      properties:
+                        size:
+                          type: string
+                          description: 사이즈
+                        stock:
+                          type: number
+                          description: 재고 수량
+                        soldOut:
+                          type: boolean
+                          description: 품절 여부
+                        productDetailId:
+                          type: number
+                          description: 상품 상세 ID (장바구니 담기 시 사용)
+                  color:
+                    type: string
+                    description: 색상명
+                  colorCode:
+                    type: string
+                    description: 색상 코드
+            simpleDescription:
+              type: string
+              description: 간단 설명
+            descriptionHtml:
+              type: object
+              description: 상품 상세 HTML
+            id:
+              type: number
+              description: 상품 ID
+            mainImageUrl:
+              type: string
+              description: 메인 이미지 URL
+            categoryName:
+              type: string
+              description: 카테고리명
+            gallery:
+              type: array
+              description: 갤러리 이미지 목록
+              items:
+                type: object
+                properties:
+                  imageUrl:
+                    type: string
+                    description: 갤러리 이미지 URL
+                  imageOrder:
+                    type: number
+                    description: 갤러리 이미지 순서
+            productName:
+              type: string
+              description: 상품명
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    CartSaveRequest:
+      title: CartSaveRequest
+      type: array
+      items:
+        type: object
+        properties:
+          quantity:
+            type: number
+            description: 수량 (최소 1)
+          productDetailId:
+            type: number
+            description: 상품 상세 ID
+    CategoryListResponse:
+      title: CategoryListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 상위 카테고리 목록
+          items:
+            type: object
+            properties:
+              children:
+                type: array
+                description: 하위 카테고리 목록 (빈 배열)
+                items:
+                  type: object
+                  properties:
+                    children:
+                      type: array
+                      description: "하위의 하위 카테고리 (현재 미사용, 빈 배열)"
+                      items:
+                        oneOf:
+                        - type: object
+                        - type: boolean
+                        - type: string
+                        - type: number
+                    id:
+                      type: number
+                      description: 하위 카테고리 ID
+                    categoryName:
+                      type: string
+                      description: 하위 카테고리명
+              id:
+                type: number
+                description: 상위 카테고리 ID
+              categoryName:
+                type: string
+                description: 상위 카테고리명
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    LogoutResponse:
+      title: LogoutResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductSearchResponse:
+      title: ProductSearchResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 검색된 상품 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  colorCodes:
+                    type: array
+                    description: "색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"\
+                      ])"
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+                  discountRate:
+                    type: number
+                    description: 할인율 (없을 시 null)
+                  sellingPrice:
+                    type: number
+                    description: 판매가
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  id:
+                    type: number
+                    description: 상품 ID
+                  hoverImageUrl:
+                    type: string
+                    description: 호버 이미지 URL (없을 수 있음)
+                  mainImageUrl:
+                    type: string
+                    description: 메인 이미지 URL
+                  categoryName:
+                    type: string
+                    description: 카테고리명
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 검색 결과 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    SmsSendResponse:
+      title: SmsSendResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            authCode:
+              type: string
+              description: 발송된 인증번호 (6자리)
+          description: 발송 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductOptionsResponse:
+      title: ProductOptionsResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 색상 옵션 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              sizes:
+                type: array
+                description: 사이즈 옵션 목록
+                items:
+                  type: object
+                  properties:
+                    size:
+                      type: string
+                      description: 사이즈
+                    stock:
+                      type: number
+                      description: 재고 수량
+                    soldOut:
+                      type: boolean
+                      description: 품절 여부
+                    productDetailId:
+                      type: number
+                      description: 상품 상세 ID (장바구니 담기/수정 시 사용)
+              color:
+                type: string
+                description: 색상명
+              colorCode:
+                type: string
+                description: 색상 코드 (HEX)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
