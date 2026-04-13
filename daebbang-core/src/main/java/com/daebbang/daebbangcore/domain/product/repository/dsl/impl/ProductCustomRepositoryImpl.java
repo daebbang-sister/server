@@ -17,6 +17,8 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -172,15 +174,39 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
         condition.and(products.productName.containsIgnoreCase(keyword));
         condition.and(products.productStatus.eq(ProductStatus.SALE));
 
-        List<ProductCardQueryResult> content = attachColors(
-            baseQuery()
-                .where(condition)
-                .orderBy(resolveSort(sort, direction))
-                .distinct()
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch()
-        );
+        List<Long> productIds = queryFactory
+            .select(products.id, products.createdAt, products.productName, products.originalPrice)
+            .distinct()
+            .from(products)
+            .innerJoin(productCategory).on(productCategory.product.eq(products))
+            .innerJoin(category).on(category.eq(productCategory.category))
+            .where(condition)
+            .orderBy(resolveSort(sort, direction))
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetch()
+            .stream()
+            .map(tuple -> tuple.get(products.id))
+            .toList();
+
+        List<ProductCardQueryResult> content = productIds.isEmpty()
+            ? List.of()
+            : attachColors(
+                baseQuery()
+                    .where(products.id.in(productIds))
+                    .orderBy(resolveSort(sort, direction), category.id.asc())
+                    .fetch()
+                    .stream()
+                    .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(
+                            ProductCardQueryResult::id,
+                            r -> r,
+                            (a, b) -> a,
+                            LinkedHashMap::new
+                        ),
+                        m -> new ArrayList<>(m.values())
+                    ))
+            );
 
         Long total = queryFactory
             .select(products.id.countDistinct())
