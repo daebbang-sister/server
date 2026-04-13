@@ -224,7 +224,14 @@ class WishListControllerTest {
         mockMvc.perform(get(BASE_URL)
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isUnauthorized())
+            .andDo(document("wish-lists/list-03-unauthorized",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("WishList")
+                    .summary("위시리스트 조회 - 인증 실패")
+                    .description("인증 토큰이 없거나 만료된 경우 401을 반환합니다. 모든 위시리스트 API는 로그인이 필요합니다.")
+                    .build()
+                )));
     }
 
     // ======================== POST /v1/wish-lists ========================
@@ -380,7 +387,7 @@ class WishListControllerTest {
                     .description("선택한 위시리스트 항목들을 삭제합니다. 본인 소유 항목만 삭제되며, 단건 삭제도 동일하게 처리합니다.")
                     .responseSchema(Schema.schema("SuccessResponse"))
                     .queryParameters(
-                        parameterWithName("ids").description("삭제할 위시리스트 항목 ID 목록 (1개 이상)")
+                        parameterWithName("ids").description("삭제할 위시리스트 항목 ID 목록 (반복 파라미터, 예: ?ids=1&ids=2, 1개 이상)")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),

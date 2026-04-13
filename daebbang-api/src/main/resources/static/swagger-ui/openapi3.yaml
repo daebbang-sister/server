@@ -137,7 +137,7 @@ paths:
       parameters:
       - name: ids
         in: query
-        description: 삭제할 장바구니 항목 ID 목록 (1개 이상)
+        description: "삭제할 장바구니 항목 ID 목록 (반복 파라미터, 예: ?ids=1&ids=2, 1개 이상)"
         required: true
         schema:
           type: string
@@ -323,6 +323,8 @@ paths:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":{\"content\":[],\"pageNumber\":0,\"pageSize\":10,\"\
                     totalElements\":0,\"totalPages\":0,\"last\":true}}"
+        "401":
+          description: "401"
     post:
       tags:
       - WishList
@@ -369,7 +371,7 @@ paths:
       parameters:
       - name: ids
         in: query
-        description: 삭제할 위시리스트 항목 ID 목록 (1개 이상)
+        description: "삭제할 위시리스트 항목 ID 목록 (반복 파라미터, 예: ?ids=1&ids=2, 1개 이상)"
         required: true
         schema:
           type: string
@@ -936,8 +938,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -1218,6 +1220,77 @@ components:
         phoneNumber:
           type: string
           description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
+    ProductPageResponse:
+      title: ProductPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 신상품 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  colorCodes:
+                    type: array
+                    description: "색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"\
+                      ])"
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+                  discountRate:
+                    type: object
+                    description: 할인율 % (할인 없을 시 null)
+                  sellingPrice:
+                    type: number
+                    description: 판매가 (할인 미적용 시 정가와 동일)
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  id:
+                    type: number
+                    description: 상품 ID
+                  hoverImageUrl:
+                    type: object
+                    description: 호버 이미지 URL (없을 수 있음)
+                  mainImageUrl:
+                    type: string
+                    description: 메인 이미지 URL
+                  categoryName:
+                    type: string
+                    description: 카테고리명
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 상품 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     ReissueTokenResponse:
       title: ReissueTokenResponse
       type: object
@@ -1235,58 +1308,6 @@ components:
               type: object
               description: "Refresh 토큰 (응답 바디에는 포함되지 않음, Set-Cookie로 전달)"
           description: 토큰 정보
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    ProductMainCardListResponse:
-      title: ProductMainCardListResponse
-      type: object
-      properties:
-        data:
-          type: array
-          description: 신상품 목록 (빈 배열)
-          items:
-            type: object
-            properties:
-              colorCodes:
-                type: array
-                description: 색상 코드 목록
-                items:
-                  oneOf:
-                  - type: object
-                  - type: boolean
-                  - type: string
-                  - type: number
-              discountRate:
-                type: object
-                description: 할인율 % (할인 없을 시 null)
-              sellingPrice:
-                type: number
-                description: 판매가 (할인 미적용 시 정가와 동일)
-              originalPrice:
-                type: number
-                description: 정가
-              id:
-                type: number
-                description: 상품 ID
-              hoverImageUrl:
-                type: object
-                description: 호버 이미지 URL (없을 수 있음)
-              mainImageUrl:
-                type: string
-                description: 메인 이미지 URL
-              categoryName:
-                type: string
-                description: 카테고리명
-              productName:
-                type: string
-                description: 상품명
         success:
           type: boolean
           description: 성공 여부
@@ -1344,6 +1365,58 @@ components:
         email:
           type: string
           description: 이메일 주소
+    ProductMainCardListResponse:
+      title: ProductMainCardListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 신상품 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              colorCodes:
+                type: array
+                description: "색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"])"
+                items:
+                  oneOf:
+                  - type: object
+                  - type: boolean
+                  - type: string
+                  - type: number
+              discountRate:
+                type: object
+                description: 할인율 % (할인 없을 시 null)
+              sellingPrice:
+                type: number
+                description: 판매가 (할인 미적용 시 정가와 동일)
+              originalPrice:
+                type: number
+                description: 정가
+              id:
+                type: number
+                description: 상품 ID
+              hoverImageUrl:
+                type: object
+                description: 호버 이미지 URL (없을 수 있음)
+              mainImageUrl:
+                type: string
+                description: 메인 이미지 URL
+              categoryName:
+                type: string
+                description: 카테고리명
+              productName:
+                type: string
+                description: 상품명
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     CartUpdateRequest:
       title: CartUpdateRequest
       type: object
@@ -1403,76 +1476,6 @@ components:
             totalElements:
               type: number
               description: 전체 항목 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    ProductPageResponse:
-      title: ProductPageResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            pageNumber:
-              type: number
-              description: 현재 페이지 번호
-            last:
-              type: boolean
-              description: 마지막 페이지 여부
-            totalPages:
-              type: number
-              description: 전체 페이지 수
-            pageSize:
-              type: number
-              description: 페이지 크기
-            content:
-              type: array
-              description: 상품 목록 (빈 배열)
-              items:
-                type: object
-                properties:
-                  colorCodes:
-                    type: array
-                    description: 색상 코드 목록
-                    items:
-                      oneOf:
-                      - type: object
-                      - type: boolean
-                      - type: string
-                      - type: number
-                  discountRate:
-                    type: object
-                    description: 할인율 % (할인 없을 시 null)
-                  sellingPrice:
-                    type: number
-                    description: 판매가 (할인 미적용 시 정가와 동일)
-                  originalPrice:
-                    type: number
-                    description: 정가
-                  id:
-                    type: number
-                    description: 상품 ID
-                  hoverImageUrl:
-                    type: object
-                    description: 호버 이미지 URL (없을 수 있음)
-                  mainImageUrl:
-                    type: string
-                    description: 메인 이미지 URL
-                  categoryName:
-                    type: string
-                    description: 카테고리명
-                  productName:
-                    type: string
-                    description: 상품명
-            totalElements:
-              type: number
-              description: 전체 상품 수
         success:
           type: boolean
           description: 성공 여부
@@ -1566,76 +1569,6 @@ components:
         data:
           type: object
           description: 응답 데이터 (없음)
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    ProductSearchResponse:
-      title: ProductSearchResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            pageNumber:
-              type: number
-              description: 현재 페이지 번호
-            last:
-              type: boolean
-              description: 마지막 페이지 여부
-            totalPages:
-              type: number
-              description: 전체 페이지 수
-            pageSize:
-              type: number
-              description: 페이지 크기
-            content:
-              type: array
-              description: 검색된 상품 목록 (빈 배열)
-              items:
-                type: object
-                properties:
-                  colorCodes:
-                    type: array
-                    description: 색상 코드 목록 (HEX 문자열 배열)
-                    items:
-                      oneOf:
-                      - type: object
-                      - type: boolean
-                      - type: string
-                      - type: number
-                  discountRate:
-                    type: number
-                    description: 할인율 (없을 시 null)
-                  sellingPrice:
-                    type: number
-                    description: 판매가
-                  originalPrice:
-                    type: number
-                    description: 정가
-                  id:
-                    type: number
-                    description: 상품 ID
-                  hoverImageUrl:
-                    type: string
-                    description: 호버 이미지 URL (없을 수 있음)
-                  mainImageUrl:
-                    type: string
-                    description: 메인 이미지 URL
-                  categoryName:
-                    type: string
-                    description: 카테고리명
-                  productName:
-                    type: string
-                    description: 상품명
-            totalElements:
-              type: number
-              description: 전체 검색 결과 수
         success:
           type: boolean
           description: 성공 여부
@@ -1795,6 +1728,77 @@ components:
         data:
           type: object
           description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductSearchResponse:
+      title: ProductSearchResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pageNumber:
+              type: number
+              description: 현재 페이지 번호
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageSize:
+              type: number
+              description: 페이지 크기
+            content:
+              type: array
+              description: 검색된 상품 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  colorCodes:
+                    type: array
+                    description: "색상 코드 목록 (HEX 문자열 배열, 예: [\"#000000\", \"#FFFFFF\"\
+                      ])"
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+                  discountRate:
+                    type: number
+                    description: 할인율 (없을 시 null)
+                  sellingPrice:
+                    type: number
+                    description: 판매가
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  id:
+                    type: number
+                    description: 상품 ID
+                  hoverImageUrl:
+                    type: string
+                    description: 호버 이미지 URL (없을 수 있음)
+                  mainImageUrl:
+                    type: string
+                    description: 메인 이미지 URL
+                  categoryName:
+                    type: string
+                    description: 카테고리명
+                  productName:
+                    type: string
+                    description: 상품명
+            totalElements:
+              type: number
+              description: 전체 검색 결과 수
         success:
           type: boolean
           description: 성공 여부

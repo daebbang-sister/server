@@ -74,7 +74,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = DataIntegrityViolationException.class)
     public ResponseEntity<@NonNull CommonResponse<Object>> handlerDataIntegrityViolationException(DataIntegrityViolationException e) {
-        ErrorCode errorCode = CommonErrorCode.DUPLICATE_RESOURCE;
+        log.warn("DataIntegrityViolationException 발생: {}", e.getMessage());
+
+        String causeMessage = e.getMostSpecificCause().getMessage();
+        if (causeMessage != null && (causeMessage.contains("Duplicate entry") || causeMessage.toLowerCase().contains("unique"))) {
+            ErrorCode errorCode = CommonErrorCode.DUPLICATE_RESOURCE;
+            CommonResponse<Object> response = makeErrorResponse(errorCode);
+            return handleExceptionInternal(response);
+        }
+
+        log.error("예상치 못한 데이터 무결성 위반: ", e);
+        ErrorCode errorCode = CommonErrorCode.INTERNAL_SERVER_ERROR;
         CommonResponse<Object> response = makeErrorResponse(errorCode);
         return handleExceptionInternal(response);
     }

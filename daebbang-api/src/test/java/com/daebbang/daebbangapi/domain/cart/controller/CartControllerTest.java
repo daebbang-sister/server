@@ -553,7 +553,7 @@ class CartControllerTest {
                     .description("선택한 장바구니 항목들을 삭제합니다. 본인 소유 항목만 삭제됩니다.")
                     .responseSchema(Schema.schema("SuccessResponse"))
                     .queryParameters(
-                        parameterWithName("ids").description("삭제할 장바구니 항목 ID 목록 (1개 이상)")
+                        parameterWithName("ids").description("삭제할 장바구니 항목 ID 목록 (반복 파라미터, 예: ?ids=1&ids=2, 1개 이상)")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),

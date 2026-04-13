@@ -2,7 +2,6 @@ package com.daebbang.daebbangcore.domain.wish.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
-import org.springframework.dao.DataIntegrityViolationException;
 import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
