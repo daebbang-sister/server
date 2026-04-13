@@ -566,6 +566,20 @@ class CartControllerTest {
     }
 
     @Test
+    @DisplayName("DELETE /v1/carts - ids 파라미터 없을 시 400 반환")
+    void deleteCarts_missingIds() throws Exception {
+        mockMvc.perform(delete("/v1/carts")
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."))
+            .andExpect(jsonPath("$.errors[0].field").value("ids"));
+    }
+
+    @Test
     @DisplayName("DELETE /v1/carts?ids= - 인증 없이 접근 시 401 반환")
     void deleteCarts_unauthorized() throws Exception {
         mockMvc.perform(delete("/v1/carts")

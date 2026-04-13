@@ -21,7 +21,10 @@ public enum UserSuccessCode implements SuccessCode {
     UPDATE_CART(200, "장바구니 수정에 성공하였습니다."),
     DELETE_CART(200, "장바구니 삭제에 성공하였습니다."),
 
-    VERIFY_AUTH_CODE(200, "핸드폰 인증에 성공하였습니다.");
+    VERIFY_AUTH_CODE(200, "핸드폰 인증에 성공하였습니다."),
+
+    ADD_WISH_LIST(201, "위시리스트 추가에 성공하였습니다."),
+    DELETE_WISH_LIST(200, "위시리스트 삭제에 성공하였습니다.");
 
     private final int status;
     private final String message;

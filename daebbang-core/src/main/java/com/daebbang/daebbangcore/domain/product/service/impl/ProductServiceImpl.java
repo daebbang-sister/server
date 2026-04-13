@@ -11,7 +11,9 @@ import com.daebbang.daebbangcore.domain.product.dto.ProductDetailQueryResult;
 import com.daebbang.daebbangcore.domain.product.dto.ProductDetailResult;
 import com.daebbang.daebbangcore.domain.product.dto.ProductOptionRaw;
 import com.daebbang.daebbangcore.domain.product.dto.ProductSizeOption;
+import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
+import com.daebbang.daebbangcore.domain.product.entity.ProductStatus;
 import com.daebbang.daebbangcore.domain.product.repository.ProductRepository;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
 import java.time.LocalDate;
@@ -66,6 +68,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<@NonNull ProductCardQueryResult> searchProducts(String keyword, ProductSortType sort, SortDirection direction, Pageable pageable) {
         return productRepository.searchProducts(keyword, sort, direction, pageable);
+    }
+
+    @Override
+    public Products getOnSaleProductById(Long productId) {
+        return productRepository.findByIdAndStatusAndNotDeleted(productId, ProductStatus.SALE)
+            .orElseThrow(() -> new BusinessException(UserErrorCode.PRODUCT_NOT_FOUND));
     }
 
     @Override

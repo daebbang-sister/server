@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingRequestCookieException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -54,6 +55,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<@NonNull CommonResponse<Object>> handlerMissingRequestCookieException(MissingRequestCookieException e) {
         ErrorCode errorCode = CommonErrorCode.INVALID_INPUT_DATA;
         CommonResponse<Object> response = makeErrorResponse(errorCode);
+        return handleExceptionInternal(response);
+    }
+
+    @ExceptionHandler(value = MissingServletRequestParameterException.class)
+    public ResponseEntity<@NonNull CommonResponse<Object>> handlerMissingServletRequestParameterException(MissingServletRequestParameterException e) {
+        ErrorCode errorCode = CommonErrorCode.INVALID_INPUT_DATA;
+        List<CommonResponse.ValidationError> errors = List.of(
+            CommonResponse.ValidationError.builder()
+                .field(e.getParameterName())
+                .message(e.getParameterName() + " 입력값은 필수입니다.")
+                .build()
+        );
+        CommonResponse<Object> response = CommonResponse.error(errorCode.getStatus(), errorCode.getMessage(), errors);
         return handleExceptionInternal(response);
     }
 
