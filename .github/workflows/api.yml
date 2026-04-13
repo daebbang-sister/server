@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
+      - 'build.gradle.kts'
       - 'daebbang-api/**'
       - 'daebbang-core/**'
       - 'daebbang-common/**'

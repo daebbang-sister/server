@@ -4,6 +4,7 @@ on:
     types: [ "opened", "synchronize", "reopened" ]
     branches: [ "main" ]
     paths:
+      - 'build.gradle.kts'
       - 'daebbang-api/**'
       - 'daebbang-core/**'
       - 'daebbang-common/**'
