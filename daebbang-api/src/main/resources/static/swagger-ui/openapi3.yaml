@@ -41,49 +41,53 @@ paths:
                 cart/get-carts-first-page:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":{\"carts\":[{\"cartId\":10,\"productId\":100,\"\
-                    quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"\
-                    discountPrice\":30000,\"discountRate\":null,\"color\":\"블랙\",\"\
-                    size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":9,\"productId\":100,\"quantity\":1,\"productName\"\
-                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
-                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
-                    :\"https://example.com/image.jpg\"},{\"cartId\":8,\"productId\"\
-                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
-                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
-                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":7,\"productId\":100,\"quantity\":1,\"productName\"\
-                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
-                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
-                    :\"https://example.com/image.jpg\"},{\"cartId\":6,\"productId\"\
-                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
-                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
-                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":5,\"productId\":100,\"quantity\":1,\"productName\"\
-                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
-                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
-                    :\"https://example.com/image.jpg\"},{\"cartId\":4,\"productId\"\
-                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
-                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
-                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":3,\"productId\":100,\"quantity\":1,\"productName\"\
-                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
-                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
-                    :\"https://example.com/image.jpg\"}],\"nextCursor\":3,\"hasNext\"\
-                    :true}}"
+                    productDetailId\":500,\"quantity\":1,\"productName\":\"테스트 상품\"\
+                    ,\"originalPrice\":30000,\"discountPrice\":30000,\"discountRate\"\
+                    :null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":9,\"productId\":100,\"productDetailId\":500,\"quantity\"\
+                    :1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :8,\"productId\":100,\"productDetailId\":500,\"quantity\":1,\"\
+                    productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :7,\"productId\":100,\"productDetailId\":500,\"quantity\":1,\"\
+                    productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :6,\"productId\":100,\"productDetailId\":500,\"quantity\":1,\"\
+                    productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :5,\"productId\":100,\"productDetailId\":500,\"quantity\":1,\"\
+                    productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :4,\"productId\":100,\"productDetailId\":500,\"quantity\":1,\"\
+                    productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :3,\"productId\":100,\"productDetailId\":500,\"quantity\":1,\"\
+                    productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"}],\"nextCursor\"\
+                    :3,\"hasNext\":true}}"
                 cart/get-carts-last-page:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":{\"carts\":[{\"cartId\":3,\"productId\":100,\"\
-                    quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"\
-                    discountPrice\":30000,\"discountRate\":null,\"color\":\"블랙\",\"\
-                    size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    },{\"cartId\":2,\"productId\":100,\"quantity\":1,\"productName\"\
-                    :\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\":30000,\"\
-                    discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\"\
-                    :\"https://example.com/image.jpg\"},{\"cartId\":1,\"productId\"\
-                    :100,\"quantity\":1,\"productName\":\"테스트 상품\",\"originalPrice\"\
-                    :30000,\"discountPrice\":30000,\"discountRate\":null,\"color\"\
-                    :\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
-                    }],\"nextCursor\":null,\"hasNext\":false}}"
+                    productDetailId\":500,\"quantity\":1,\"productName\":\"테스트 상품\"\
+                    ,\"originalPrice\":30000,\"discountPrice\":30000,\"discountRate\"\
+                    :null,\"color\":\"블랙\",\"size\":\"M\",\"mainImageUrl\":\"https://example.com/image.jpg\"\
+                    },{\"cartId\":2,\"productId\":100,\"productDetailId\":500,\"quantity\"\
+                    :1,\"productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"},{\"cartId\"\
+                    :1,\"productId\":100,\"productDetailId\":500,\"quantity\":1,\"\
+                    productName\":\"테스트 상품\",\"originalPrice\":30000,\"discountPrice\"\
+                    :30000,\"discountRate\":null,\"color\":\"블랙\",\"size\":\"M\",\"\
+                    mainImageUrl\":\"https://example.com/image.jpg\"}],\"nextCursor\"\
+                    :null,\"hasNext\":false}}"
     post:
       tags:
       - Cart
@@ -1155,64 +1159,6 @@ components:
         phoneNumber:
           type: string
           description: 인증번호를 받은 전화번호
-    CartPageResponse:
-      title: CartPageResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            nextCursor:
-              type: object
-              description: 다음 페이지 cursor (null)
-            carts:
-              type: array
-              description: 장바구니 항목 목록
-              items:
-                type: object
-                properties:
-                  discountRate:
-                    type: object
-                    description: 할인율 (%)
-                  quantity:
-                    type: number
-                    description: 수량
-                  size:
-                    type: string
-                    description: 사이즈
-                  color:
-                    type: string
-                    description: 색상
-                  originalPrice:
-                    type: number
-                    description: 정가
-                  productId:
-                    type: number
-                    description: 상품 ID
-                  cartId:
-                    type: number
-                    description: 장바구니 항목 ID
-                  discountPrice:
-                    type: number
-                    description: 할인 적용가
-                  mainImageUrl:
-                    type: string
-                    description: 대표 이미지 URL
-                  productName:
-                    type: string
-                    description: 상품명
-            hasNext:
-              type: boolean
-              description: 다음 페이지 존재 여부
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     SmsSendRequest:
       title: SmsSendRequest
       type: object
@@ -1553,6 +1499,67 @@ components:
                     type: string
                     description: "마스킹 처리된 로그인 아이디 (앞 3자리 + ********, 예: tes********)"
           description: 아이디 찾기 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    CartPageResponse:
+      title: CartPageResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            nextCursor:
+              type: object
+              description: 다음 페이지 cursor (null)
+            carts:
+              type: array
+              description: 장바구니 항목 목록
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: object
+                    description: 할인율 (%)
+                  quantity:
+                    type: number
+                    description: 수량
+                  size:
+                    type: string
+                    description: 사이즈
+                  color:
+                    type: string
+                    description: 색상
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  productId:
+                    type: number
+                    description: 상품 ID
+                  cartId:
+                    type: number
+                    description: 장바구니 항목 ID
+                  discountPrice:
+                    type: number
+                    description: 할인 적용가
+                  mainImageUrl:
+                    type: string
+                    description: 대표 이미지 URL
+                  productName:
+                    type: string
+                    description: 상품명
+                  productDetailId:
+                    type: number
+                    description: 상품 상세 ID
+            hasNext:
+              type: boolean
+              description: 다음 페이지 존재 여부
         success:
           type: boolean
           description: 성공 여부
