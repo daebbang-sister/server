@@ -12,6 +12,7 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -22,22 +23,22 @@ import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
-import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
-import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
 import com.daebbang.daebbangapi.domain.users.dto.vo.AddressVO;
 import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
+import com.daebbang.daebbangcommon.error.BusinessException;
+import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.domain.address.entity.Address;
+import com.daebbang.daebbangcore.domain.address.service.AddressService;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
-import com.daebbang.daebbangcore.domain.user.entity.Provider;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import static com.epages.restdocs.apispec.ResourceDocumentation.headerWithName;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,9 @@ class UserControllerTest {
     private UserMapper userMapper;
 
     @MockitoBean
+    private AddressService addressService;
+
+    @MockitoBean
     private JwtUtils jwtUtils;
 
     @MockitoBean
@@ -80,31 +84,19 @@ class UserControllerTest {
     @MockitoBean
     private Oauth2UserDetailsService oauth2UserDetailsService;
 
-    @Test
-    @DisplayName("GET /v1/users - 회원 정보 조회 성공")
-    void getUser_success() throws Exception {
-        // given
-        Long userId = 1L;
-        Users mockUser = Users.createLocalUser("testuser", "encoded_password", "홍길동", "test@example.com", "01012345678");
+    private static final UsernamePasswordAuthenticationToken AUTH =
+        new UsernamePasswordAuthenticationToken(1L, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
-        UserInfo mockUserInfo = UserInfo.builder()
-            .id(userId)
-            .provider(Provider.LOCAL)
-            .loginId("testuser")
-            .userName("홍길동")
-            .userEmail("test@example.com")
-            .userPhoneNumber("010-****-5678")
-            .createdAt(LocalDateTime.of(2025, 1, 1, 0, 0, 0))
-            .lastLoginAt(null)
-            .build();
+    @Test
+    @DisplayName("GET /v1/users - 기본 주소 없이 회원 정보 조회 성공")
+    void getUser_success_without_default_address() throws Exception {
+        Users mockUser = Users.createLocalUser("testuser", "encoded_password", "홍길동", "test@example.com", "010-1234-5678");
 
         given(userService.getUserById(anyLong())).willReturn(mockUser);
-        given(userMapper.toUserInfo(any(Users.class))).willReturn(mockUserInfo);
+        given(addressService.findDefaultByUserId(anyLong())).willReturn(Optional.empty());
 
-        // when & then
         mockMvc.perform(get("/v1/users")
-                .with(authentication(new UsernamePasswordAuthenticationToken(
-                    userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")))))
+                .with(authentication(AUTH))
                 .header("Authorization", "Bearer test-jwt-token")
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
@@ -115,28 +107,91 @@ class UserControllerTest {
             .andExpect(jsonPath("$.data.loginId").value("testuser"))
             .andExpect(jsonPath("$.data.userName").value("홍길동"))
             .andExpect(jsonPath("$.data.userEmail").value("test@example.com"))
-            .andDo(document("user/get-user",
+            .andExpect(jsonPath("$.data.defaultAddress").isEmpty())
+            .andDo(document("user/get-user-no-address",
                 resource(ResourceSnippetParameters.builder()
                     .tag("User")
-                    .summary("회원 정보 조회")
-                    .description("JWT 토큰으로 인증된 회원의 정보를 조회합니다.")
+                    .summary("회원 정보 조회 (기본 주소 없음)")
+                    .description("JWT 토큰으로 인증된 회원의 정보를 조회합니다. 기본 배송지가 없을 경우 defaultAddress는 null입니다.")
                     .responseSchema(Schema.schema("UserInfoResponse"))
                     .requestHeaders(
-                        headerWithName("Authorization").description("Bearer JWT 토큰 (로그인 후 발급된 액세스 토큰)")
+                        headerWithName("Authorization").description("Bearer JWT 토큰")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data").type(JsonFieldType.OBJECT).description("회원 정보"),
-                        fieldWithPath("data.id").type(JsonFieldType.NUMBER).description("회원 고유 ID"),
+                        fieldWithPath("data.id").type(JsonFieldType.VARIES).optional().description("회원 고유 ID"),
                         fieldWithPath("data.provider").type(JsonFieldType.STRING).description("로그인 제공자 (LOCAL, KAKAO)"),
                         fieldWithPath("data.loginId").type(JsonFieldType.STRING).description("로그인 ID"),
                         fieldWithPath("data.userName").type(JsonFieldType.STRING).description("회원 이름"),
                         fieldWithPath("data.userEmail").type(JsonFieldType.STRING).description("이메일 주소"),
                         fieldWithPath("data.userPhoneNumber").type(JsonFieldType.STRING).description("전화번호 (마스킹 처리, 예: 010-****-5678)"),
-                        fieldWithPath("data.createdAt").type(JsonFieldType.STRING).description("가입 일시"),
-                        fieldWithPath("data.lastLoginAt").type(JsonFieldType.VARIES).optional().description("마지막 로그인 일시 (ISO 8601, 미로그인 시 null)")
+                        fieldWithPath("data.createdAt").type(JsonFieldType.VARIES).optional().description("가입 일시"),
+                        fieldWithPath("data.lastLoginAt").type(JsonFieldType.VARIES).optional().description("마지막 로그인 일시 (미로그인 시 null)"),
+                        fieldWithPath("data.defaultAddress").type(JsonFieldType.VARIES).optional().description("기본 배송지 (없을 경우 null)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/users - 기본 주소 포함 회원 정보 조회 성공")
+    void getUser_success_with_default_address() throws Exception {
+        Users mockUser = Users.createLocalUser("testuser", "encoded_password", "홍길동", "test@example.com", "010-1234-5678");
+        Address mockAddress = Address.create(
+            mockUser, "홍길동", "010-1234-5678", "집",
+            com.daebbang.daebbangcore.domain.address.entity.AddressVO.of("12345", "서울시 강남구 테헤란로", "101호"),
+            true
+        );
+
+        given(userService.getUserById(anyLong())).willReturn(mockUser);
+        given(addressService.findDefaultByUserId(anyLong())).willReturn(Optional.of(mockAddress));
+
+        mockMvc.perform(get("/v1/users")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.loginId").value("testuser"))
+            .andExpect(jsonPath("$.data.defaultAddress.alias").value("집"))
+            .andExpect(jsonPath("$.data.defaultAddress.receiver").value("홍길동"))
+            .andExpect(jsonPath("$.data.defaultAddress.zipCode").value("12345"))
+            .andExpect(jsonPath("$.data.defaultAddress.address").value("서울시 강남구 테헤란로"))
+            .andExpect(jsonPath("$.data.defaultAddress.detailAddress").value("101호"))
+            .andDo(document("user/get-user-with-address",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("회원 정보 조회 (기본 주소 포함)")
+                    .description("기본 배송지가 있을 경우 defaultAddress 필드에 주소 정보가 포함됩니다.")
+                    .responseSchema(Schema.schema("UserInfoResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.OBJECT).description("회원 정보"),
+                        fieldWithPath("data.id").type(JsonFieldType.VARIES).optional().description("회원 고유 ID"),
+                        fieldWithPath("data.provider").type(JsonFieldType.STRING).description("로그인 제공자 (LOCAL, KAKAO)"),
+                        fieldWithPath("data.loginId").type(JsonFieldType.STRING).description("로그인 ID"),
+                        fieldWithPath("data.userName").type(JsonFieldType.STRING).description("회원 이름"),
+                        fieldWithPath("data.userEmail").type(JsonFieldType.STRING).description("이메일 주소"),
+                        fieldWithPath("data.userPhoneNumber").type(JsonFieldType.STRING).description("전화번호 (마스킹 처리, 예: 010-****-5678)"),
+                        fieldWithPath("data.createdAt").type(JsonFieldType.VARIES).optional().description("가입 일시"),
+                        fieldWithPath("data.lastLoginAt").type(JsonFieldType.VARIES).optional().description("마지막 로그인 일시"),
+                        fieldWithPath("data.defaultAddress").type(JsonFieldType.OBJECT).description("기본 배송지"),
+                        fieldWithPath("data.defaultAddress.addressId").type(JsonFieldType.VARIES).optional().description("주소 ID"),
+                        fieldWithPath("data.defaultAddress.alias").type(JsonFieldType.VARIES).optional().description("주소 별칭"),
+                        fieldWithPath("data.defaultAddress.receiver").type(JsonFieldType.STRING).description("수령인"),
+                        fieldWithPath("data.defaultAddress.receiverPhoneNumber").type(JsonFieldType.STRING).description("수령인 전화번호"),
+                        fieldWithPath("data.defaultAddress.zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("data.defaultAddress.address").type(JsonFieldType.STRING).description("도로명 주소"),
+                        fieldWithPath("data.defaultAddress.detailAddress").type(JsonFieldType.STRING).description("상세 주소")
                     )
                     .build()
                 )));
@@ -152,24 +207,63 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("DELETE /v1/users - 회원 탈퇴 성공")
+    void withdrawUser_success() throws Exception {
+        willDoNothing().given(userService).withdraw(anyLong());
+
+        mockMvc.perform(delete("/v1/users")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("회원 탈퇴에 성공하였습니다."))
+            .andDo(document("user/withdraw-user",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("회원 탈퇴")
+                    .description("인증된 회원을 탈퇴 처리합니다. 탈퇴 시 모든 주소록도 함께 삭제됩니다.")
+                    .responseSchema(Schema.schema("SuccessResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("DELETE /v1/users - 인증 없이 접근 시 401 반환")
+    void withdrawUser_unauthorized() throws Exception {
+        mockMvc.perform(delete("/v1/users")
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("POST /v1/users - 회원 가입 성공")
     void joinUser_success() throws Exception {
-        // given
         JoinRequest request = new JoinRequest(
             "홍길동",
             "testuser123",
             "Password123!",
             "010-1234-5678",
             "test@example.com",
-            new AddressVO(null,
-                "123-4567",
-                "테스트시 테스트구 테스트동",
-                "테스트 오피스텔 2층")
+            new AddressVO(null, "123-4567", "테스트시 테스트구 테스트동", "테스트 오피스텔 2층")
         );
 
         willDoNothing().given(userService).join(any(UserJoinCommand.class));
 
-        // when & then
         mockMvc.perform(post("/v1/users")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -211,20 +305,15 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /v1/users - loginId가 영문 소문자/숫자 외 문자 포함 시 400 반환")
     void joinUser_invalidLoginIdPattern() throws Exception {
-        // given
         JoinRequest request = new JoinRequest(
             "홍길동",
             "TestUser123",
             "Password123!",
             "010-1234-5678",
             "test@example.com",
-            new AddressVO(null,
-                "123-4567",
-                "테스트시 테스트구 테스트동",
-                "테스트 오피스텔 2층")
+            new AddressVO(null, "123-4567", "테스트시 테스트구 테스트동", "테스트 오피스텔 2층")
         );
 
-        // when & then
         mockMvc.perform(post("/v1/users")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -238,7 +327,7 @@ class UserControllerTest {
                 resource(ResourceSnippetParameters.builder()
                     .tag("User")
                     .summary("회원 가입 - loginId 형식 오류")
-                    .description("loginId에 영문 소문자/숫자 외 문자(대문자, 특수문자 등)가 포함된 경우 400 Bad Request를 반환합니다.")
+                    .description("loginId에 영문 소문자/숫자 외 문자가 포함된 경우 400 Bad Request를 반환합니다.")
                     .requestSchema(Schema.schema("JoinUserRequest"))
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
@@ -269,10 +358,8 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /v1/users/check/id - 아이디 사용 가능 시 200 반환")
     void checkDuplicationId_success() throws Exception {
-        // given
         willDoNothing().given(userService).existsActiveUsers(anyString());
 
-        // when & then
         mockMvc.perform(get("/v1/users/check/id")
                 .param("loginId", "available123")
                 .accept(MediaType.APPLICATION_JSON))
@@ -303,11 +390,9 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /v1/users/check/id - 이미 사용 중인 아이디 시 409 반환")
     void checkDuplicationId_duplicateId() throws Exception {
-        // given
         willThrow(new BusinessException(UserErrorCode.DUPLICATE_LOGIN_ID))
             .given(userService).existsActiveUsers(anyString());
 
-        // when & then
         mockMvc.perform(get("/v1/users/check/id")
                 .param("loginId", "takenuser1")
                 .accept(MediaType.APPLICATION_JSON))
@@ -338,7 +423,6 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /v1/users/check/id - loginId가 빈 값일 때 400 반환")
     void checkDuplicationId_blankLoginId() throws Exception {
-        // when & then
         mockMvc.perform(get("/v1/users/check/id")
                 .param("loginId", "")
                 .accept(MediaType.APPLICATION_JSON))
@@ -372,7 +456,6 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /v1/users/check/id - loginId가 4자 미만일 때 400 반환")
     void checkDuplicationId_invalidLoginId() throws Exception {
-        // when & then
         mockMvc.perform(get("/v1/users/check/id")
                 .param("loginId", "abc")
                 .accept(MediaType.APPLICATION_JSON))

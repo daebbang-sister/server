@@ -10,6 +10,41 @@ servers:
   description: 로컬 개발 서버
 tags: []
 paths:
+  /v1/addresses:
+    get:
+      tags:
+      - Address
+      summary: 주소 목록 조회
+      description: 인증된 회원의 전체 주소 목록을 조회합니다.
+      operationId: address/get-addresses
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressListResponse'
+              examples:
+                address/get-addresses:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주소 목록 조회에\
+                    \ 성공하였습니다.\",\"data\":[{\"addressId\":null,\"alias\":\"집\",\"\
+                    receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\",\"\
+                    zipCode\":\"12345\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
+                    :\"101호\",\"isDefault\":true},{\"addressId\":null,\"alias\":\"\
+                    집\",\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                    ,\"zipCode\":\"12345\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
+                    :\"101호\",\"isDefault\":false}]}"
+                address/get-addresses-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주소 목록 조회에\
+                    \ 성공하였습니다.\",\"data\":[]}"
   /v1/carts:
     get:
       tags:
@@ -239,6 +274,21 @@ paths:
                     :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
                     ,\"userPhoneNumber\":\"010-****-5678\",\"createdAt\":\"2025-01-01T00:00:00\"\
                     ,\"lastLoginAt\":null}}"
+                user/get-user-no-address:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"id\":null,\"provider\":\"LOCAL\",\"loginId\"\
+                    :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
+                    ,\"userPhoneNumber\":\"010-****-5678\",\"createdAt\":null,\"lastLoginAt\"\
+                    :null,\"defaultAddress\":null}}"
+                user/get-user-with-address:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"id\":null,\"provider\":\"LOCAL\",\"loginId\"\
+                    :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
+                    ,\"userPhoneNumber\":\"010-****-5678\",\"createdAt\":null,\"lastLoginAt\"\
+                    :null,\"defaultAddress\":{\"addressId\":null,\"alias\":\"집\",\"\
+                    receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\",\"\
+                    zipCode\":\"12345\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
+                    :\"101호\"}}}"
     post:
       tags:
       - User
@@ -285,6 +335,39 @@ paths:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
                     :\"아이디는 영문 소문자와 숫자만 입력 가능하며, 특수문자는 사용할 수 없습니다.\"}]}"
+    delete:
+      tags:
+      - User
+      summary: 회원 탈퇴
+      description: 인증된 회원을 탈퇴 처리합니다. 탈퇴 시 모든 주소록도 함께 삭제됩니다.
+      operationId: user/withdraw-user
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/v1-users486549215'
+            examples:
+              user/withdraw-user:
+                value: _csrf=CeFf8J-tj6T7nD3PO_yrj-AFPjPEC-nhj3l_dSDPYhmEoy1uOdJqxq2dupDWrlv4D9Gfu4Q2EwrwbtrMukxOExmtBH29k0wI
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user/withdraw-user:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 탈퇴에 성공\
+                    하였습니다.\",\"data\":null}"
   /v1/wish-lists:
     get:
       tags:
@@ -1263,6 +1346,76 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    UserInfoResponse:
+      title: UserInfoResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            createdAt:
+              description: 가입 일시
+              oneOf:
+              - type: object
+              - type: string
+            lastLoginAt:
+              type: object
+              description: 마지막 로그인 일시
+            loginId:
+              type: string
+              description: 로그인 ID
+            provider:
+              type: string
+              description: "로그인 제공자 (LOCAL, KAKAO)"
+            userPhoneNumber:
+              type: string
+              description: "전화번호 (마스킹 처리, 예: 010-****-5678)"
+            userEmail:
+              type: string
+              description: 이메일 주소
+            id:
+              description: 회원 고유 ID
+              oneOf:
+              - type: object
+              - type: number
+            userName:
+              type: string
+              description: 회원 이름
+            defaultAddress:
+              type: object
+              properties:
+                zipCode:
+                  type: string
+                  description: 우편번호
+                address:
+                  type: string
+                  description: 도로명 주소
+                receiver:
+                  type: string
+                  description: 수령인
+                receiverPhoneNumber:
+                  type: string
+                  description: 수령인 전화번호
+                detailAddress:
+                  type: string
+                  description: 상세 주소
+                alias:
+                  type: object
+                  description: 주소 별칭
+                addressId:
+                  type: object
+                  description: 주소 ID
+              description: 기본 배송지
+          description: 회원 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     FindPasswordRequest:
       title: FindPasswordRequest
       type: object
@@ -1438,47 +1591,8 @@ components:
         productId:
           type: number
           description: 추가할 상품 ID
-    UserInfoResponse:
-      title: UserInfoResponse
+    v1-users486549215:
       type: object
-      properties:
-        data:
-          type: object
-          properties:
-            createdAt:
-              type: string
-              description: 가입 일시
-            lastLoginAt:
-              type: object
-              description: "마지막 로그인 일시 (ISO 8601, 미로그인 시 null)"
-            loginId:
-              type: string
-              description: 로그인 ID
-            provider:
-              type: string
-              description: "로그인 제공자 (LOCAL, KAKAO)"
-            userPhoneNumber:
-              type: string
-              description: "전화번호 (마스킹 처리, 예: 010-****-5678)"
-            userEmail:
-              type: string
-              description: 이메일 주소
-            id:
-              type: number
-              description: 회원 고유 ID
-            userName:
-              type: string
-              description: 회원 이름
-          description: 회원 정보
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     FindUserIdResponse:
       title: FindUserIdResponse
       type: object
@@ -1560,6 +1674,49 @@ components:
             hasNext:
               type: boolean
               description: 다음 페이지 존재 여부
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    AddressListResponse:
+      title: AddressListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 주소 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              zipCode:
+                type: string
+                description: 우편번호
+              isDefault:
+                type: boolean
+                description: 기본 배송지 여부
+              address:
+                type: string
+                description: 도로명 주소
+              receiver:
+                type: string
+                description: 수령인 이름
+              receiverPhoneNumber:
+                type: string
+                description: 수령인 전화번호
+              detailAddress:
+                type: string
+                description: 상세 주소
+              alias:
+                type: object
+                description: 주소 별칭 (null 가능)
+              addressId:
+                type: object
+                description: 주소 ID
         success:
           type: boolean
           description: 성공 여부
