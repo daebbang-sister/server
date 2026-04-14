@@ -8,6 +8,7 @@ import com.daebbang.daebbangcore.domain.product.util.DiscountResult;
 public record UserCartInfo(
     Long cartId,
     Long productId,
+    Long productDetailId,
     Integer quantity,
     String productName,
     Integer originalPrice,
@@ -31,6 +32,7 @@ public record UserCartInfo(
         return new UserCartInfo(
             cart.getId(),
             product.getId(),
+            cart.getProductDetail().getId(),
             cart.getQuantity(),
             product.getProductName(),
             product.getOriginalPrice(),
