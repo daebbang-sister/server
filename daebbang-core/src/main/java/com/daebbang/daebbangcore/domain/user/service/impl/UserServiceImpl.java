@@ -2,6 +2,7 @@ package com.daebbang.daebbangcore.domain.user.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.domain.address.service.AddressService;
 import com.daebbang.daebbangcore.domain.user.command.PasswordPort;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;
@@ -29,10 +30,9 @@ public class UserServiceImpl implements UserService {
 
     private final PasswordPort passwordPort;
     private final ApplicationEventPublisher eventPublisher;
-
     private final UsersRepository userRepository;
-
     private final SmsService smsService;
+    private final AddressService addressService;
 
     @Override
     @Transactional
@@ -47,6 +47,10 @@ public class UserServiceImpl implements UserService {
 
         Users joinUser = UserJoinCommand.toEntity(joinCommand, encoded);
         userRepository.save(joinUser);
+
+        if (joinCommand.address() != null) {
+            addressService.save(joinUser, joinCommand.address());
+        }
 
         eventPublisher.publishEvent(UserJoinEvent.toEvent(joinCommand.phoneNumber()));
     }
@@ -100,6 +104,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Users> getUsersByFindLoginId(String username, String email) {
         return userRepository.findActiveUserIdsByUsernameAndEmail(username, email, UserStatus.WITHDRAWN);
+    }
+
+    @Override
+    @Transactional
+    public void withdraw(Long userId) {
+        Users user = getUserById(userId);
+        user.withdraw();
+        addressService.deleteAllByUserId(userId);
     }
 
     private Users findActiveLocalUserByLoginId(String loginId) {

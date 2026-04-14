@@ -11,5 +11,6 @@ public interface UserMapper {
     @Mapping(source = "users.name", target = "userName")
     @Mapping(source = "users.email", target = "userEmail")
     @Mapping(target = "userPhoneNumber", expression = "java(PhoneNumberUtils.maskPhoneNumber(users.getPhoneNumber()))")
+    @Mapping(target = "defaultAddress", ignore = true)
     UserInfo toUserInfo(Users users);
 }

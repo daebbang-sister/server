@@ -14,4 +14,5 @@ public interface UserService {
     Users getUser(String loginId);
     Users getUserById(Long userId);
     List<Users> getUsersByFindLoginId(String username, String email);
+    void withdraw(Long userId);
 }

@@ -102,4 +102,8 @@ public class Users extends CreatedBase {
     public void updatePassword(String newPwd) {
         this.loginPwd = newPwd;
     }
+
+    public void withdraw() {
+        this.status = UserStatus.WITHDRAWN;
+    }
 }

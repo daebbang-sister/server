@@ -1,6 +1,7 @@
 package com.daebbang.daebbangapi.domain.users.dto.request;
 
 import com.daebbang.daebbangapi.domain.users.dto.vo.AddressVO;
+import com.daebbang.daebbangcore.domain.address.command.AddressCommand;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
@@ -42,12 +43,17 @@ public record JoinRequest(
     AddressVO address
 ) {
     public static UserJoinCommand toCommand(JoinRequest joinRequest) {
+        AddressVO addr = joinRequest.address();
+        AddressCommand addressCommand = addr != null
+            ? new AddressCommand(addr.alias(), addr.zipCode(), addr.address(), addr.detailAddress(), true)
+            : null;
         return UserJoinCommand.builder()
-                            .name(joinRequest.name)
-                            .loginId(joinRequest.loginId)
-                            .password(joinRequest.password)
-                            .phoneNumber(joinRequest.phoneNumber)
-                            .email(joinRequest.email)
-                            .build();
+            .name(joinRequest.name)
+            .loginId(joinRequest.loginId)
+            .password(joinRequest.password)
+            .phoneNumber(joinRequest.phoneNumber)
+            .email(joinRequest.email)
+            .address(addressCommand)
+            .build();
     }
 }

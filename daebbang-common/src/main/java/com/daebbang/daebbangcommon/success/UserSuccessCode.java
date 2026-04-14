@@ -14,6 +14,8 @@ public enum UserSuccessCode implements SuccessCode {
     USER_UPDATED(200, "회원 정보 수정에 성공하였습니다."),
     USER_UPDATED_PASSWORD(200, "회원 비밀번호 수정에 성공하였습니다."),
     USER_JOINED(201, "회원 가입에 성공하였습니다."),
+    USER_WITHDRAWN(200, "회원 탈퇴에 성공하였습니다."),
+    ADDRESS_RETRIEVED(200, "주소 목록 조회에 성공하였습니다."),
 
     SEND_EMAIL(201, "이메일 전송에 성공하였습니다."),
 
