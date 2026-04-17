@@ -12,6 +12,7 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
 
   data:
     redis:
@@ -51,6 +52,16 @@ spring:
     failure: http://localhost:3000/login?error
     success: http://localhost:3000
 
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: test
+        secret-key: test
+      s3:
+        bucket: test-bucket
+
   security:
     oauth2:
       client:
@@ -71,12 +82,7 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
-  cloud:
-    aws:
-      region:
-        static: ap-northeast-2
-      credentials:
-        access-key: test
-        secret-key: test
-      s3:
-        enabled: false
+toss:
+  payments:
+    secret-key: test_toss_secret_key
+

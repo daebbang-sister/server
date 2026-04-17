@@ -30,6 +30,9 @@ dependencies {
     // redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
+    // redisson (distributed lock)
+    implementation("org.redisson:redisson:3.29.0")
+
     // cool - sms
     implementation("com.solapi:sdk:1.0.3")
 

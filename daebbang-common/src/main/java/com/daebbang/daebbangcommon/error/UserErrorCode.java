@@ -46,7 +46,15 @@ public enum UserErrorCode implements ErrorCode {
     WISH_LIST_ALREADY_EXISTS(409, "이미 위시리스트에 추가된 상품입니다."),
 
     ADDRESS_NOT_FOUND(404, "존재하지 않는 주소입니다."),
-    ADDRESS_LIMIT_EXCEEDED(409, "주소록은 최대 5개까지 등록 가능합니다.");
+    ADDRESS_LIMIT_EXCEEDED(409, "주소록은 최대 5개까지 등록 가능합니다."),
+
+    ORDER_NOT_FOUND(404, "존재하지 않는 주문입니다."),
+    ORDER_AMOUNT_MISMATCH(400, "결제 금액이 주문 금액과 일치하지 않습니다."),
+    ORDER_USER_MISMATCH(403, "주문자 정보가 일치하지 않습니다."),
+    ORDER_ALREADY_PROCESSED(409, "이미 처리된 주문입니다."),
+    OUT_OF_STOCK(409, "재고가 부족합니다."),
+    STOCK_LOCK_FAILED(503, "재고 처리 중입니다. 잠시 후 다시 시도해주세요."),
+    PAYMENT_CONFIRMATION_FAILED(502, "결제 승인에 실패했습니다. 관리자에게 문의하세요.");
 
     private final int status;
     private final String message;

@@ -356,7 +356,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=CeFf8J-tj6T7nD3PO_yrj-AFPjPEC-nhj3l_dSDPYhmEoy1uOdJqxq2dupDWrlv4D9Gfu4Q2EwrwbtrMukxOExmtBH29k0wI
+                value: _csrf=37RT4D9HnbZD-4FFK2-4QOMcWEfHoqB9yycuO4DO6MiEDpQN6NBj0Qt__4duzeQjTkKMeYUrdX73wJBQ-x4XWrn60ariaqQ9
       responses:
         "200":
           description: "200"
@@ -536,6 +536,214 @@ paths:
                 cart/update-cart-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 카트 번호입니다.\",\"data\":null}"
+  /v1/orders/confirm:
+    post:
+      tags:
+      - Order
+      summary: 결제 확정 - 중복 요청
+      description: 이미 결제 확정이 완료된 주문에 중복 요청하거나 동시에 같은 주문을 처리하려 할 경우 409를 반환합니다.
+      operationId: order/confirm-
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-orders-confirm1031018359'
+            examples:
+              order/confirm-already-processed:
+                value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":33000}"
+              order/confirm-amount-mismatch:
+                value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":99999}"
+              order/confirm-blank-order-id:
+                value: "{\"orderId\":\"\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":33000}"
+              order/confirm-blank-payment-key:
+                value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"\",\"\
+                  amount\":33000}"
+              order/confirm-invalid-amount:
+                value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":0}"
+              order/confirm-not-found:
+                value: "{\"orderId\":\"20260416-EXPIRED0000\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":33000}"
+              order/confirm-payment-failed:
+                value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":33000}"
+              order/confirm-success:
+                value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":33000}"
+              order/confirm-user-mismatch:
+                value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"toss_payment_key_abc\"\
+                  ,\"amount\":33000}"
+      responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/confirm-already-processed:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 처리된 주\
+                    문입니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/confirm-amount-mismatch:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"결제 금액이 주\
+                    문 금액과 일치하지 않습니다.\",\"data\":null}"
+                order/confirm-blank-order-id:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"orderId\",\"message\"\
+                    :\"주문 번호는 필수입니다.\"}]}"
+                order/confirm-blank-payment-key:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"paymentKey\",\"message\"\
+                    :\"결제 키는 필수입니다.\"}]}"
+                order/confirm-invalid-amount:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"amount\",\"message\"\
+                    :\"결제 금액은 0보다 커야 합니다.\"}]}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/confirm-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 주문입니다.\",\"data\":null}"
+        "502":
+          description: "502"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/confirm-payment-failed:
+                  value: "{\"success\":false,\"status\":502,\"message\":\"결제 승인에 실\
+                    패했습니다. 관리자에게 문의하세요.\",\"data\":null}"
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                order/confirm-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"결제가 완료되었습\
+                    니다.\",\"data\":null}"
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/confirm-user-mismatch:
+                  value: "{\"success\":false,\"status\":403,\"message\":\"주문자 정보가\
+                    \ 일치하지 않습니다.\",\"data\":null}"
+  /v1/orders/prepare:
+    post:
+      tags:
+      - Order
+      summary: 주문 준비 - 상품 목록 없음
+      description: items가 비어있으면 400 Bad Request를 반환합니다.
+      operationId: order/prepare-
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-orders-prepare1866161413'
+            examples:
+              order/prepare-empty-items:
+                value: "{\"items\":[],\"usedPoint\":0}"
+              order/prepare-invalid-quantity:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":0}],\"usedPoint\"\
+                  :0}"
+              order/prepare-lock-failed:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :0}"
+              order/prepare-negative-point:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :-1}"
+              order/prepare-out-of-stock:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":999}],\"usedPoint\"\
+                  :0}"
+              order/prepare-success:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :0}"
+              order/prepare-success-free-shipping:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":2}],\"usedPoint\"\
+                  :0}"
+              order/prepare-success-with-point:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :3000}"
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/prepare-empty-items:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"items\",\"message\"\
+                    :\"주문 상품 목록은 필수입니다.\"}]}"
+                order/prepare-invalid-quantity:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"items[0].quantity\"\
+                    ,\"message\":\"최소 1개 수량 이상 선택하셔야 합니다.\"}]}"
+                order/prepare-negative-point:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"usedPoint\",\"message\"\
+                    :\"포인트는 0 이상이어야 합니다.\"}]}"
+        "503":
+          description: "503"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/prepare-lock-failed:
+                  value: "{\"success\":false,\"status\":503,\"message\":\"재고 처리 중입\
+                    니다. 잠시 후 다시 시도해주세요.\",\"data\":null}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/prepare-out-of-stock:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"재고가 부족합니\
+                    다.\",\"data\":null}"
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPrepareResponse'
+              examples:
+                order/prepare-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                    니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\",\"paymentAmount\"\
+                    :33000}}"
+                order/prepare-success-free-shipping:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                    니다.\",\"data\":{\"orderNumber\":\"20260416-DEF9876543\",\"paymentAmount\"\
+                    :60000}}"
+                order/prepare-success-with-point:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                    니다.\",\"data\":{\"orderNumber\":\"20260416-GHI1357924\",\"paymentAmount\"\
+                    :30000}}"
   /v1/products/new:
     get:
       tags:
@@ -1232,6 +1440,28 @@ components:
         status:
           type: number
           description: HTTP 상태 코드 (400)
+    OrderPrepareResponse:
+      title: OrderPrepareResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            orderNumber:
+              type: string
+              description: 주문 번호
+            paymentAmount:
+              type: number
+              description: 최종 결제 금액 (포인트 차감 후)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     SmsVerifyRequest:
       title: SmsVerifyRequest
       type: object
@@ -1242,6 +1472,18 @@ components:
         phoneNumber:
           type: string
           description: 인증번호를 받은 전화번호
+    v1-orders-confirm1031018359:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: 결제 금액
+        orderId:
+          type: string
+          description: 주문 번호
+        paymentKey:
+          type: string
+          description: 토스 결제키
     SmsSendRequest:
       title: SmsSendRequest
       type: object
@@ -2035,3 +2277,21 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    v1-orders-prepare1866161413:
+      type: object
+      properties:
+        usedPoint:
+          type: number
+          description: 사용 포인트 (결제 금액에서 차감)
+        items:
+          type: array
+          description: 주문 상품 목록
+          items:
+            type: object
+            properties:
+              quantity:
+                type: number
+                description: 주문 수량
+              productDetailId:
+                type: number
+                description: 상품 상세 ID

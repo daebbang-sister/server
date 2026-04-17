@@ -19,6 +19,12 @@ public class ProductDetailsServiceImpl implements ProductDetailsService {
     @Override
     public ProductDetails getProductDetailsById(Long id) {
         return productDetailsRepository.findById(id)
-                                        .orElseThrow(() -> new BusinessException(UserErrorCode.PRODUCT_DETAILS_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(UserErrorCode.PRODUCT_DETAILS_NOT_FOUND));
+    }
+
+    @Override
+    @Transactional
+    public int decreaseStock(Long id, int quantity) {
+        return productDetailsRepository.decreaseStock(id, quantity);
     }
 }
