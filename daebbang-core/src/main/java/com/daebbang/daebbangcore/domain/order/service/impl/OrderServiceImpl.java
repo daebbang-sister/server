@@ -59,15 +59,12 @@ public class OrderServiceImpl implements OrderService {
     private final RedissonClient redissonClient;
     private final OrderStockReserveRedisRepository stockReserveRedisRepository;
 
-    // ──────────────────────────────────────────────
-    // 주문 준비: 재고 검증 & Redis 임시 주문 저장
-    // ──────────────────────────────────────────────
     @Override
     public OrderPrepareResponse prepare(OrderPrepareCommand command) {
         Users user = userService.getUserById(command.userId());
 
         List<OrderSessionItem> sessionItems = new ArrayList<>();
-        Map<Long, Integer> decreasedStocks = new LinkedHashMap<>(); // 롤백 추적
+        Map<Long, Integer> decreasedStocks = new LinkedHashMap<>();
 
         try {
             for (OrderItemCommand item : command.items()) {
@@ -79,11 +76,10 @@ public class OrderServiceImpl implements OrderService {
                         throw new BusinessException(UserErrorCode.STOCK_LOCK_FAILED);
                     }
 
-                    // Redis 재고 감소 (캐시 미스 시 DB 로드)
                     stockCacheService.decreaseStock(item.productDetailId(), item.quantity());
-                    decreasedStocks.put(item.productDetailId(), item.quantity());
+                    // merge로 동일 productDetailId 중복 요청 처리
+                    decreasedStocks.merge(item.productDetailId(), item.quantity(), Integer::sum);
 
-                    // 가격 스냅샷
                     ProductDetails pd = productDetailsService.getProductDetailsById(item.productDetailId());
                     Products product = pd.getProduct();
 
@@ -107,12 +103,10 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
         } catch (BusinessException e) {
-            // 성공적으로 감소된 재고 전체 롤백
-            decreasedStocks.forEach((id, qty) -> stockCacheService.restoreStock(id, qty));
+            decreasedStocks.forEach(stockCacheService::restoreStock);
             throw e;
         }
 
-        // 금액 계산
         int totalOriginalAmount = sessionItems.stream()
             .mapToInt(i -> i.getOriginalPrice() * i.getQuantity())
             .sum();
@@ -142,9 +136,6 @@ public class OrderServiceImpl implements OrderService {
         return new OrderPrepareResponse(orderNumber, paymentAmount);
     }
 
-    // ──────────────────────────────────────────────
-    // 결제 확인: Toss 승인 → DB 저장
-    // ──────────────────────────────────────────────
     @Override
     @Transactional
     public void confirm(OrderConfirmCommand command) {
@@ -162,11 +153,11 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(UserErrorCode.ORDER_AMOUNT_MISMATCH);
         }
 
-        // 4. 중복 처리 방지 Lock
+        // 4. 중복 처리 방지 Lock (leaseTime 없이 watchdog 자동 갱신)
         RLock confirmLock = redissonClient.getLock("order:confirm:lock:" + command.orderNumber());
         boolean acquired = false;
         try {
-            acquired = confirmLock.tryLock(3, 5, TimeUnit.SECONDS);
+            acquired = confirmLock.tryLock(3, TimeUnit.SECONDS);
             if (!acquired) {
                 throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
             }
@@ -181,68 +172,80 @@ public class OrderServiceImpl implements OrderService {
                 command.orderNumber(), command.paymentKey(), command.amount()
             );
 
-            // 7. DB 재고 감소 (안전망 — 실패 시 Toss 취소 + Redis 복원)
-            for (OrderSessionItem item : session.getItems()) {
-                int updated = productDetailsService.decreaseStock(
-                    item.getProductDetailId(), item.getQuantity()
-                );
-                if (updated == 0) {
-                    log.error("[Order] DB 재고 부족 - productDetailId: {}", item.getProductDetailId());
-                    tossPaymentClient.cancel(command.paymentKey(), "재고 부족으로 인한 자동 취소");
-                    session.getItems().forEach(i ->
-                        stockCacheService.restoreStock(i.getProductDetailId(), i.getQuantity()));
-                    stockReserveRedisRepository.delete(command.orderNumber());
-                    throw new BusinessException(UserErrorCode.OUT_OF_STOCK);
+            // 7 ~ 10. Toss 승인 이후 DB 처리 — 실패 시 Toss 취소 + Redis 복원
+            try {
+                // 7. DB 재고 감소
+                for (OrderSessionItem item : session.getItems()) {
+                    int updated = productDetailsService.decreaseStock(
+                        item.getProductDetailId(), item.getQuantity()
+                    );
+                    if (updated == 0) {
+                        log.error("[Order] DB 재고 부족 - productDetailId: {}", item.getProductDetailId());
+                        throw new BusinessException(UserErrorCode.OUT_OF_STOCK);
+                    }
                 }
+
+                // 8. 주문 저장
+                Users user = userService.getUserById(session.getUserId());
+
+                Orders order = Orders.create(
+                    user,
+                    session.getOrderNumber(),
+                    session.getUsedPoint(),
+                    session.getShippingFee(),
+                    session.getTotalOriginalAmount(),
+                    session.getTotalSellingAmount()
+                );
+
+                for (OrderSessionItem item : session.getItems()) {
+                    ProductDetails pd = productDetailsService.getProductDetailsById(item.getProductDetailId());
+                    order.addDetail(OrderDetails.create(
+                        pd, item.getQuantity(), item.getOriginalPrice(), item.getDiscountRate()
+                    ));
+                }
+
+                // 9. 결제 방식에 따른 주문 상태
+                if (tossResponse.isVirtualAccount()) {
+                    order.waitDeposit();
+                } else {
+                    order.pay();
+                }
+                order.update();
+                ordersRepository.save(order);
+
+                // 10. 결제 저장
+                LocalDateTime approvedAt = tossResponse.getApprovedAt() != null
+                    ? tossResponse.getApprovedAt().toLocalDateTime()
+                    : LocalDateTime.now();
+
+                Payment payment = Payment.create(
+                    order,
+                    tossResponse.getPaymentKey(),
+                    tossResponse.getCurrency(),
+                    tossResponse.getMethod(),
+                    tossResponse.getTotalAmount(),
+                    tossResponse.getRequestedAt().toLocalDateTime(),
+                    approvedAt
+                );
+                payment.update();
+                paymentRepository.save(payment);
+
+                log.info("[Order] confirm 완료 - orderNumber: {}, method: {}",
+                    command.orderNumber(), tossResponse.getMethod());
+
+            } catch (Exception e) {
+                log.error("[Order] DB 처리 실패 - Toss 취소 시도 - orderNumber: {}", command.orderNumber(), e);
+                try {
+                    tossPaymentClient.cancel(command.paymentKey(), "시스템 오류로 인한 자동 취소");
+                } catch (Exception cancelEx) {
+                    log.error("[Order] Toss 취소 실패 - 수동 취소 필요 - paymentKey: {}", command.paymentKey(), cancelEx);
+                }
+                session.getItems().forEach(i ->
+                    stockCacheService.restoreStock(i.getProductDetailId(), i.getQuantity()));
+                stockReserveRedisRepository.delete(command.orderNumber());
+                if (e instanceof BusinessException) throw e;
+                throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
             }
-
-            // 8. 주문 저장
-            Users user = userService.getUserById(session.getUserId());
-
-            Orders order = Orders.create(
-                user,
-                session.getOrderNumber(),
-                session.getUsedPoint(),
-                session.getShippingFee(),
-                session.getTotalOriginalAmount(),
-                session.getTotalSellingAmount()
-            );
-
-            for (OrderSessionItem item : session.getItems()) {
-                ProductDetails pd = productDetailsService.getProductDetailsById(item.getProductDetailId());
-                order.addDetail(OrderDetails.create(
-                    pd, item.getQuantity(), item.getOriginalPrice(), item.getDiscountRate()
-                ));
-            }
-
-            // 9. 결제 방식에 따른 주문 상태
-            if (tossResponse.isVirtualAccount()) {
-                order.waitDeposit();
-            } else {
-                order.pay();
-            }
-            order.update();
-            ordersRepository.save(order);
-
-            // 10. 결제 저장
-            LocalDateTime approvedAt = tossResponse.getApprovedAt() != null
-                ? tossResponse.getApprovedAt().toLocalDateTime()
-                : LocalDateTime.now();
-
-            Payment payment = Payment.create(
-                order,
-                tossResponse.getPaymentKey(),
-                tossResponse.getCurrency(),
-                tossResponse.getMethod(),
-                tossResponse.getTotalAmount(),
-                tossResponse.getRequestedAt().toLocalDateTime(),
-                approvedAt
-            );
-            payment.update();
-            paymentRepository.save(payment);
-
-            log.info("[Order] confirm 완료 - orderNumber: {}, method: {}",
-                command.orderNumber(), tossResponse.getMethod());
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

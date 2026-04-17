@@ -39,7 +39,7 @@ public class OrderSessionRedisRepository {
             return Optional.of(objectMapper.readValue(raw.toString(), OrderSession.class));
         } catch (JsonProcessingException e) {
             log.error("[OrderSession] 역직렬화 실패 - orderNumber: {}", orderNumber, e);
-            return Optional.empty();
+            throw new RuntimeException("OrderSession 역직렬화에 실패했습니다.", e);
         }
     }
 

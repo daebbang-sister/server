@@ -92,10 +92,14 @@ public class Payment extends DefaultBase {
     }
 
     public void addCancel(PaymentCancels cancel) {
+        int newCancelTotal = this.totalCancelAmount + cancel.getCancelAmount();
+        if (newCancelTotal > this.totalAmount) {
+            throw new IllegalStateException("취소 금액 합계가 결제 금액을 초과할 수 없습니다.");
+        }
         cancels.add(cancel);
         cancel.assignPayment(this);
-        this.totalCancelAmount += cancel.getCancelAmount();
-        this.status = this.totalCancelAmount >= this.totalAmount
+        this.totalCancelAmount = newCancelTotal;
+        this.status = (this.totalCancelAmount == this.totalAmount)
             ? PaymentStatus.CANCELLED
             : PaymentStatus.PARTIAL_CANCELLED;
     }

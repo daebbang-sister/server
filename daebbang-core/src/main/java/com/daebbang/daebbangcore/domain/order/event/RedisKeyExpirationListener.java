@@ -35,12 +35,22 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
         String orderNumber = expiredKey.substring(SESSION_PREFIX.length());
         log.info("[StockRestore] 세션 만료 감지 - orderNumber: {}", orderNumber);
 
-        stockReserveRepository.findByOrderNumber(orderNumber).ifPresent(items -> {
-            items.forEach(item ->
-                stockCacheService.restoreStock(item.getProductDetailId(), item.getQuantity())
-            );
-            stockReserveRepository.delete(orderNumber);
-            log.info("[StockRestore] keyspace 이벤트로 재고 복구 완료 - orderNumber: {}", orderNumber);
-        });
+        try {
+            stockReserveRepository.findByOrderNumber(orderNumber).ifPresent(items -> {
+                // 스케줄러와의 중복 복원 방지를 위해 예약 키 먼저 삭제
+                stockReserveRepository.delete(orderNumber);
+                for (var item : items) {
+                    try {
+                        stockCacheService.restoreStock(item.getProductDetailId(), item.getQuantity());
+                    } catch (Exception e) {
+                        log.error("[StockRestore] 재고 복원 실패 - productDetailId: {}, quantity: {}",
+                            item.getProductDetailId(), item.getQuantity(), e);
+                    }
+                }
+                log.info("[StockRestore] keyspace 이벤트로 재고 복구 완료 - orderNumber: {}", orderNumber);
+            });
+        } catch (Exception e) {
+            log.error("[StockRestore] 세션 만료 처리 중 오류 - orderNumber: {} (스케줄러 안전망이 처리)", orderNumber, e);
+        }
     }
 }

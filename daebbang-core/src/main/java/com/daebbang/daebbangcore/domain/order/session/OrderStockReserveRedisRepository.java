@@ -41,7 +41,7 @@ public class OrderStockReserveRedisRepository {
             return Optional.of(objectMapper.readValue(raw.toString(), new TypeReference<List<OrderSessionItem>>() {}));
         } catch (JsonProcessingException e) {
             log.error("[StockReserve] 역직렬화 실패 - orderNumber: {}", orderNumber, e);
-            return Optional.empty();
+            throw new RuntimeException("StockReserve 역직렬화 실패", e);
         }
     }
 

@@ -11,6 +11,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,9 @@ import org.springframework.stereotype.Component;
 public class TossPaymentClient {
 
     private static final String BASE_URL = "https://api.tosspayments.com";
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
 
     @Value("${toss.payments.secret-key}")
     private String secretKey;
@@ -41,14 +44,15 @@ public class TossPaymentClient {
                 .uri(URI.create(BASE_URL + "/v1/payments/confirm"))
                 .header("Authorization", basicAuth())
                 .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(30))
                 .POST(BodyPublishers.ofString(body))
                 .build();
 
             HttpResponse<String> response = HTTP_CLIENT.send(request, BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                log.error("[Toss] 결제 승인 실패 - orderId: {}, status: {}, body: {}",
-                    orderId, response.statusCode(), response.body());
+                log.error("[Toss] 결제 승인 실패 - orderId: {}, status: {}",
+                    orderId, response.statusCode());
                 throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
             }
 
@@ -59,7 +63,7 @@ public class TossPaymentClient {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
-        }  catch (Exception e) {
+        } catch (Exception e) {
             log.error("[Toss] 결제 승인 중 예외 - orderId: {}, error: {}", orderId, e.getMessage(), e);
             throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
         }
@@ -73,21 +77,26 @@ public class TossPaymentClient {
                 .uri(URI.create(BASE_URL + "/v1/payments/" + paymentKey + "/cancel"))
                 .header("Authorization", basicAuth())
                 .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(30))
                 .POST(BodyPublishers.ofString(body))
                 .build();
 
             HttpResponse<String> response = HTTP_CLIENT.send(request, BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                log.error("[Toss] 결제 취소 실패 - paymentKey: {}, status: {}, body: {}",
-                    paymentKey, response.statusCode(), response.body());
+                log.error("[Toss] 결제 취소 실패 - paymentKey: {}, status: {}",
+                    paymentKey, response.statusCode());
+                throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
             }
 
+        } catch (BusinessException e) {
+            throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("[Toss] 결제 취소 인터럽트 - paymentKey: {}", paymentKey);
+            throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
         } catch (Exception e) {
             log.error("[Toss] 결제 취소 중 예외 - paymentKey: {}, error: {}", paymentKey, e.getMessage(), e);
+            throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
         }
     }
 

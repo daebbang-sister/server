@@ -26,8 +26,11 @@ public class StockCacheService {
 
         if (Boolean.FALSE.equals(stringRedisTemplate.hasKey(key))) {
             int dbStock = productDetailsService.getProductDetailsById(productDetailId).getStock();
-            stringRedisTemplate.opsForValue().set(key, String.valueOf(dbStock), STOCK_TTL);
-            log.info("[Stock] 캐시 적재 - productDetailId: {}, stock: {}", productDetailId, dbStock);
+
+            Boolean initialized = stringRedisTemplate.opsForValue().setIfAbsent(key, String.valueOf(dbStock), STOCK_TTL);
+            if (Boolean.TRUE.equals(initialized)) {
+                log.info("[Stock] 캐시 적재 - productDetailId: {}, stock: {}", productDetailId, dbStock);
+            }
         }
 
         Long result = stringRedisTemplate.opsForValue().decrement(key, quantity);
@@ -45,10 +48,11 @@ public class StockCacheService {
         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
             stringRedisTemplate.opsForValue().increment(key, quantity);
             log.info("[Stock] 복원 - productDetailId: {}, 복원수량: {}", productDetailId, quantity);
+        } else {
+            log.warn("[Stock] 복원 스킵 - 캐시 없음 productDetailId: {}, 수량: {} (캐시 만료 또는 무효화)", productDetailId, quantity);
         }
     }
 
-    /** 결제 확정 후 DB를 신뢰 원본으로 삼아 캐시 무효화 */
     public void invalidateStock(Long productDetailId) {
         stringRedisTemplate.delete(STOCK_KEY_PREFIX + productDetailId);
         log.info("[Stock] 캐시 무효화 - productDetailId: {}", productDetailId);

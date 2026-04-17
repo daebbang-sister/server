@@ -356,7 +356,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=gE66GYcAZdJY2kDlbLC_QvGNGJB5pE1vFXhRSZV9vRpPvUXjsSqMLeYyUeZ16XDQCZ2LJ8XvNfFJxn1CIxxif_NI2S4s2SfU
+                value: _csrf=37RT4D9HnbZD-4FFK2-4QOMcWEfHoqB9yycuO4DO6MiEDpQN6NBj0Qt__4duzeQjTkKMeYUrdX73wJBQ-x4XWrn60ariaqQ9
       responses:
         "200":
           description: "200"
@@ -600,15 +600,15 @@ paths:
                 order/confirm-blank-order-id:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"orderId\",\"message\"\
-                    :\"must not be blank\"}]}"
+                    :\"주문 번호는 필수입니다.\"}]}"
                 order/confirm-blank-payment-key:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"paymentKey\",\"message\"\
-                    :\"must not be blank\"}]}"
+                    :\"결제 키는 필수입니다.\"}]}"
                 order/confirm-invalid-amount:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"amount\",\"message\"\
-                    :\"must be greater than 0\"}]}"
+                    :\"결제 금액은 0보다 커야 합니다.\"}]}"
         "404":
           description: "404"
           content:
@@ -696,15 +696,15 @@ paths:
                 order/prepare-empty-items:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"items\",\"message\"\
-                    :\"must not be empty\"}]}"
+                    :\"주문 상품 목록은 필수입니다.\"}]}"
                 order/prepare-invalid-quantity:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"items[0].quantity\"\
-                    ,\"message\":\"must be greater than or equal to 1\"}]}"
+                    ,\"message\":\"최소 1개 수량 이상 선택하셔야 합니다.\"}]}"
                 order/prepare-negative-point:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"usedPoint\",\"message\"\
-                    :\"must be greater than or equal to 0\"}]}"
+                    :\"포인트는 0 이상이어야 합니다.\"}]}"
         "503":
           description: "503"
           content:
@@ -725,8 +725,8 @@ paths:
                 order/prepare-out-of-stock:
                   value: "{\"success\":false,\"status\":409,\"message\":\"재고가 부족합니\
                     다.\",\"data\":null}"
-        "200":
-          description: "200"
+        "201":
+          description: "201"
           content:
             application/json:
               schema:
@@ -1412,28 +1412,6 @@ paths:
                     니다.\",\"data\":[]}"
 components:
   schemas:
-    OrderPrepareResponse:
-      title: OrderPrepareResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            orderNumber:
-              type: string
-              description: 주문 번호
-            paymentAmount:
-              type: number
-              description: 최종 결제 금액 (포인트 차감 후)
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     ErrorResponse:
       title: ErrorResponse
       type: object
@@ -1462,6 +1440,28 @@ components:
         status:
           type: number
           description: HTTP 상태 코드 (400)
+    OrderPrepareResponse:
+      title: OrderPrepareResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            orderNumber:
+              type: string
+              description: 주문 번호
+            paymentAmount:
+              type: number
+              description: 최종 결제 금액 (포인트 차감 후)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     SmsVerifyRequest:
       title: SmsVerifyRequest
       type: object
@@ -2234,24 +2234,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-orders-prepare1866161413:
-      type: object
-      properties:
-        usedPoint:
-          type: number
-          description: 사용 포인트 (결제 금액에서 차감)
-        items:
-          type: array
-          description: 주문 상품 목록
-          items:
-            type: object
-            properties:
-              quantity:
-                type: number
-                description: 주문 수량
-              productDetailId:
-                type: number
-                description: 상품 상세 ID
     ProductOptionsResponse:
       title: ProductOptionsResponse
       type: object
@@ -2295,3 +2277,21 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    v1-orders-prepare1866161413:
+      type: object
+      properties:
+        usedPoint:
+          type: number
+          description: 사용 포인트 (결제 금액에서 차감)
+        items:
+          type: array
+          description: 주문 상품 목록
+          items:
+            type: object
+            properties:
+              quantity:
+                type: number
+                description: 주문 수량
+              productDetailId:
+                type: number
+                description: 상품 상세 ID

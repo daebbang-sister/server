@@ -45,6 +45,9 @@ public class PaymentCancels extends CreatedBase {
     }
 
     public static PaymentCancels create(String cancelReason, int cancelAmount, LocalDateTime cancelledAt) {
+        if (cancelAmount <= 0) {
+            throw new IllegalArgumentException("취소 금액은 0보다 커야 합니다.");
+        }
         return PaymentCancels.builder()
             .cancelReason(cancelReason)
             .cancelAmount(cancelAmount)

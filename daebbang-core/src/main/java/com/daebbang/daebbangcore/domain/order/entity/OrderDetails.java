@@ -77,18 +77,30 @@ public class OrderDetails extends CreatedBase {
     }
 
     public void cancelRequest() {
+        requireStatus(OrderDetailStatus.NORMAL);
         this.status = OrderDetailStatus.CANCEL_REQUESTED;
     }
 
     public void cancel() {
+        requireStatus(OrderDetailStatus.CANCEL_REQUESTED);
         this.status = OrderDetailStatus.CANCELLED;
     }
 
     public void refundRequest() {
+        requireStatus(OrderDetailStatus.NORMAL);
         this.status = OrderDetailStatus.REFUND_REQUESTED;
     }
 
     public void returned() {
+        requireStatus(OrderDetailStatus.REFUND_REQUESTED);
         this.status = OrderDetailStatus.RETURNED;
+    }
+
+    private void requireStatus(OrderDetailStatus... allowed) {
+        for (OrderDetailStatus s : allowed) {
+            if (this.status == s) return;
+        }
+        throw new IllegalStateException(
+            "주문 상세 상태 전환 불가. 현재: " + this.status + ", 허용: " + java.util.Arrays.toString(allowed));
     }
 }

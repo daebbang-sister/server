@@ -93,7 +93,7 @@ class OrderControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
-            .andExpect(status().isOk())
+            .andExpect(status().isCreated())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.status").value(200))
             .andExpect(jsonPath("$.message").value("주문이 생성되었습니다."))
@@ -144,7 +144,7 @@ class OrderControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
-            .andExpect(status().isOk())
+            .andExpect(status().isCreated())
             .andExpect(jsonPath("$.data.paymentAmount").value(60_000))
             .andDo(document("order/prepare-success-free-shipping",
                 resource(ResourceSnippetParameters.builder()
@@ -187,7 +187,7 @@ class OrderControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
-            .andExpect(status().isOk())
+            .andExpect(status().isCreated())
             .andExpect(jsonPath("$.data.paymentAmount").value(30_000))
             .andDo(document("order/prepare-success-with-point",
                 resource(ResourceSnippetParameters.builder()

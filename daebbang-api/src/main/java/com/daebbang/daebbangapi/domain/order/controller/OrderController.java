@@ -24,10 +24,6 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    /**
-     * 주문 준비
-     * 재고 검증 후 Redis에 임시 주문 저장, orderNumber 반환
-     */
     @PostMapping("/prepare")
     public ResponseEntity<@NonNull CommonResponse<OrderPrepareResponse>> prepareOrder(
         @AuthenticationPrincipal Long userId,
@@ -35,14 +31,10 @@ public class OrderController {
     ) {
         OrderPrepareResponse response = orderService.prepare(request.toCommand(userId));
         return ResponseEntity
-            .status(HttpStatus.OK)
+            .status(HttpStatus.CREATED)
             .body(CommonResponse.success(UserSuccessCode.ORDER_PREPARED, response));
     }
 
-    /**
-     * 결제 확정
-     * Toss 승인 API 호출 후 DB 저장
-     */
     @PostMapping("/confirm")
     public ResponseEntity<@NonNull CommonResponse<Void>> confirmOrder(
         @AuthenticationPrincipal Long userId,

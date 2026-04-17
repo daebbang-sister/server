@@ -2,6 +2,7 @@ package com.daebbang.daebbangcore.domain.order.entity;
 
 import com.daebbang.daebbangcore.domain.audit.DefaultBase;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
+import java.util.Arrays;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -90,35 +91,50 @@ public class Orders extends DefaultBase {
     }
 
     public void pay() {
+        requireStatus(OrderStatus.PENDING);
         this.orderStatus = OrderStatus.PAID;
     }
 
     public void waitDeposit() {
+        requireStatus(OrderStatus.PENDING);
         this.orderStatus = OrderStatus.WAITING_DEPOSIT;
     }
 
     public void startDelivery() {
+        requireStatus(OrderStatus.PAID);
         this.orderStatus = OrderStatus.IN_DELIVERY;
     }
 
     public void delivered() {
+        requireStatus(OrderStatus.IN_DELIVERY);
         this.orderStatus = OrderStatus.DELIVERED;
     }
 
     public void complete() {
+        requireStatus(OrderStatus.DELIVERED);
         this.orderStatus = OrderStatus.COMPLETED;
     }
 
     public void cancel() {
+        requireStatus(OrderStatus.PENDING, OrderStatus.WAITING_DEPOSIT, OrderStatus.PAID);
         this.orderStatus = OrderStatus.CANCELLED;
     }
 
     public void expire() {
+        requireStatus(OrderStatus.PENDING, OrderStatus.WAITING_DEPOSIT);
         this.orderStatus = OrderStatus.EXPIRED;
     }
 
     public boolean isPending() {
         return this.orderStatus == OrderStatus.PENDING
             || this.orderStatus == OrderStatus.WAITING_DEPOSIT;
+    }
+
+    private void requireStatus(OrderStatus... allowed) {
+        for (OrderStatus s : allowed) {
+            if (this.orderStatus == s) return;
+        }
+        throw new IllegalStateException(
+            "주문 상태 전환 불가. 현재: " + this.orderStatus + ", 허용: " + Arrays.toString(allowed));
     }
 }

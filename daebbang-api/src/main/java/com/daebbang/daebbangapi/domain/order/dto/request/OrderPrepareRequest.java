@@ -7,8 +7,8 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public record OrderPrepareRequest(
-    @NotEmpty List<@Valid OrderItemRequest> items,
-    @Min(0) int usedPoint
+    @NotEmpty(message = "주문 상품 목록은 필수입니다.") List<@Valid OrderItemRequest> items,
+    @Min(value = 0, message = "포인트는 0 이상이어야 합니다.") int usedPoint
 ) {
     public OrderPrepareCommand toCommand(Long userId) {
         return new OrderPrepareCommand(
