@@ -32,6 +32,11 @@ public class WishListServiceImpl implements WishListService {
     }
 
     @Override
+    public boolean isWished(Long userId, Long productId) {
+        return wishListRepository.findWishListByUserIdAndProductId(userId, productId).isPresent();
+    }
+
+    @Override
     @Transactional
     public void addWishList(Long userId, Long productId) {
         // 중복 추가 방지 (데이터 정합성)

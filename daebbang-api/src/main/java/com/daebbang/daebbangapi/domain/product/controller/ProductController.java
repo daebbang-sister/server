@@ -9,11 +9,13 @@ import com.daebbang.daebbangcommon.success.CommonSuccessCode;
 import com.daebbang.daebbangcore.domain.page.PageResponse;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
+import com.daebbang.daebbangcore.domain.wish.service.WishListService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
 
     private final ProductService productService;
+    private final WishListService wishListService;
 
     @GetMapping("/main/new")
     public CommonResponse<List<ProductsCard>> getMainNewProductsOnSale(@RequestParam("limit") int limit) {
@@ -65,11 +68,15 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}")
-    public CommonResponse<ProductDetailResponse> getProductDetail(@PathVariable Long productId) {
-        // TODO : Wish List 찜 목록 여부 필드 값 추가 true/false 보내기
+    public CommonResponse<ProductDetailResponse> getProductDetail(
+        @PathVariable Long productId,
+        @AuthenticationPrincipal Long userId
+    ) {
+        Boolean isWished = userId != null && wishListService.isWished(userId, productId);
+
         return CommonResponse.success(
             CommonSuccessCode.SELECT_SUCCESS,
-            ProductDetailResponse.of(productService.getProductDetail(productId))
+            ProductDetailResponse.of(productService.getProductDetail(productId), isWished)
         );
     }
 

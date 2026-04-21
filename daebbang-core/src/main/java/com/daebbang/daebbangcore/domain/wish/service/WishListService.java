@@ -9,6 +9,8 @@ public interface WishListService {
 
     Page<WishListQueryResult> getWishList(Long userId, Pageable pageable);
 
+    boolean isWished(Long userId, Long productId);
+
     void addWishList(Long userId, Long productId);
 
     void deleteWishLists(Long userId, List<Long> wishListIds);
