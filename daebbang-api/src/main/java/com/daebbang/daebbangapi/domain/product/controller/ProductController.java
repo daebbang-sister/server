@@ -72,9 +72,7 @@ public class ProductController {
         @PathVariable Long productId,
         @AuthenticationPrincipal Long userId
     ) {
-        Boolean isWished = (userId != null)
-            ? wishListService.isWished(userId, productId)
-            : null;
+        Boolean isWished = userId != null && wishListService.isWished(userId, productId);
 
         return CommonResponse.success(
             CommonSuccessCode.SELECT_SUCCESS,
