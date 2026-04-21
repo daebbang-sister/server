@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -18,6 +19,7 @@ import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.domain.wish.service.WishListService;
 import com.daebbang.daebbangcore.domain.product.dto.ProductCardQueryResult;
 import com.daebbang.daebbangcore.domain.product.dto.ProductColorOption;
 import com.daebbang.daebbangcore.domain.product.dto.ProductDetailResult;
@@ -36,6 +38,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -60,7 +64,16 @@ class ProductControllerTest {
     @MockitoBean
     private ProductService productService;
 
+    @MockitoBean
+    private WishListService wishListService;
+
     private static final String BASE_URL = "/v1/products";
+    private static final Long USER_ID = 1L;
+
+    private UsernamePasswordAuthenticationToken authToken() {
+        return new UsernamePasswordAuthenticationToken(
+            USER_ID, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    }
 
     private PageImpl<ProductCardQueryResult> createProductPage() {
         return new PageImpl<>(createProductQueryResults(), PageRequest.of(0, 8), 2L);
@@ -475,11 +488,8 @@ class ProductControllerTest {
                 )));
     }
 
-    @Test
-    @DisplayName("GET /v1/products/{productId} - 상품 상세 조회 성공")
-    void getProductDetail_success() throws Exception {
-        // given
-        ProductDetailResult result = new ProductDetailResult(
+    private ProductDetailResult createProductDetailResult() {
+        return new ProductDetailResult(
             1L,
             "TOP",
             "루즈핏 티셔츠",
@@ -505,7 +515,13 @@ class ProductControllerTest {
                 ))
             )
         );
-        given(productService.getProductDetail(anyLong())).willReturn(result);
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId} - 비로그인 상품 상세 조회 성공 (isWished=null)")
+    void getProductDetail_success_guest() throws Exception {
+        // given - 비로그인: userId=null → isWished=null
+        given(productService.getProductDetail(anyLong())).willReturn(createProductDetailResult());
 
         // when & then
         mockMvc.perform(get(BASE_URL + "/{productId}", 1L)
@@ -534,11 +550,16 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.data.options[0].sizes[0].stock").value(10))
             .andExpect(jsonPath("$.data.options[0].sizes[0].soldOut").value(false))
             .andExpect(jsonPath("$.data.options[0].sizes[1].soldOut").value(true))
-            .andDo(document("products/detail",
+            .andExpect(jsonPath("$.data.isWished").doesNotExist())
+            .andDo(document("products/detail-guest",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Product")
-                    .summary("상품 상세 조회")
-                    .description("상품 ID로 상세 정보를 조회합니다. 갤러리 이미지, 색상/사이즈 옵션, 할인 정보가 포함됩니다.")
+                    .summary("상품 상세 조회 (비로그인)")
+                    .description("""
+                        상품 ID로 상세 정보를 조회합니다.
+                        갤러리 이미지, 색상/사이즈 옵션, 할인 정보가 포함됩니다.
+                        비로그인 상태에서는 isWished가 null로 반환됩니다.
+                        """)
                     .responseSchema(Schema.schema("ProductDetailResponse"))
                     .pathParameters(
                         parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
@@ -566,7 +587,116 @@ class ProductControllerTest {
                         fieldWithPath("data.options[].sizes[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (장바구니 담기 시 사용)"),
                         fieldWithPath("data.options[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
                         fieldWithPath("data.options[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
-                        fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부")
+                        fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부"),
+                        fieldWithPath("data.isWished").type(JsonFieldType.VARIES).optional().description("찜 여부 (비로그인 시 null, 로그인 시 true/false)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId} - 로그인 유저 찜한 상품 조회 (isWished=true)")
+    void getProductDetail_success_wished() throws Exception {
+        // given
+        given(productService.getProductDetail(anyLong())).willReturn(createProductDetailResult());
+        given(wishListService.isWished(anyLong(), anyLong())).willReturn(true);
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/{productId}", 1L)
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(1L))
+            .andExpect(jsonPath("$.data.isWished").value(true))
+            .andDo(document("products/detail-wished",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 상세 조회 (로그인 - 찜한 상품)")
+                    .description("로그인 유저가 찜한 상품 조회 시 isWished=true를 반환합니다.")
+                    .responseSchema(Schema.schema("ProductDetailResponse"))
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.id").type(JsonFieldType.NUMBER).description("상품 ID"),
+                        fieldWithPath("data.categoryName").type(JsonFieldType.STRING).description("카테고리명"),
+                        fieldWithPath("data.productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data.simpleDescription").type(JsonFieldType.STRING).description("간단 설명"),
+                        fieldWithPath("data.mainImageUrl").type(JsonFieldType.STRING).description("메인 이미지 URL"),
+                        fieldWithPath("data.originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data.sellingPrice").type(JsonFieldType.NUMBER).description("판매가"),
+                        fieldWithPath("data.discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data.gallery").type(JsonFieldType.ARRAY).description("갤러리 이미지 목록"),
+                        fieldWithPath("data.gallery[].imageUrl").type(JsonFieldType.STRING).description("갤러리 이미지 URL"),
+                        fieldWithPath("data.gallery[].imageOrder").type(JsonFieldType.NUMBER).description("갤러리 이미지 순서"),
+                        fieldWithPath("data.descriptionHtml").type(JsonFieldType.VARIES).optional().description("상품 상세 HTML"),
+                        fieldWithPath("data.options").type(JsonFieldType.ARRAY).description("색상 옵션 목록"),
+                        fieldWithPath("data.options[].color").type(JsonFieldType.STRING).description("색상명"),
+                        fieldWithPath("data.options[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
+                        fieldWithPath("data.options[].sizes").type(JsonFieldType.ARRAY).description("사이즈 옵션 목록"),
+                        fieldWithPath("data.options[].sizes[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
+                        fieldWithPath("data.options[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
+                        fieldWithPath("data.options[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
+                        fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부"),
+                        fieldWithPath("data.isWished").type(JsonFieldType.BOOLEAN).description("찜 여부 (true: 찜한 상품)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId} - 로그인 유저 찜하지 않은 상품 조회 (isWished=false)")
+    void getProductDetail_success_notWished() throws Exception {
+        // given
+        given(productService.getProductDetail(anyLong())).willReturn(createProductDetailResult());
+        given(wishListService.isWished(anyLong(), anyLong())).willReturn(false);
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/{productId}", 1L)
+                .with(authentication(authToken()))
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(1L))
+            .andExpect(jsonPath("$.data.isWished").value(false))
+            .andDo(document("products/detail-not-wished",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 상세 조회 (로그인 - 찜하지 않은 상품)")
+                    .description("로그인 유저가 찜하지 않은 상품 조회 시 isWished=false를 반환합니다.")
+                    .responseSchema(Schema.schema("ProductDetailResponse"))
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.id").type(JsonFieldType.NUMBER).description("상품 ID"),
+                        fieldWithPath("data.categoryName").type(JsonFieldType.STRING).description("카테고리명"),
+                        fieldWithPath("data.productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data.simpleDescription").type(JsonFieldType.STRING).description("간단 설명"),
+                        fieldWithPath("data.mainImageUrl").type(JsonFieldType.STRING).description("메인 이미지 URL"),
+                        fieldWithPath("data.originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data.sellingPrice").type(JsonFieldType.NUMBER).description("판매가"),
+                        fieldWithPath("data.discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data.gallery").type(JsonFieldType.ARRAY).description("갤러리 이미지 목록"),
+                        fieldWithPath("data.gallery[].imageUrl").type(JsonFieldType.STRING).description("갤러리 이미지 URL"),
+                        fieldWithPath("data.gallery[].imageOrder").type(JsonFieldType.NUMBER).description("갤러리 이미지 순서"),
+                        fieldWithPath("data.descriptionHtml").type(JsonFieldType.VARIES).optional().description("상품 상세 HTML"),
+                        fieldWithPath("data.options").type(JsonFieldType.ARRAY).description("색상 옵션 목록"),
+                        fieldWithPath("data.options[].color").type(JsonFieldType.STRING).description("색상명"),
+                        fieldWithPath("data.options[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
+                        fieldWithPath("data.options[].sizes").type(JsonFieldType.ARRAY).description("사이즈 옵션 목록"),
+                        fieldWithPath("data.options[].sizes[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
+                        fieldWithPath("data.options[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
+                        fieldWithPath("data.options[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
+                        fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부"),
+                        fieldWithPath("data.isWished").type(JsonFieldType.BOOLEAN).description("찜 여부 (false: 찜하지 않은 상품)")
                     )
                     .build()
                 )));
