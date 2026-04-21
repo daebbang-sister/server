@@ -550,7 +550,7 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.data.options[0].sizes[0].stock").value(10))
             .andExpect(jsonPath("$.data.options[0].sizes[0].soldOut").value(false))
             .andExpect(jsonPath("$.data.options[0].sizes[1].soldOut").value(true))
-            .andExpect(jsonPath("$.data.isWished").doesNotExist())
+            .andExpect(jsonPath("$.data.isWished").value(false))
             .andDo(document("products/detail-guest",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Product")
@@ -558,7 +558,7 @@ class ProductControllerTest {
                     .description("""
                         상품 ID로 상세 정보를 조회합니다.
                         갤러리 이미지, 색상/사이즈 옵션, 할인 정보가 포함됩니다.
-                        비로그인 상태에서는 isWished가 null로 반환됩니다.
+                        비로그인 상태에서는 isWished가 false로 반환됩니다.
                         """)
                     .responseSchema(Schema.schema("ProductDetailResponse"))
                     .pathParameters(
@@ -588,7 +588,7 @@ class ProductControllerTest {
                         fieldWithPath("data.options[].sizes[].size").type(JsonFieldType.STRING).description("사이즈"),
                         fieldWithPath("data.options[].sizes[].stock").type(JsonFieldType.NUMBER).description("재고 수량"),
                         fieldWithPath("data.options[].sizes[].soldOut").type(JsonFieldType.BOOLEAN).description("품절 여부"),
-                        fieldWithPath("data.isWished").type(JsonFieldType.VARIES).optional().description("찜 여부 (비로그인 시 null, 로그인 시 true/false)")
+                        fieldWithPath("data.isWished").type(JsonFieldType.BOOLEAN).description("찜 여부 (비로그인 시 false, 로그인 시 true/false)")
                     )
                     .build()
                 )));

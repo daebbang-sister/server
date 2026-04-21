@@ -356,7 +356,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=Sr9gyhVUw61YedAmj5oPHxknO7CIfgow4pS6Hf2f990Pie2lf4xUqXQx9sx1HLRE7bc7LStFFom5TDgd2vCDeZirlek7v4jH
+                value: _csrf=ybyglmXXnqgDuBr-wHxJYrr1aBQi5aqXhxBdf7QUJQkB3q-4qIyX91bhrZgu2ynH91F9A4vDRSwQ15m6sCNsT4EhQz5ju5bb
       responses:
         "200":
           description: "200"
@@ -910,7 +910,7 @@ paths:
                     :false},{\"productDetailId\":2,\"size\":\"M\",\"stock\":0,\"soldOut\"\
                     :true}]},{\"color\":\"화이트\",\"colorCode\":\"#FFFFFF\",\"sizes\"\
                     :[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"soldOut\"\
-                    :false}]}],\"isWished\":null}}"
+                    :false}]}],\"isWished\":false}}"
                 products/detail-not-wished:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
@@ -1275,8 +1275,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -1752,14 +1752,12 @@ components:
             descriptionHtml:
               type: object
               description: 상품 상세 HTML
+            isWished:
+              type: boolean
+              description: "찜 여부 (true: 찜한 상품)"
             id:
               type: number
               description: 상품 ID
-            isWished:
-              description: "찜 여부 (true: 찜한 상품)"
-              oneOf:
-              - type: boolean
-              - type: object
             mainImageUrl:
               type: string
               description: 메인 이미지 URL
