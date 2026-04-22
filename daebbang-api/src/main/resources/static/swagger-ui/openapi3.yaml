@@ -416,7 +416,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=z_3LHFv36N9jPq8F8mDkgf8EL9hnm-OTZPgk-DkZiuwzVc---sz7LGLP3-dOWJc3lE3QtcY0AuFfrNq-U8gdnF8uso0LYf-P
+                value: _csrf=qY3Vpl-8335ER6vf8qD0zyFN-NAetZ4c5XWu6lNKgImJUbWun-_mlW6FuxxpI526xY3ArhV71egqhq4xh02fiWt-5e-xZdbM
       responses:
         "200":
           description: "200"
