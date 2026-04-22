@@ -25,7 +25,6 @@ import com.daebbang.daebbangcore.domain.order.session.OrderSession;
 import com.daebbang.daebbangcore.domain.order.session.OrderSessionItem;
 import com.daebbang.daebbangcore.domain.order.session.OrderSessionRedisRepository;
 import com.daebbang.daebbangcore.domain.order.session.OrderStockReserveRedisRepository;
-import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
 import com.daebbang.daebbangcore.domain.product.entity.ProductDetails;
 import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.domain.product.service.ProductDetailsService;
@@ -33,6 +32,7 @@ import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.toss.TossPaymentClient;
 import com.daebbang.daebbangcore.infra.toss.dto.TossPaymentResponse;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.NonNull;
@@ -50,6 +51,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -64,6 +66,8 @@ public class OrderServiceImpl implements OrderService {
 
     private static final int FREE_SHIPPING_THRESHOLD = 50_000;
     private static final int DEFAULT_SHIPPING_FEE = 3_000;
+    private static final String CANCEL_IDEMPOTENCY_PREFIX = "order:cancel:idempotency:";
+    private static final Duration CANCEL_IDEMPOTENCY_TTL = Duration.ofHours(24);
 
     private final UserService userService;
     private final ProductDetailsService productDetailsService;
@@ -76,6 +80,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderStockReserveRedisRepository stockReserveRedisRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final PlatformTransactionManager transactionManager;
+    private final StringRedisTemplate stringRedisTemplate;
 
     // read tx: 검증 단계에서 커넥션 조기 반환
     private TransactionTemplate readTx() {
@@ -275,7 +280,7 @@ public class OrderServiceImpl implements OrderService {
             } catch (Exception e) {
                 log.error("[Order] DB 처리 실패 - Toss 취소 시도 - orderNumber: {}", command.orderNumber(), e);
                 try {
-                    tossPaymentClient.cancel(command.paymentKey(), "시스템 오류로 인한 자동 취소");
+                    tossPaymentClient.cancel(command.paymentKey(), "시스템 오류로 인한 자동 취소", UUID.randomUUID().toString());
                 } catch (Exception cancelEx) {
                     log.error("[Order] Toss 취소 실패 - 수동 취소 필요 - paymentKey: {}", command.paymentKey(), cancelEx);
                 }
@@ -301,16 +306,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void cancel(OrderCancelCommand command) {
-        RLock cancelLock = redissonClient.getLock("order:cancel:lock:" + command.orderNumber());
-        boolean acquired = false;
-        try {
-            acquired = cancelLock.tryLock(3, TimeUnit.SECONDS);
-            if (!acquired) {
-                throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
-            }
-
+        withCancelLock(command.orderNumber(), () -> {
             // [Phase 1] read tx: 검증 + 필요 데이터 수집 후 커넥션 반환
-            CancelPrecheck precheck = readTx().execute(status -> {
+            CancelPrecheck precheck = Objects.requireNonNull(readTx().execute(status -> {
                 Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
                         command.orderNumber(), command.userId())
                     .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
@@ -328,10 +326,11 @@ public class OrderServiceImpl implements OrderService {
                 }
 
                 return new CancelPrecheck(payment.getPaymentKey(), cancelableAmount);
-            });
+            }));
 
             // [Phase 2] Toss API 호출 — DB 커넥션 미보유
-            tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason());
+            String idempotencyKey = getOrCreateCancelIdempotencyKey(command.orderNumber());
+            tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason(), idempotencyKey);
 
             // [Phase 3] write tx: DB 상태 반영
             writeTx().execute(status -> {
@@ -350,47 +349,22 @@ public class OrderServiceImpl implements OrderService {
                 }
                 order.cancel();
                 paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelableAmount());
-
-                for (OrderDetails detail : cancelTargets) {
-                    int updated = productDetailsService.increaseStock(
-                        detail.getProductDetail().getId(), detail.getQuantity()
-                    );
-                    if (updated != 1) {
-                        log.error("[Order] 재고 복원 실패 - productDetailId: {}", detail.getProductDetail().getId());
-                        throw new BusinessException(UserErrorCode.STOCK_RESTORE_FAILED);
-                    }
-                }
-
-                List<Long> productDetailIds = cancelTargets.stream()
-                    .map(d -> d.getProductDetail().getId())
-                    .toList();
-                eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+                restoreStockAndPublishEvent(cancelTargets);
 
                 log.info("[Order] 전체 취소 완료 - orderNumber: {}, userId: {}",
                     command.orderNumber(), command.userId());
                 return null;
             });
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
-        } finally {
-            if (acquired) cancelLock.unlock();
-        }
+            deleteCancelIdempotencyKey(command.orderNumber());
+        });
     }
 
     @Override
     public void cancelPartial(OrderPartialCancelCommand command) {
-        RLock cancelLock = redissonClient.getLock("order:cancel:lock:" + command.orderNumber());
-        boolean acquired = false;
-        try {
-            acquired = cancelLock.tryLock(3, TimeUnit.SECONDS);
-            if (!acquired) {
-                throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
-            }
-
+        withCancelLock(command.orderNumber(), () -> {
             // [Phase 1] read tx: 검증 + 필요 데이터 수집
-            PartialCancelPrecheck precheck = readTx().execute(status -> {
+            PartialCancelPrecheck precheck = Objects.requireNonNull(readTx().execute(status -> {
                 Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
                         command.orderNumber(), command.userId())
                     .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
@@ -431,10 +405,11 @@ public class OrderServiceImpl implements OrderService {
 
                 List<Long> targetDetailIds = targetDetails.stream().map(OrderDetails::getId).toList();
                 return new PartialCancelPrecheck(payment.getPaymentKey(), cancelAmount, targetDetailIds);
-            });
+            }));
 
             // [Phase 2] Toss API 호출 — DB 커넥션 미보유
-            tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason(), precheck.cancelAmount());
+            String idempotencyKey = getOrCreateCancelIdempotencyKey(command.orderNumber());
+            tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason(), precheck.cancelAmount(), idempotencyKey);
 
             // [Phase 3] write tx: DB 상태 반영
             writeTx().execute(status -> {
@@ -459,33 +434,15 @@ public class OrderServiceImpl implements OrderService {
                 }
 
                 paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelAmount());
+                restoreStockAndPublishEvent(targetDetails);
 
-                for (OrderDetails detail : targetDetails) {
-                    int updated = productDetailsService.increaseStock(
-                        detail.getProductDetail().getId(), detail.getQuantity()
-                    );
-                    if (updated != 1) {
-                        log.error("[Order] 재고 복원 실패 - productDetailId: {}", detail.getProductDetail().getId());
-                        throw new BusinessException(UserErrorCode.STOCK_RESTORE_FAILED);
-                    }
-                }
-
-                List<Long> productDetailIds = targetDetails.stream()
-                    .map(d -> d.getProductDetail().getId())
-                    .toList();
-                eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
-
-                log.info("[Order] 일부 취소 완료 - orderNumber: {}, userId: {}, 취소금액: {}",
+                log.info("[Order] 부분 취소 완료 - orderNumber: {}, userId: {}, 취소금액: {}",
                     command.orderNumber(), command.userId(), precheck.cancelAmount());
                 return null;
             });
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
-        } finally {
-            if (acquired) cancelLock.unlock();
-        }
+            deleteCancelIdempotencyKey(command.orderNumber());
+        });
     }
 
     @Override
@@ -572,6 +529,54 @@ public class OrderServiceImpl implements OrderService {
             }
             default -> 0;
         };
+    }
+
+    private void withCancelLock(String orderNumber, Runnable action) {
+        RLock cancelLock = redissonClient.getLock("order:cancel:lock:" + orderNumber);
+        boolean acquired = false;
+        try {
+            acquired = cancelLock.tryLock(3, TimeUnit.SECONDS);
+            if (!acquired) {
+                throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
+            }
+            action.run();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
+        } finally {
+            if (acquired) cancelLock.unlock();
+        }
+    }
+
+    private void restoreStockAndPublishEvent(List<OrderDetails> details) {
+        for (OrderDetails detail : details) {
+            int updated = productDetailsService.increaseStock(
+                detail.getProductDetail().getId(), detail.getQuantity()
+            );
+            if (updated != 1) {
+                log.error("[Order] 재고 복원 실패 - productDetailId: {}", detail.getProductDetail().getId());
+                throw new BusinessException(UserErrorCode.STOCK_RESTORE_FAILED);
+            }
+        }
+        List<Long> productDetailIds = details.stream()
+            .map(d -> d.getProductDetail().getId())
+            .toList();
+        eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+    }
+
+    private String getOrCreateCancelIdempotencyKey(String orderNumber) {
+        String redisKey = CANCEL_IDEMPOTENCY_PREFIX + orderNumber;
+        String existing = stringRedisTemplate.opsForValue().get(redisKey);
+        if (existing != null) {
+            return existing;
+        }
+        String newKey = UUID.randomUUID().toString();
+        stringRedisTemplate.opsForValue().set(redisKey, newKey, CANCEL_IDEMPOTENCY_TTL);
+        return newKey;
+    }
+
+    private void deleteCancelIdempotencyKey(String orderNumber) {
+        stringRedisTemplate.delete(CANCEL_IDEMPOTENCY_PREFIX + orderNumber);
     }
 
     private String generateOrderNumber() {

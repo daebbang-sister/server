@@ -71,12 +71,12 @@ public class TossPaymentClient {
     }
 
 
-    public void cancel(String paymentKey, String cancelReason) {
-        cancel(paymentKey, cancelReason, null);
+    public void cancel(String paymentKey, String cancelReason, String idempotencyKey) {
+        cancel(paymentKey, cancelReason, null, idempotencyKey);
     }
 
 
-    public void cancel(String paymentKey, String cancelReason, Integer cancelAmount) {
+    public void cancel(String paymentKey, String cancelReason, Integer cancelAmount, String idempotencyKey) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("cancelReason", cancelReason);
@@ -89,6 +89,7 @@ public class TossPaymentClient {
                 .uri(URI.create(BASE_URL + "/v1/payments/" + paymentKey + "/cancel"))
                 .header("Authorization", basicAuth())
                 .header("Content-Type", "application/json")
+                .header("Idempotency-Key", idempotencyKey)
                 .timeout(Duration.ofSeconds(30))
                 .POST(BodyPublishers.ofString(body))
                 .build();
