@@ -2,16 +2,24 @@ package com.daebbang.daebbangcore.domain.order.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.domain.order.command.OrderCancelCommand;
 import com.daebbang.daebbangcore.domain.order.command.OrderConfirmCommand;
 import com.daebbang.daebbangcore.domain.order.command.OrderItemCommand;
+import com.daebbang.daebbangcore.domain.order.command.OrderPartialCancelCommand;
 import com.daebbang.daebbangcore.domain.order.command.OrderPrepareCommand;
+import com.daebbang.daebbangcore.domain.order.dto.OrderFullDetailResult;
 import com.daebbang.daebbangcore.domain.order.dto.OrderPrepareResponse;
+import com.daebbang.daebbangcore.domain.order.dto.OrderStatusCountResult;
+import com.daebbang.daebbangcore.domain.order.dto.OrderSummaryResult;
+import com.daebbang.daebbangcore.domain.order.entity.OrderDetailStatus;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetails;
+import com.daebbang.daebbangcore.domain.order.entity.OrderStatus;
 import com.daebbang.daebbangcore.domain.order.entity.Orders;
 import com.daebbang.daebbangcore.domain.order.entity.Payment;
+import com.daebbang.daebbangcore.domain.order.event.StockInvalidateEvent;
 import com.daebbang.daebbangcore.domain.order.repository.OrdersRepository;
-import com.daebbang.daebbangcore.domain.order.repository.PaymentRepository;
 import com.daebbang.daebbangcore.domain.order.service.OrderService;
+import com.daebbang.daebbangcore.domain.order.service.PaymentService;
 import com.daebbang.daebbangcore.domain.order.service.StockCacheService;
 import com.daebbang.daebbangcore.domain.order.session.OrderSession;
 import com.daebbang.daebbangcore.domain.order.session.OrderSessionItem;
@@ -33,10 +41,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,12 +64,13 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final ProductDetailsService productDetailsService;
     private final OrdersRepository ordersRepository;
-    private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
     private final StockCacheService stockCacheService;
     private final OrderSessionRedisRepository orderSessionRedisRepository;
     private final TossPaymentClient tossPaymentClient;
     private final RedissonClient redissonClient;
     private final OrderStockReserveRedisRepository stockReserveRedisRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public OrderPrepareResponse prepare(OrderPrepareCommand command) {
@@ -77,7 +90,6 @@ public class OrderServiceImpl implements OrderService {
                     }
 
                     stockCacheService.decreaseStock(item.productDetailId(), item.quantity());
-                    // merge로 동일 productDetailId 중복 요청 처리
                     decreasedStocks.merge(item.productDetailId(), item.quantity(), Integer::sum);
 
                     ProductDetails pd = productDetailsService.getProductDetailsById(item.productDetailId());
@@ -228,7 +240,7 @@ public class OrderServiceImpl implements OrderService {
                     approvedAt
                 );
                 payment.update();
-                paymentRepository.save(payment);
+                paymentService.save(payment);
 
                 log.info("[Order] confirm 완료 - orderNumber: {}, method: {}",
                     command.orderNumber(), tossResponse.getMethod());
@@ -260,9 +272,210 @@ public class OrderServiceImpl implements OrderService {
         session.getItems().forEach(i -> stockCacheService.invalidateStock(i.getProductDetailId()));
     }
 
+    @Override
+    @Transactional
+    public void cancel(OrderCancelCommand command) {
+        // 1. 주문 조회 (userId 포함 → 타인 주문 취소 방지)
+        Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(command.orderNumber(), command.userId())
+            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+
+        // 2. 취소 가능 상태 검증 (배송중 이후는 취소 불가 → 반품 프로세스 이용)
+        if (order.getOrderStatus() != OrderStatus.PAID
+            && order.getOrderStatus() != OrderStatus.WAITING_DEPOSIT
+            && order.getOrderStatus() != OrderStatus.PREPARING_DELIVERY) {
+            throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+        }
+
+        // 3. 결제 조회
+        Payment payment = paymentService.findByOrder(order);
+
+        // 4. Toss 전액 취소 — 실패 시 예외 throw → 트랜잭션 롤백 (DB 변경 없음)
+        tossPaymentClient.cancel(payment.getPaymentKey(), command.cancelReason());
+
+        // 5. NORMAL 상태인 OrderDetails 모두 취소
+        for (OrderDetails detail : order.getOrderList()) {
+            if (detail.getStatus() == OrderDetailStatus.NORMAL) {
+                detail.cancelRequest();
+                detail.cancel();
+            }
+        }
+
+        // 6. Orders 상태 취소로 변경
+        order.cancel();
+
+        // 7. 결제 취소 이력 기록 (전액: 남은 미취소 금액 전부)
+        int remainingAmount = payment.getTotalAmount() - payment.getTotalCancelAmount();
+        paymentService.recordCancel(payment, command.cancelReason(), remainingAmount);
+
+        // 8. DB 재고 복원
+        for (OrderDetails detail : order.getOrderList()) {
+            productDetailsService.increaseStock(
+                detail.getProductDetail().getId(), detail.getQuantity()
+            );
+        }
+
+        // 9. 이벤트 발행 → 트랜잭션 커밋 후 Redis 캐시 무효화
+        //    롤백 시에는 AFTER_COMMIT 리스너가 실행되지 않으므로 Redis/DB 정합성 보장
+        List<Long> productDetailIds = order.getOrderList().stream()
+            .map(d -> d.getProductDetail().getId())
+            .toList();
+        eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+
+        log.info("[Order] 전체 취소 완료 - orderNumber: {}, userId: {}",
+            command.orderNumber(), command.userId());
+    }
+
+    @Override
+    @Transactional
+    public void cancelPartial(OrderPartialCancelCommand command) {
+        // 1. 주문 조회 (userId 포함 → 타인 주문 취소 방지)
+        Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(command.orderNumber(), command.userId())
+            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+
+        // 2. 일부 취소는 PAID 상태만 허용 (WAITING_DEPOSIT은 전액 취소만)
+        if (order.getOrderStatus() != OrderStatus.PAID) {
+            throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+        }
+
+        // 3. 취소 대상 detail 검증
+        List<Long> targetIds = command.orderDetailIds();
+        if (targetIds == null || targetIds.isEmpty()) {
+            throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+        }
+
+        List<OrderDetails> targetDetails = order.getOrderList().stream()
+            .filter(d -> targetIds.contains(d.getId()))
+            .toList();
+
+        // 요청한 ID 수와 실제 조회 수가 다르면 → 해당 주문에 없는 ID가 포함됨
+        if (targetDetails.size() != targetIds.size()) {
+            throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+        }
+
+        // 이미 취소된 항목이 포함된 경우 거부
+        boolean hasAlreadyCancelled = targetDetails.stream()
+            .anyMatch(d -> d.getStatus() != OrderDetailStatus.NORMAL);
+        if (hasAlreadyCancelled) {
+            throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+        }
+
+        // 4. 취소 금액 계산 (선택된 detail의 discountPrice 합계)
+        int cancelAmount = targetDetails.stream()
+            .mapToInt(OrderDetails::getDiscountPrice)
+            .sum();
+
+        // 5. 결제 조회
+        Payment payment = paymentService.findByOrder(order);
+
+        // 6. Toss 부분 취소 — 실패 시 예외 throw → 트랜잭션 롤백 (DB 변경 없음)
+        tossPaymentClient.cancel(payment.getPaymentKey(), command.cancelReason(), cancelAmount);
+
+        // 7. 선택된 detail 취소 처리
+        for (OrderDetails detail : targetDetails) {
+            detail.cancelRequest();
+            detail.cancel();
+        }
+
+        // 8. 모든 detail이 취소됐으면 Orders도 CANCELLED
+        boolean allCancelled = order.getOrderList().stream()
+            .allMatch(d -> d.getStatus() == OrderDetailStatus.CANCELLED);
+        if (allCancelled) {
+            order.cancel();
+        }
+
+        // 9. 결제 취소 이력 기록 (부분 취소)
+        paymentService.recordCancel(payment, command.cancelReason(), cancelAmount);
+
+        // 10. 취소된 detail들의 DB 재고 복원
+        for (OrderDetails detail : targetDetails) {
+            productDetailsService.increaseStock(
+                detail.getProductDetail().getId(), detail.getQuantity()
+            );
+        }
+
+        // 11. 이벤트 발행 → 트랜잭션 커밋 후 Redis 캐시 무효화 (취소된 상품만)
+        List<Long> productDetailIds = targetDetails.stream()
+            .map(d -> d.getProductDetail().getId())
+            .toList();
+        eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+
+        log.info("[Order] 일부 취소 완료 - orderNumber: {}, userId: {}, 취소금액: {}",
+            command.orderNumber(), command.userId(), cancelAmount);
+    }
+
+    @Override
+    public Page<@NonNull OrderSummaryResult> getOrderList(Long userId, LocalDateTime start,
+                                                  LocalDateTime end, Pageable pageable) {
+        return ordersRepository.findOrdersByUserIdAndDateRange(userId, start, end, pageable)
+            .map(this::toSummaryResult);
+    }
+
+    @Override
+    public OrderFullDetailResult getOrderDetail(Long userId, String orderNumber) {
+        Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(orderNumber, userId)
+            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+        return toFullDetailResult(order);
+    }
+
+    @Override
+    public OrderStatusCountResult getOrderStatusCount(Long userId, LocalDateTime start,
+                                                       LocalDateTime end) {
+        return ordersRepository.countOrderStatusByUserIdAndDateRange(userId, start, end);
+    }
+
+    private OrderSummaryResult toSummaryResult(Orders order) {
+        List<OrderDetails> details = order.getOrderList();
+        OrderDetails first = details.isEmpty() ? null : details.get(0);
+        int totalQuantity = details.stream().mapToInt(OrderDetails::getQuantity).sum();
+
+        return new OrderSummaryResult(
+            order.getId(),
+            order.getOrderNumber(),
+            order.getOrderStatus(),
+            order.getCreatedAt(),
+            order.getPaymentAmount(),
+            totalQuantity,
+            first != null ? first.getProductDetail().getProduct().getProductName() : null,
+            first != null ? first.getProductDetail().getProduct().getMainImageUrl() : null,
+            first != null ? first.getProductDetail().getColor() : null,
+            first != null ? first.getProductDetail().getSize() : null
+        );
+    }
+
+    private OrderFullDetailResult toFullDetailResult(Orders order) {
+        List<OrderFullDetailResult.OrderDetailItem> items = order.getOrderList().stream()
+            .map(d -> new OrderFullDetailResult.OrderDetailItem(
+                d.getId(),
+                d.getProductDetail().getId(),
+                d.getProductDetail().getProduct().getProductName(),
+                d.getProductDetail().getProduct().getMainImageUrl(),
+                d.getProductDetail().getColor(),
+                d.getProductDetail().getColorCode(),
+                d.getProductDetail().getSize(),
+                d.getQuantity(),
+                d.getOriginalPrice(),
+                d.getDiscountRate(),
+                d.getDiscountPrice(),
+                d.getStatus()
+            ))
+            .toList();
+
+        return new OrderFullDetailResult(
+            order.getOrderNumber(),
+            order.getOrderStatus(),
+            order.getCreatedAt(),
+            order.getTotalOriginalAmount(),
+            order.getTotalSellingAmount(),
+            order.getShippingFee(),
+            order.getUsedPoint(),
+            order.getPaymentAmount(),
+            items
+        );
+    }
+
     private String generateOrderNumber() {
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String random = UUID.randomUUID().toString().replace("-", "").substring(0, 10).toUpperCase();
-        return date + "-" + random; // 8 + 1 + 10 = 19자
+        return date + "-" + random;
     }
 }

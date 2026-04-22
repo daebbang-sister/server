@@ -27,4 +27,10 @@ public class ProductDetailsServiceImpl implements ProductDetailsService {
     public int decreaseStock(Long id, int quantity) {
         return productDetailsRepository.decreaseStock(id, quantity);
     }
+
+    @Override
+    @Transactional
+    public int increaseStock(Long id, int quantity) {
+        return productDetailsRepository.increaseStock(id, quantity);
+    }
 }

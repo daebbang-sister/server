@@ -14,4 +14,8 @@ public interface ProductDetailsRepository extends JpaRepository<@NonNull Product
     @Modifying(clearAutomatically = true)
     @Query("UPDATE ProductDetails pd SET pd.stock = pd.stock - :quantity WHERE pd.id = :id AND pd.stock >= :quantity AND :quantity > 0")
     int decreaseStock(@Param("id") Long id, @Param("quantity") int quantity);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE ProductDetails pd SET pd.stock = pd.stock + :quantity WHERE pd.id = :id AND :quantity > 0")
+    int increaseStock(@Param("id") Long id, @Param("quantity") int quantity);
 }

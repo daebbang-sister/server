@@ -7,4 +7,6 @@ public interface ProductDetailsService {
     ProductDetails getProductDetailsById(Long id);
 
     int decreaseStock(Long id, int quantity);
+
+    int increaseStock(Long id, int quantity);
 }

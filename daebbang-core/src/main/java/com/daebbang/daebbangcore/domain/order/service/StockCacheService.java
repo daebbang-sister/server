@@ -2,13 +2,15 @@ package com.daebbang.daebbangcore.domain.order.service;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcore.domain.order.event.StockInvalidateEvent;
 import com.daebbang.daebbangcore.domain.product.service.ProductDetailsService;
-
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Service
@@ -56,5 +58,20 @@ public class StockCacheService {
     public void invalidateStock(Long productDetailId) {
         stringRedisTemplate.delete(STOCK_KEY_PREFIX + productDetailId);
         log.info("[Stock] 캐시 무효화 - productDetailId: {}", productDetailId);
+    }
+
+    /**
+     * 주문 취소 트랜잭션 커밋 완료 후 Redis 캐시 무효화.
+     * AFTER_COMMIT 을 사용하므로 트랜잭션 롤백 시에는 실행되지 않아 DB/Redis 정합성 보장.
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleStockInvalidate(StockInvalidateEvent event) {
+        event.getProductDetailIds().forEach(id -> {
+            try {
+                invalidateStock(id);
+            } catch (Exception e) {
+                log.error("[Stock] 취소 후 캐시 무효화 실패 - productDetailId: {} (다음 요청 시 DB 재로드)", id, e);
+            }
+        });
     }
 }

@@ -54,7 +54,12 @@ public enum UserErrorCode implements ErrorCode {
     ORDER_ALREADY_PROCESSED(409, "이미 처리된 주문입니다."),
     OUT_OF_STOCK(409, "재고가 부족합니다."),
     STOCK_LOCK_FAILED(503, "재고 처리 중입니다. 잠시 후 다시 시도해주세요."),
-    PAYMENT_CONFIRMATION_FAILED(502, "결제 승인에 실패했습니다. 관리자에게 문의하세요.");
+    PAYMENT_CONFIRMATION_FAILED(502, "결제 승인에 실패했습니다. 관리자에게 문의하세요."),
+    PAYMENT_NOT_FOUND(404, "결제 정보를 찾을 수 없습니다."),
+    PAYMENT_CANCEL_FAILED(502, "결제 취소에 실패했습니다. 관리자에게 문의하세요."),
+
+    ORDER_CANCEL_NOT_ALLOWED(400, "취소할 수 없는 주문 상태입니다."),
+    ORDER_PARTIAL_CANCEL_INVALID(400, "유효하지 않은 취소 항목입니다.");
 
     private final int status;
     private final String message;
