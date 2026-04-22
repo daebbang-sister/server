@@ -4,8 +4,13 @@ import com.daebbang.daebbangcore.domain.order.dto.OrderStatusCountResult;
 import com.daebbang.daebbangcore.domain.order.entity.OrderStatus;
 import com.daebbang.daebbangcore.domain.order.entity.Orders;
 import com.daebbang.daebbangcore.domain.order.repository.dsl.OrderCustomRepository;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,8 +18,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import static com.daebbang.daebbangcore.domain.order.entity.QOrderDetails.orderDetails;
@@ -28,15 +34,10 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
 
     private final JPAQueryFactory queryFactory;
 
-    /**
-     * 2단계 쿼리로 컬렉션 fetch join + 페이징 충돌 방지.
-     * 1단계: 주문 ID만 페이징 조회 (row 뻥튀기 없음)
-     * 2단계: ID로 LEFT JOIN FETCH (orderList 없어도 주문은 포함)
-     */
     @Override
     public Page<Orders> findOrdersByUserIdAndDateRange(Long userId, LocalDateTime start,
                                                        LocalDateTime end, Pageable pageable) {
-        // 1단계: ID 페이징
+        // 1단계: ID만 페이징 (컬렉션 fetch join 없이 row 뻥튀기 방지)
         List<Long> ids = queryFactory
             .select(orders.id)
             .from(orders)
@@ -44,36 +45,56 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
                 orders.user.id.eq(userId),
                 orders.createdAt.between(start, end)
             )
-            .orderBy(orders.createdAt.desc())
+            .orderBy(toOrderSpecifiers(pageable.getSort()))
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();
 
         if (ids.isEmpty()) {
-            return Page.empty(pageable);
+            // totalElements를 정확하게 계산하기 위해 count 쿼리 위임
+            JPAQuery<Long> countQuery = queryFactory
+                .select(orders.count())
+                .from(orders)
+                .where(
+                    orders.user.id.eq(userId),
+                    orders.createdAt.between(start, end)
+                );
+            return PageableExecutionUtils.getPage(List.of(), pageable, countQuery::fetchOne);
         }
 
-        Long total = queryFactory
-            .select(orders.count())
-            .from(orders)
-            .where(
-                orders.user.id.eq(userId),
-                orders.createdAt.between(start, end)
-            )
-            .fetchOne();
-
-        // 2단계: ID로 fetch join (left join → orderList 비어도 주문 포함)
+        // 2단계: ID로 LEFT JOIN FETCH (orderList 없어도 주문 포함)
         List<Orders> content = queryFactory
             .selectFrom(orders)
             .leftJoin(orders.orderList, orderDetails).fetchJoin()
             .leftJoin(orderDetails.productDetail, productDetails).fetchJoin()
             .leftJoin(productDetails.product, products).fetchJoin()
             .where(orders.id.in(ids))
-            .orderBy(orders.createdAt.desc())
+            .orderBy(toOrderSpecifiers(pageable.getSort()))
             .distinct()
             .fetch();
 
-        return new PageImpl<>(content, pageable, total != null ? total : 0L);
+        JPAQuery<Long> countQuery = queryFactory
+            .select(orders.count())
+            .from(orders)
+            .where(
+                orders.user.id.eq(userId),
+                orders.createdAt.between(start, end)
+            );
+
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    private OrderSpecifier<?>[] toOrderSpecifiers(Sort sort) {
+        if (sort.isUnsorted()) {
+            return new OrderSpecifier[]{orders.createdAt.desc()};
+        }
+        List<OrderSpecifier<?>> specifiers = new ArrayList<>();
+        PathBuilder<Orders> path = new PathBuilder<>(Orders.class, "orders");
+        for (Sort.Order o : sort) {
+            Order direction = o.isAscending() ? Order.ASC : Order.DESC;
+            specifiers.add(new OrderSpecifier<>(direction, path.get(o.getProperty(), Comparable.class)));
+        }
+        return specifiers.toArray(new OrderSpecifier[0]);
     }
 
     @Override
@@ -93,6 +114,11 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
         return Optional.ofNullable(result);
     }
 
+    private static final List<OrderStatus> DELIVERY_STATUSES = List.of(
+        OrderStatus.PAID, OrderStatus.PREPARING_DELIVERY,
+        OrderStatus.IN_DELIVERY, OrderStatus.DELIVERED
+    );
+
     @Override
     public OrderStatusCountResult countOrderStatusByUserIdAndDateRange(Long userId,
                                                                        LocalDateTime start,
@@ -102,7 +128,8 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
             .from(orders)
             .where(
                 orders.user.id.eq(userId),
-                orders.createdAt.between(start, end)
+                orders.createdAt.between(start, end),
+                orders.orderStatus.in(DELIVERY_STATUSES)
             )
             .groupBy(orders.orderStatus)
             .fetch()

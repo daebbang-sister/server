@@ -58,6 +58,7 @@ public class Orders extends DefaultBase {
     private Integer paymentAmount;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @jakarta.persistence.OrderBy("id ASC")
     private final List<OrderDetails> orderList = new ArrayList<>();
 
     @Builder

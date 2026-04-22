@@ -42,15 +42,18 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.NonNull;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @Service
@@ -71,6 +74,25 @@ public class OrderServiceImpl implements OrderService {
     private final RedissonClient redissonClient;
     private final OrderStockReserveRedisRepository stockReserveRedisRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final PlatformTransactionManager transactionManager;
+
+    // read tx: 검증 단계에서 커넥션 조기 반환
+    private TransactionTemplate readTx() {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.setReadOnly(true);
+        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return tx;
+    }
+
+    // write tx: Toss 호출 후 DB 반영
+    private TransactionTemplate writeTx() {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return tx;
+    }
+
+    private record CancelPrecheck(String paymentKey, int cancelableAmount) {}
+    private record PartialCancelPrecheck(String paymentKey, int cancelAmount, List<Long> targetDetailIds) {}
 
     @Override
     public OrderPrepareResponse prepare(OrderPrepareCommand command) {
@@ -273,134 +295,160 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
     public void cancel(OrderCancelCommand command) {
-        // 1. 주문 조회 (userId 포함 → 타인 주문 취소 방지)
-        Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(command.orderNumber(), command.userId())
-            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+        // [Phase 1] read tx: 검증 + 필요 데이터 수집 후 커넥션 반환
+        CancelPrecheck precheck = readTx().execute(status -> {
+            Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
+                    command.orderNumber(), command.userId())
+                .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
 
-        // 2. 취소 가능 상태 검증 (배송중 이후는 취소 불가 → 반품 프로세스 이용)
-        if (order.getOrderStatus() != OrderStatus.PAID
-            && order.getOrderStatus() != OrderStatus.WAITING_DEPOSIT
-            && order.getOrderStatus() != OrderStatus.PREPARING_DELIVERY) {
-            throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
-        }
-
-        // 3. 결제 조회
-        Payment payment = paymentService.findByOrder(order);
-
-        // 4. Toss 전액 취소 — 실패 시 예외 throw → 트랜잭션 롤백 (DB 변경 없음)
-        tossPaymentClient.cancel(payment.getPaymentKey(), command.cancelReason());
-
-        // 5. NORMAL 상태인 OrderDetails 모두 취소
-        for (OrderDetails detail : order.getOrderList()) {
-            if (detail.getStatus() == OrderDetailStatus.NORMAL) {
-                detail.cancelRequest();
-                detail.cancel();
+            if (order.getOrderStatus() != OrderStatus.PAID
+                && order.getOrderStatus() != OrderStatus.WAITING_DEPOSIT
+                && order.getOrderStatus() != OrderStatus.PREPARING_DELIVERY) {
+                throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
             }
-        }
 
-        // 6. Orders 상태 취소로 변경
-        order.cancel();
+            Payment payment = paymentService.findByOrder(order);
+            int cancelableAmount = payment.getTotalAmount() - payment.getTotalCancelAmount();
+            if (cancelableAmount <= 0) {
+                throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+            }
 
-        // 7. 결제 취소 이력 기록 (전액: 남은 미취소 금액 전부)
-        int remainingAmount = payment.getTotalAmount() - payment.getTotalCancelAmount();
-        paymentService.recordCancel(payment, command.cancelReason(), remainingAmount);
+            return new CancelPrecheck(payment.getPaymentKey(), cancelableAmount);
+        });
 
-        // 8. DB 재고 복원
-        for (OrderDetails detail : order.getOrderList()) {
-            productDetailsService.increaseStock(
-                detail.getProductDetail().getId(), detail.getQuantity()
-            );
-        }
+        // [Phase 2] Toss API 호출 — DB 커넥션 미보유
+        tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason());
 
-        // 9. 이벤트 발행 → 트랜잭션 커밋 후 Redis 캐시 무효화
-        //    롤백 시에는 AFTER_COMMIT 리스너가 실행되지 않으므로 Redis/DB 정합성 보장
-        List<Long> productDetailIds = order.getOrderList().stream()
-            .map(d -> d.getProductDetail().getId())
-            .toList();
-        eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+        // [Phase 3] write tx: DB 상태 반영
+        writeTx().execute(status -> {
+            Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
+                    command.orderNumber(), command.userId())
+                .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+            Payment payment = paymentService.findByOrder(order);
 
-        log.info("[Order] 전체 취소 완료 - orderNumber: {}, userId: {}",
-            command.orderNumber(), command.userId());
+            for (OrderDetails detail : order.getOrderList()) {
+                if (detail.getStatus() == OrderDetailStatus.NORMAL) {
+                    detail.cancelRequest();
+                    detail.cancel();
+                }
+            }
+            order.cancel();
+            paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelableAmount());
+
+            for (OrderDetails detail : order.getOrderList()) {
+                int updated = productDetailsService.increaseStock(
+                    detail.getProductDetail().getId(), detail.getQuantity()
+                );
+                if (updated != 1) {
+                    log.error("[Order] 재고 복원 실패 - productDetailId: {}", detail.getProductDetail().getId());
+                    throw new BusinessException(UserErrorCode.STOCK_RESTORE_FAILED);
+                }
+            }
+
+            List<Long> productDetailIds = order.getOrderList().stream()
+                .map(d -> d.getProductDetail().getId())
+                .toList();
+            eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+
+            log.info("[Order] 전체 취소 완료 - orderNumber: {}, userId: {}",
+                command.orderNumber(), command.userId());
+            return null;
+        });
     }
 
     @Override
-    @Transactional
     public void cancelPartial(OrderPartialCancelCommand command) {
-        // 1. 주문 조회 (userId 포함 → 타인 주문 취소 방지)
-        Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(command.orderNumber(), command.userId())
-            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+        // [Phase 1] read tx: 검증 + 필요 데이터 수집
+        PartialCancelPrecheck precheck = readTx().execute(status -> {
+            Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
+                    command.orderNumber(), command.userId())
+                .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
 
-        // 2. 일부 취소는 PAID 상태만 허용 (WAITING_DEPOSIT은 전액 취소만)
-        if (order.getOrderStatus() != OrderStatus.PAID) {
-            throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
-        }
+            if (order.getOrderStatus() != OrderStatus.PAID
+                && order.getOrderStatus() != OrderStatus.PREPARING_DELIVERY) {
+                throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+            }
 
-        // 3. 취소 대상 detail 검증
-        List<Long> targetIds = command.orderDetailIds();
-        if (targetIds == null || targetIds.isEmpty()) {
-            throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
-        }
+            List<Long> targetIds = command.orderDetailIds();
+            List<OrderDetails> targetDetails = order.getOrderList().stream()
+                .filter(d -> targetIds.contains(d.getId()))
+                .toList();
 
-        List<OrderDetails> targetDetails = order.getOrderList().stream()
-            .filter(d -> targetIds.contains(d.getId()))
-            .toList();
+            if (targetDetails.size() != targetIds.size()) {
+                throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+            }
+            if (targetDetails.stream().anyMatch(d -> d.getStatus() != OrderDetailStatus.NORMAL)) {
+                throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+            }
 
-        // 요청한 ID 수와 실제 조회 수가 다르면 → 해당 주문에 없는 ID가 포함됨
-        if (targetDetails.size() != targetIds.size()) {
-            throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
-        }
+            int cancelAmount = targetDetails.stream()
+                .mapToInt(OrderDetails::getDiscountPrice)
+                .sum();
 
-        // 이미 취소된 항목이 포함된 경우 거부
-        boolean hasAlreadyCancelled = targetDetails.stream()
-            .anyMatch(d -> d.getStatus() != OrderDetailStatus.NORMAL);
-        if (hasAlreadyCancelled) {
-            throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
-        }
+            // 모든 항목 취소 시 배송비도 환불
+            boolean allWillBeCancelled = order.getOrderList().stream()
+                .allMatch(d -> targetIds.contains(d.getId()) || d.getStatus() == OrderDetailStatus.CANCELLED);
+            if (allWillBeCancelled) {
+                cancelAmount += order.getShippingFee();
+            }
 
-        // 4. 취소 금액 계산 (선택된 detail의 discountPrice 합계)
-        int cancelAmount = targetDetails.stream()
-            .mapToInt(OrderDetails::getDiscountPrice)
-            .sum();
+            Payment payment = paymentService.findByOrder(order);
+            int remainingAmount = payment.getTotalAmount() - payment.getTotalCancelAmount();
+            if (cancelAmount > remainingAmount || cancelAmount <= 0) {
+                throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+            }
 
-        // 5. 결제 조회
-        Payment payment = paymentService.findByOrder(order);
+            List<Long> targetDetailIds = targetDetails.stream().map(OrderDetails::getId).toList();
+            return new PartialCancelPrecheck(payment.getPaymentKey(), cancelAmount, targetDetailIds);
+        });
 
-        // 6. Toss 부분 취소 — 실패 시 예외 throw → 트랜잭션 롤백 (DB 변경 없음)
-        tossPaymentClient.cancel(payment.getPaymentKey(), command.cancelReason(), cancelAmount);
+        // [Phase 2] Toss API 호출 — DB 커넥션 미보유
+        tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason(), precheck.cancelAmount());
 
-        // 7. 선택된 detail 취소 처리
-        for (OrderDetails detail : targetDetails) {
-            detail.cancelRequest();
-            detail.cancel();
-        }
+        // [Phase 3] write tx: DB 상태 반영
+        writeTx().execute(status -> {
+            Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
+                    command.orderNumber(), command.userId())
+                .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+            Payment payment = paymentService.findByOrder(order);
 
-        // 8. 모든 detail이 취소됐으면 Orders도 CANCELLED
-        boolean allCancelled = order.getOrderList().stream()
-            .allMatch(d -> d.getStatus() == OrderDetailStatus.CANCELLED);
-        if (allCancelled) {
-            order.cancel();
-        }
+            List<OrderDetails> targetDetails = order.getOrderList().stream()
+                .filter(d -> precheck.targetDetailIds().contains(d.getId()))
+                .toList();
 
-        // 9. 결제 취소 이력 기록 (부분 취소)
-        paymentService.recordCancel(payment, command.cancelReason(), cancelAmount);
+            for (OrderDetails detail : targetDetails) {
+                detail.cancelRequest();
+                detail.cancel();
+            }
 
-        // 10. 취소된 detail들의 DB 재고 복원
-        for (OrderDetails detail : targetDetails) {
-            productDetailsService.increaseStock(
-                detail.getProductDetail().getId(), detail.getQuantity()
-            );
-        }
+            boolean allCancelled = order.getOrderList().stream()
+                .allMatch(d -> d.getStatus() == OrderDetailStatus.CANCELLED);
+            if (allCancelled) {
+                order.cancel();
+            }
 
-        // 11. 이벤트 발행 → 트랜잭션 커밋 후 Redis 캐시 무효화 (취소된 상품만)
-        List<Long> productDetailIds = targetDetails.stream()
-            .map(d -> d.getProductDetail().getId())
-            .toList();
-        eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+            paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelAmount());
 
-        log.info("[Order] 일부 취소 완료 - orderNumber: {}, userId: {}, 취소금액: {}",
-            command.orderNumber(), command.userId(), cancelAmount);
+            for (OrderDetails detail : targetDetails) {
+                int updated = productDetailsService.increaseStock(
+                    detail.getProductDetail().getId(), detail.getQuantity()
+                );
+                if (updated != 1) {
+                    log.error("[Order] 재고 복원 실패 - productDetailId: {}", detail.getProductDetail().getId());
+                    throw new BusinessException(UserErrorCode.STOCK_RESTORE_FAILED);
+                }
+            }
+
+            List<Long> productDetailIds = targetDetails.stream()
+                .map(d -> d.getProductDetail().getId())
+                .toList();
+            eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
+
+            log.info("[Order] 일부 취소 완료 - orderNumber: {}, userId: {}, 취소금액: {}",
+                command.orderNumber(), command.userId(), precheck.cancelAmount());
+            return null;
+        });
     }
 
     @Override

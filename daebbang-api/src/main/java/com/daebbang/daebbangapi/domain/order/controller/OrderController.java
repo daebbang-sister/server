@@ -12,8 +12,11 @@ import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.order.dto.OrderPrepareResponse;
 import com.daebbang.daebbangcore.domain.order.service.OrderService;
 import jakarta.validation.Valid;
+import com.daebbang.daebbangcommon.error.BusinessException;
+import com.daebbang.daebbangcommon.error.UserErrorCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -130,12 +133,15 @@ public class OrderController {
             return end.minusMonths(3);
         }
         LocalDateTime start = startDate.atStartOfDay();
+        if (start.isAfter(end)) {
+            throw new BusinessException(UserErrorCode.ORDER_DATE_RANGE_INVALID);
+        }
         return start.isBefore(oneYearAgo) ? oneYearAgo : start;
     }
 
-    private LocalDateTime resolveEndDate(LocalDate end) {
-        return end != null
-            ? end.atTime(23, 59, 59)
+    private LocalDateTime resolveEndDate(LocalDate endDate) {
+        return endDate != null
+            ? endDate.atTime(LocalTime.MAX)
             : LocalDateTime.now();
     }
 }

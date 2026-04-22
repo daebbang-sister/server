@@ -8,6 +8,7 @@ import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -61,12 +62,14 @@ public class StockCacheService {
     }
 
     /**
-     * 주문 취소 트랜잭션 커밋 완료 후 Redis 캐시 무효화.
-     * AFTER_COMMIT 을 사용하므로 트랜잭션 롤백 시에는 실행되지 않아 DB/Redis 정합성 보장.
+     * 주문 취소 트랜잭션 커밋 완료 후 Redis 캐시 비동기 무효화.
+     * AFTER_COMMIT + @Async → 커밋 확정 후 별도 스레드에서 실행.
+     * 트랜잭션 롤백 시에는 실행되지 않아 DB/Redis 정합성 보장.
      */
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleStockInvalidate(StockInvalidateEvent event) {
-        event.getProductDetailIds().forEach(id -> {
+        event.productDetailIds().forEach(id -> {
             try {
                 invalidateStock(id);
             } catch (Exception e) {
