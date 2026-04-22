@@ -416,7 +416,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=RLB1kcf4plxM95XJG_76cNmEgXTeJLBxVvkyAIpS-cgMJoKwcoZFqPOclmhhk_PwKNPOQL3lrBXoHIhcMMlRZegzmPo0ErWG
+                value: _csrf=z_3LHFv36N9jPq8F8mDkgf8EL9hnm-OTZPgk-DkZiuwzVc---sz7LGLP3-dOWJc3lE3QtcY0AuFfrNq-U8gdnF8uso0LYf-P
       responses:
         "200":
           description: "200"
@@ -783,6 +783,9 @@ paths:
               order/prepare-out-of-stock:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":999}],\"usedPoint\"\
                   :0}"
+              order/prepare-point-exceeds:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :99999}"
               order/prepare-success:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
                   :0}"
@@ -812,6 +815,9 @@ paths:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"usedPoint\",\"message\"\
                     :\"포인트는 0 이상이어야 합니다.\"}]}"
+                order/prepare-point-exceeds:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"포인트가 결제\
+                    \ 금액을 초과합니다.\",\"data\":null}"
         "503":
           description: "503"
           content:
@@ -1503,8 +1509,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\

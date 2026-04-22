@@ -427,6 +427,47 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("POST /v1/orders/prepare - 포인트가 결제 금액 초과 시 400 반환")
+    void prepare_pointExceedsPayment() throws Exception {
+        OrderPrepareRequest request = new OrderPrepareRequest(
+            List.of(new OrderItemRequest(1L, 1)),
+            99_999
+        );
+        willThrow(new BusinessException(UserErrorCode.POINT_EXCEEDS_PAYMENT))
+            .given(orderService).prepare(any());
+
+        mockMvc.perform(post("/v1/orders/prepare")
+                .with(authentication(authToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("포인트가 결제 금액을 초과합니다."))
+            .andDo(document("order/prepare-point-exceeds",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("주문 준비 - 포인트 초과")
+                    .description("사용 포인트가 결제 금액(상품금액 + 배송비)보다 크면 400 Bad Request를 반환합니다.")
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .requestFields(
+                        fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
+                        fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
+                        fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
+                        fieldWithPath("usedPoint").type(JsonFieldType.NUMBER).description("사용 포인트 (결제 금액 초과)")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
     @DisplayName("POST /v1/orders/prepare - 인증 없이 접근 시 401 반환")
     void prepare_unauthorized() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(

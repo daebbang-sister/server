@@ -6,7 +6,7 @@ import com.daebbang.daebbangcore.domain.order.entity.Orders;
 import com.daebbang.daebbangcore.domain.order.repository.dsl.OrderCustomRepository;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
@@ -31,6 +31,10 @@ import static com.daebbang.daebbangcore.domain.product.entity.QProducts.products
 @Repository
 @RequiredArgsConstructor
 public class OrderCustomRepositoryImpl implements OrderCustomRepository {
+
+    private static final Map<String, ComparableExpressionBase<?>> ORDER_SORTS = Map.of(
+        "createdAt", orders.createdAt
+    );
 
     private final JPAQueryFactory queryFactory;
 
@@ -84,16 +88,22 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private OrderSpecifier<?>[] toOrderSpecifiers(Sort sort) {
         if (sort.isUnsorted()) {
-            return new OrderSpecifier[]{orders.createdAt.desc()};
+            return new OrderSpecifier[]{orders.createdAt.desc(), orders.id.desc()};
         }
         List<OrderSpecifier<?>> specifiers = new ArrayList<>();
-        PathBuilder<Orders> path = new PathBuilder<>(Orders.class, "orders");
         for (Sort.Order o : sort) {
+            ComparableExpressionBase<?> path = ORDER_SORTS.get(o.getProperty());
+            if (path == null) continue;
             Order direction = o.isAscending() ? Order.ASC : Order.DESC;
-            specifiers.add(new OrderSpecifier<>(direction, path.get(o.getProperty(), Comparable.class)));
+            specifiers.add(new OrderSpecifier(direction, path));
         }
+        if (specifiers.isEmpty()) {
+            return new OrderSpecifier[]{orders.createdAt.desc(), orders.id.desc()};
+        }
+        specifiers.add(new OrderSpecifier(Order.DESC, orders.id));
         return specifiers.toArray(new OrderSpecifier[0]);
     }
 

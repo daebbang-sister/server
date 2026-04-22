@@ -25,6 +25,7 @@ import com.daebbang.daebbangcore.domain.order.session.OrderSession;
 import com.daebbang.daebbangcore.domain.order.session.OrderSessionItem;
 import com.daebbang.daebbangcore.domain.order.session.OrderSessionRedisRepository;
 import com.daebbang.daebbangcore.domain.order.session.OrderStockReserveRedisRepository;
+import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
 import com.daebbang.daebbangcore.domain.product.entity.ProductDetails;
 import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.domain.product.service.ProductDetailsService;
@@ -101,6 +102,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderSessionItem> sessionItems = new ArrayList<>();
         Map<Long, Integer> decreasedStocks = new LinkedHashMap<>();
 
+        LocalDate today = LocalDate.now();
         try {
             for (OrderItemCommand item : command.items()) {
                 boolean acquired = false;
@@ -116,8 +118,7 @@ public class OrderServiceImpl implements OrderService {
 
                     ProductDetails pd = productDetailsService.getProductDetailsById(item.productDetailId());
                     Products product = pd.getProduct();
-
-                    int discountRate = product.getDiscountRate() != null ? product.getDiscountRate() : 0;
+                    int discountRate = resolveDiscountRate(product, today);
                     int originalPrice = product.getOriginalPrice();
                     int discountPrice = (int) (originalPrice * (1 - discountRate / 100.0)) * item.quantity();
 
@@ -136,7 +137,7 @@ public class OrderServiceImpl implements OrderService {
                     if (acquired) lock.unlock();
                 }
             }
-        } catch (BusinessException e) {
+        } catch (RuntimeException e) {
             decreasedStocks.forEach(stockCacheService::restoreStock);
             throw e;
         }
@@ -148,6 +149,10 @@ public class OrderServiceImpl implements OrderService {
             .mapToInt(OrderSessionItem::getDiscountPrice)
             .sum();
         int shippingFee = totalSellingAmount >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_FEE;
+
+        if (command.usedPoint() > totalSellingAmount + shippingFee) {
+            throw new BusinessException(UserErrorCode.POINT_EXCEEDS_PAYMENT);
+        }
         int paymentAmount = totalSellingAmount + shippingFee - command.usedPoint();
 
         String orderNumber = generateOrderNumber();
@@ -327,16 +332,18 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
             Payment payment = paymentService.findByOrder(order);
 
-            for (OrderDetails detail : order.getOrderList()) {
-                if (detail.getStatus() == OrderDetailStatus.NORMAL) {
-                    detail.cancelRequest();
-                    detail.cancel();
-                }
+            List<OrderDetails> cancelTargets = order.getOrderList().stream()
+                .filter(d -> d.getStatus() == OrderDetailStatus.NORMAL)
+                .toList();
+
+            for (OrderDetails detail : cancelTargets) {
+                detail.cancelRequest();
+                detail.cancel();
             }
             order.cancel();
             paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelableAmount());
 
-            for (OrderDetails detail : order.getOrderList()) {
+            for (OrderDetails detail : cancelTargets) {
                 int updated = productDetailsService.increaseStock(
                     detail.getProductDetail().getId(), detail.getQuantity()
                 );
@@ -346,7 +353,7 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
 
-            List<Long> productDetailIds = order.getOrderList().stream()
+            List<Long> productDetailIds = cancelTargets.stream()
                 .map(d -> d.getProductDetail().getId())
                 .toList();
             eventPublisher.publishEvent(new StockInvalidateEvent(productDetailIds));
@@ -519,6 +526,22 @@ public class OrderServiceImpl implements OrderService {
             order.getPaymentAmount(),
             items
         );
+    }
+
+    private int resolveDiscountRate(Products product, LocalDate today) {
+        if (product.getDiscountRate() == null) return 0;
+        return switch (product.getDiscountType()) {
+            case ALWAYS -> product.getDiscountRate();
+            case PERIOD -> {
+                LocalDate start = product.getDiscountStartDate();
+                LocalDate end = product.getDiscountEndDate();
+                if (start != null && end != null && !today.isBefore(start) && !today.isAfter(end)) {
+                    yield product.getDiscountRate();
+                }
+                yield 0;
+            }
+            default -> 0;
+        };
     }
 
     private String generateOrderNumber() {
