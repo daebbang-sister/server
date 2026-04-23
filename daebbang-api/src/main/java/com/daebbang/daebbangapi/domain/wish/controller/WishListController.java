@@ -45,6 +45,14 @@ public class WishListController {
         return CommonResponse.success(CommonSuccessCode.SELECT_SUCCESS, response);
     }
 
+    @GetMapping("/check")
+    public CommonResponse<Boolean> checkWishList(
+        @AuthenticationPrincipal Long userId,
+        @RequestParam @Positive(message = "상품 ID는 1 이상이어야 합니다.") Long productId
+    ) {
+        return CommonResponse.success(UserSuccessCode.CHECK_WISH_LIST, wishListService.isWished(userId, productId));
+    }
+
     @PostMapping
     public ResponseEntity<@NonNull CommonResponse<Void>> addWishList(
         @AuthenticationPrincipal Long userId,

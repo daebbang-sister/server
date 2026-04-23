@@ -25,6 +25,7 @@ public enum UserSuccessCode implements SuccessCode {
 
     VERIFY_AUTH_CODE(200, "핸드폰 인증에 성공하였습니다."),
 
+    CHECK_WISH_LIST(200, "위시리스트 여부 조회에 성공하였습니다."),
     ADD_WISH_LIST(201, "위시리스트 추가에 성공하였습니다."),
     DELETE_WISH_LIST(200, "위시리스트 삭제에 성공하였습니다."),
 

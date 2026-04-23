@@ -9,7 +9,6 @@ import com.daebbang.daebbangcommon.success.CommonSuccessCode;
 import com.daebbang.daebbangcore.domain.page.PageResponse;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
-import com.daebbang.daebbangcore.domain.wish.service.WishListService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -30,7 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
 
     private final ProductService productService;
-    private final WishListService wishListService;
 
     @GetMapping("/main/new")
     public CommonResponse<List<ProductsCard>> getMainNewProductsOnSale(@RequestParam("limit") int limit) {
@@ -72,11 +70,9 @@ public class ProductController {
         @PathVariable Long productId,
         @AuthenticationPrincipal Long userId
     ) {
-        Boolean isWished = userId != null && wishListService.isWished(userId, productId);
-
         return CommonResponse.success(
             CommonSuccessCode.SELECT_SUCCESS,
-            ProductDetailResponse.of(productService.getProductDetail(productId), isWished)
+            ProductDetailResponse.of(productService.getProductDetail(productId))
         );
     }
 
