@@ -291,7 +291,7 @@ paths:
                     \ 성공하였습니다.\",\"data\":{\"content\":[{\"orderNumber\":\"20260416-ABC1234567\"\
                     ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
                     ,\"paymentAmount\":33000,\"totalQuantity\":2,\"representativeProductName\"\
-                    :\"빵집 크루아상\",\"representativeImageUrl\":\"https://cdn.daebbang.com/img/croissant.jpg\"\
+                    :\"슬림핏 청바지\",\"representativeImageUrl\":\"https://cdn.daebbang.com/img/slim-jeans.jpg\"\
                     ,\"representativeColor\":\"골드\",\"representativeSize\":\"M\"}],\"\
                     empty\":false,\"first\":true,\"last\":true,\"number\":0,\"numberOfElements\"\
                     :1,\"pageable\":{\"offset\":0,\"pageNumber\":0,\"pageSize\":10,\"\
@@ -416,7 +416,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=F76stX5TRbzUWDHhAoB-1ULcwQKQm3UDD-Oe-Fxm6BIq_df_Lt2egx9lcoj5OlCFY61K4yS47DqiqEwuOtv4yW1SiXMTxbXJ
+                value: _csrf=UqbCeJV7byXueyUGGuQx-e1wl5xSeP7CUbUUpngMkSzdLAIsasP3SqZPXhHDGUYyLckFyNgTuv0zGp3vYtMglkA-o06_HDsV
       responses:
         "200":
           description: "200"
@@ -596,53 +596,6 @@ paths:
                 cart/update-cart-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 카트 번호입니다.\",\"data\":null}"
-  /v1/orders/20260416-ABC1234567:
-    get:
-      tags:
-      - Order
-      summary: 주문 상세 조회
-      description: |
-        주문 번호로 해당 주문의 상세 정보를 조회합니다.
-        본인 주문만 조회 가능하며 타인의 주문 번호를 전달하면 404를 반환합니다.
-        orderDetailId를 통해 부분 취소 API에서 항목을 지정할 수 있습니다.
-      operationId: order/detail-success
-      responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderDetailResponse'
-              examples:
-                order/detail-success:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 상세 조회에\
-                    \ 성공하였습니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\"\
-                    ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
-                    ,\"totalOriginalAmount\":30000,\"totalSellingAmount\":27000,\"\
-                    shippingFee\":3000,\"usedPoint\":0,\"paymentAmount\":30000,\"\
-                    details\":[{\"orderDetailId\":10,\"productDetailId\":101,\"productName\"\
-                    :\"빵집 크루아상\",\"imageUrl\":\"https://cdn.daebbang.com/img/croissant.jpg\"\
-                    ,\"color\":\"골드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"\
-                    quantity\":2,\"originalPrice\":15000,\"discountRate\":10,\"discountPrice\"\
-                    :13500,\"status\":\"NORMAL\"}]}}"
-  /v1/orders/20260416-NOTEXIST00:
-    get:
-      tags:
-      - Order
-      summary: 주문 상세 조회 - 주문 없음
-      description: 존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.
-      operationId: order/detail-not-found
-      responses:
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                order/detail-not-found:
-                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
-                    \ 주문입니다.\",\"data\":null}"
   /v1/orders/confirm:
     post:
       tags:
@@ -896,6 +849,49 @@ paths:
                   value: "{\"success\":true,\"status\":200,\"message\":\"배송 현황 건수\
                     \ 조회에 성공하였습니다.\",\"data\":{\"paid\":0,\"preparingDelivery\":0,\"\
                     inDelivery\":0,\"delivered\":0}}"
+  /v1/orders/{orderNumber}:
+    get:
+      tags:
+      - Order
+      summary: 주문 상세 조회 - 주문 없음
+      description: 존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.
+      operationId: order/detail-
+      parameters:
+      - name: orderNumber
+        in: path
+        description: 주문 번호
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/detail-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 주문입니다.\",\"data\":null}"
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailResponse'
+              examples:
+                order/detail-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 상세 조회에\
+                    \ 성공하였습니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\"\
+                    ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
+                    ,\"totalOriginalAmount\":30000,\"totalSellingAmount\":27000,\"\
+                    shippingFee\":3000,\"usedPoint\":0,\"paymentAmount\":30000,\"\
+                    details\":[{\"orderDetailId\":10,\"productDetailId\":101,\"productName\"\
+                    :\"슬림핏 청바지\",\"imageUrl\":\"https://cdn.daebbang.com/img/slim-jeans.jpg\"\
+                    ,\"color\":\"골드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"\
+                    quantity\":2,\"originalPrice\":15000,\"discountRate\":10,\"discountPrice\"\
+                    :13500,\"status\":\"NORMAL\"}]}}"
   /v1/products/new:
     get:
       tags:
@@ -1253,22 +1249,31 @@ paths:
                 wish-lists/delete-02-all:
                   value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 삭제에\
                     \ 성공하였습니다.\",\"data\":null}"
-  /v1/orders/20260416-ABC1234567/cancel:
+  /v1/orders/{orderNumber}/cancel:
     post:
       tags:
       - Order
       summary: 주문 전체 취소 - 취소 사유 누락
       description: 취소 사유가 빈 문자열이면 400 Bad Request를 반환합니다.
       operationId: order/cancel-
+      parameters:
+      - name: orderNumber
+        in: path
+        description: 주문 번호
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: '#/components/schemas/v1-orders-20260416-ABC1234567-cancel1320508390'
+              $ref: '#/components/schemas/v1-orders-orderNumber-cancel1320508390'
             examples:
               order/cancel-blank-reason:
                 value: "{\"cancelReason\":\"\"}"
               order/cancel-not-allowed:
+                value: "{\"cancelReason\":\"단순 변심\"}"
+              order/cancel-not-found:
                 value: "{\"cancelReason\":\"단순 변심\"}"
               order/cancel-payment-failed:
                 value: "{\"cancelReason\":\"단순 변심\"}"
@@ -1289,6 +1294,16 @@ paths:
                 order/cancel-not-allowed:
                   value: "{\"success\":false,\"status\":400,\"message\":\"취소할 수 없는\
                     \ 주문 상태입니다.\",\"data\":null}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/cancel-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 주문입니다.\",\"data\":null}"
         "502":
           description: "502"
           content:
@@ -1309,32 +1324,6 @@ paths:
                 order/cancel-success:
                   value: "{\"success\":true,\"status\":200,\"message\":\"주문이 취소되었습\
                     니다.\",\"data\":null}"
-  /v1/orders/20260416-NOTEXIST00/cancel:
-    post:
-      tags:
-      - Order
-      summary: 주문 전체 취소 - 주문 없음
-      description: 존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.
-      operationId: order/cancel-not-found
-      requestBody:
-        content:
-          application/json;charset=UTF-8:
-            schema:
-              $ref: '#/components/schemas/v1-orders-20260416-NOTEXIST00-cancel-1889817476'
-            examples:
-              order/cancel-not-found:
-                value: "{\"cancelReason\":\"단순 변심\"}"
-      responses:
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                order/cancel-not-found:
-                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
-                    \ 주문입니다.\",\"data\":null}"
   /v1/products/category/{categoryId}:
     get:
       tags:
@@ -1509,8 +1498,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -1643,18 +1632,25 @@ paths:
                 user-info/find-password-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 사용자입니다.\",\"data\":null}"
-  /v1/orders/20260416-ABC1234567/cancel/partial:
+  /v1/orders/{orderNumber}/cancel/partial:
     post:
       tags:
       - Order
       summary: 주문 부분 취소 - 항목 미선택
       description: orderDetailIds가 비어있으면 400 Bad Request를 반환합니다.
       operationId: order/cancel-partial-
+      parameters:
+      - name: orderNumber
+        in: path
+        description: 주문 번호
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: '#/components/schemas/v1-orders-20260416-ABC1234567-cancel-partial-1086755764'
+              $ref: '#/components/schemas/v1-orders-orderNumber-cancel-partial-1086755764'
             examples:
               order/cancel-partial-empty-ids:
                 value: "{\"orderDetailIds\":[],\"cancelReason\":\"사이즈 오주문\"}"
@@ -1978,7 +1974,7 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-orders-20260416-ABC1234567-cancel1320508390:
+    v1-orders-orderNumber-cancel1320508390:
       type: object
       properties:
         cancelReason:
@@ -2486,12 +2482,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-orders-20260416-NOTEXIST00-cancel-1889817476:
-      type: object
-      properties:
-        cancelReason:
-          type: string
-          description: 취소 사유
     AddressListResponse:
       title: AddressListResponse
       type: object
@@ -2551,7 +2541,19 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-orders-20260416-ABC1234567-cancel-partial-1086755764:
+    CartSaveRequest:
+      title: CartSaveRequest
+      type: array
+      items:
+        type: object
+        properties:
+          quantity:
+            type: number
+            description: 수량 (최소 1)
+          productDetailId:
+            type: number
+            description: 상품 상세 ID
+    v1-orders-orderNumber-cancel-partial-1086755764:
       type: object
       properties:
         orderDetailIds:
@@ -2566,18 +2568,6 @@ components:
         cancelReason:
           type: string
           description: 취소 사유 (1~200자)
-    CartSaveRequest:
-      title: CartSaveRequest
-      type: array
-      items:
-        type: object
-        properties:
-          quantity:
-            type: number
-            description: 수량 (최소 1)
-          productDetailId:
-            type: number
-            description: 상품 상세 ID
     CategoryListResponse:
       title: CategoryListResponse
       type: object
