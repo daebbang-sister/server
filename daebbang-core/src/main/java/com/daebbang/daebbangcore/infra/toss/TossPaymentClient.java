@@ -13,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,14 +70,26 @@ public class TossPaymentClient {
         }
     }
 
-    public void cancel(String paymentKey, String cancelReason) {
+
+    public void cancel(String paymentKey, String cancelReason, String idempotencyKey) {
+        cancel(paymentKey, cancelReason, null, idempotencyKey);
+    }
+
+
+    public void cancel(String paymentKey, String cancelReason, Integer cancelAmount, String idempotencyKey) {
         try {
-            String body = objectMapper.writeValueAsString(Map.of("cancelReason", cancelReason));
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("cancelReason", cancelReason);
+            if (cancelAmount != null) {
+                payload.put("cancelAmount", cancelAmount);
+            }
+            String body = objectMapper.writeValueAsString(payload);
 
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/v1/payments/" + paymentKey + "/cancel"))
                 .header("Authorization", basicAuth())
                 .header("Content-Type", "application/json")
+                .header("Idempotency-Key", idempotencyKey)
                 .timeout(Duration.ofSeconds(30))
                 .POST(BodyPublishers.ofString(body))
                 .build();
@@ -86,17 +99,17 @@ public class TossPaymentClient {
             if (response.statusCode() != 200) {
                 log.error("[Toss] 결제 취소 실패 - paymentKey: {}, status: {}",
                     paymentKey, response.statusCode());
-                throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
+                throw new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED);
             }
 
         } catch (BusinessException e) {
             throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
+            throw new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED);
         } catch (Exception e) {
             log.error("[Toss] 결제 취소 중 예외 - paymentKey: {}, error: {}", paymentKey, e.getMessage(), e);
-            throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
+            throw new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED);
         }
     }
 

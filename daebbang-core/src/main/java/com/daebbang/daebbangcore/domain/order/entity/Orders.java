@@ -58,6 +58,7 @@ public class Orders extends DefaultBase {
     private Integer paymentAmount;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @jakarta.persistence.OrderBy("id ASC")
     private final List<OrderDetails> orderList = new ArrayList<>();
 
     @Builder
@@ -100,8 +101,13 @@ public class Orders extends DefaultBase {
         this.orderStatus = OrderStatus.WAITING_DEPOSIT;
     }
 
-    public void startDelivery() {
+    public void prepareDelivery() {
         requireStatus(OrderStatus.PAID);
+        this.orderStatus = OrderStatus.PREPARING_DELIVERY;
+    }
+
+    public void startDelivery() {
+        requireStatus(OrderStatus.PREPARING_DELIVERY);
         this.orderStatus = OrderStatus.IN_DELIVERY;
     }
 
@@ -116,7 +122,7 @@ public class Orders extends DefaultBase {
     }
 
     public void cancel() {
-        requireStatus(OrderStatus.PENDING, OrderStatus.WAITING_DEPOSIT, OrderStatus.PAID);
+        requireStatus(OrderStatus.PENDING, OrderStatus.WAITING_DEPOSIT, OrderStatus.PAID, OrderStatus.PREPARING_DELIVERY);
         this.orderStatus = OrderStatus.CANCELLED;
     }
 

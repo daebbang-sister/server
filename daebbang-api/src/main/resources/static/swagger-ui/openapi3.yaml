@@ -245,6 +245,66 @@ paths:
                 auth/logout-no-refresh-cookie:
                   value: "{\"success\":true,\"status\":200,\"message\":\"로그아웃에 성공하\
                     였습니다.\",\"data\":null}"
+  /v1/orders:
+    get:
+      tags:
+      - Order
+      summary: 주문 목록 조회
+      description: "로그인한 사용자의 주문 목록을 페이징하여 반환합니다.\n기본 조회 범위는 최근 3개월이며 최대 1년까지 조회 가\
+        능합니다.\nstartDate를 1년 이전으로 지정하면 자동으로 1년 전으로 보정됩니다.\n날짜 형식: yyyy-MM-dd\n"
+      operationId: order/list-
+      parameters:
+      - name: startDate
+        in: query
+        description: "조회 시작일 (yyyy-MM-dd, 기본값: 오늘 - 3개월, 최대 1년 전)"
+        required: false
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        description: "조회 종료일 (yyyy-MM-dd, 기본값: 오늘)"
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: "페이지 번호 (0부터 시작, 기본값: 0)"
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: "페이지 크기 (기본값: 10)"
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+              examples:
+                order/list-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 목록 조회에\
+                    \ 성공하였습니다.\",\"data\":{\"content\":[{\"orderNumber\":\"20260416-ABC1234567\"\
+                    ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
+                    ,\"paymentAmount\":33000,\"totalQuantity\":2,\"representativeProductName\"\
+                    :\"빵집 크루아상\",\"representativeImageUrl\":\"https://cdn.daebbang.com/img/croissant.jpg\"\
+                    ,\"representativeColor\":\"골드\",\"representativeSize\":\"M\"}],\"\
+                    empty\":false,\"first\":true,\"last\":true,\"number\":0,\"numberOfElements\"\
+                    :1,\"pageable\":{\"offset\":0,\"pageNumber\":0,\"pageSize\":10,\"\
+                    paged\":true,\"sort\":{\"empty\":true,\"sorted\":false,\"unsorted\"\
+                    :true},\"unpaged\":false},\"size\":10,\"sort\":{\"empty\":true,\"\
+                    sorted\":false,\"unsorted\":true},\"totalElements\":1,\"totalPages\"\
+                    :1}}"
+                order/list-with-date-range:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 목록 조회에\
+                    \ 성공하였습니다.\",\"data\":{\"content\":[],\"empty\":true,\"first\"\
+                    :true,\"last\":true,\"number\":0,\"numberOfElements\":0,\"pageable\"\
+                    :\"INSTANCE\",\"size\":0,\"sort\":{\"empty\":true,\"sorted\":false,\"\
+                    unsorted\":true},\"totalElements\":0,\"totalPages\":1}}"
   /v1/users:
     get:
       tags:
@@ -356,7 +416,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=ybyglmXXnqgDuBr-wHxJYrr1aBQi5aqXhxBdf7QUJQkB3q-4qIyX91bhrZgu2ynH91F9A4vDRSwQ15m6sCNsT4EhQz5ju5bb
+                value: _csrf=F76stX5TRbzUWDHhAoB-1ULcwQKQm3UDD-Oe-Fxm6BIq_df_Lt2egx9lcoj5OlCFY61K4yS47DqiqEwuOtv4yW1SiXMTxbXJ
       responses:
         "200":
           description: "200"
@@ -536,6 +596,53 @@ paths:
                 cart/update-cart-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 카트 번호입니다.\",\"data\":null}"
+  /v1/orders/20260416-ABC1234567:
+    get:
+      tags:
+      - Order
+      summary: 주문 상세 조회
+      description: |
+        주문 번호로 해당 주문의 상세 정보를 조회합니다.
+        본인 주문만 조회 가능하며 타인의 주문 번호를 전달하면 404를 반환합니다.
+        orderDetailId를 통해 부분 취소 API에서 항목을 지정할 수 있습니다.
+      operationId: order/detail-success
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailResponse'
+              examples:
+                order/detail-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 상세 조회에\
+                    \ 성공하였습니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\"\
+                    ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
+                    ,\"totalOriginalAmount\":30000,\"totalSellingAmount\":27000,\"\
+                    shippingFee\":3000,\"usedPoint\":0,\"paymentAmount\":30000,\"\
+                    details\":[{\"orderDetailId\":10,\"productDetailId\":101,\"productName\"\
+                    :\"빵집 크루아상\",\"imageUrl\":\"https://cdn.daebbang.com/img/croissant.jpg\"\
+                    ,\"color\":\"골드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"\
+                    quantity\":2,\"originalPrice\":15000,\"discountRate\":10,\"discountPrice\"\
+                    :13500,\"status\":\"NORMAL\"}]}}"
+  /v1/orders/20260416-NOTEXIST00:
+    get:
+      tags:
+      - Order
+      summary: 주문 상세 조회 - 주문 없음
+      description: 존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.
+      operationId: order/detail-not-found
+      responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/detail-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 주문입니다.\",\"data\":null}"
   /v1/orders/confirm:
     post:
       tags:
@@ -676,6 +783,9 @@ paths:
               order/prepare-out-of-stock:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":999}],\"usedPoint\"\
                   :0}"
+              order/prepare-point-exceeds:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :99999}"
               order/prepare-success:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
                   :0}"
@@ -705,6 +815,9 @@ paths:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"usedPoint\",\"message\"\
                     :\"포인트는 0 이상이어야 합니다.\"}]}"
+                order/prepare-point-exceeds:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"포인트가 결제\
+                    \ 금액을 초과합니다.\",\"data\":null}"
         "503":
           description: "503"
           content:
@@ -744,6 +857,45 @@ paths:
                   value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
                     니다.\",\"data\":{\"orderNumber\":\"20260416-GHI1357924\",\"paymentAmount\"\
                     :30000}}"
+  /v1/orders/status-count:
+    get:
+      tags:
+      - Order
+      summary: 배송 현황 건수 조회
+      description: |
+        마이페이지 상단에 표시할 배송 현황 건수를 반환합니다.
+        결제완료 / 배송준비중 / 배송중 / 배송완료 4가지 상태별 건수를 제공합니다.
+        날짜 범위를 지정하지 않으면 기본 3개월 기준으로 집계하며 최대 1년까지 조회 가능합니다.
+      operationId: order/status-count-
+      parameters:
+      - name: startDate
+        in: query
+        description: "조회 시작일 (yyyy-MM-dd, 기본값: 오늘 - 3개월)"
+        required: false
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        description: "조회 종료일 (yyyy-MM-dd, 기본값: 오늘)"
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusCountResponse'
+              examples:
+                order/status-count-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"배송 현황 건수\
+                    \ 조회에 성공하였습니다.\",\"data\":{\"paid\":2,\"preparingDelivery\":1,\"\
+                    inDelivery\":3,\"delivered\":1}}"
+                order/status-count-with-date-range:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"배송 현황 건수\
+                    \ 조회에 성공하였습니다.\",\"data\":{\"paid\":0,\"preparingDelivery\":0,\"\
+                    inDelivery\":0,\"delivered\":0}}"
   /v1/products/new:
     get:
       tags:
@@ -1101,6 +1253,88 @@ paths:
                 wish-lists/delete-02-all:
                   value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 삭제에\
                     \ 성공하였습니다.\",\"data\":null}"
+  /v1/orders/20260416-ABC1234567/cancel:
+    post:
+      tags:
+      - Order
+      summary: 주문 전체 취소 - 취소 사유 누락
+      description: 취소 사유가 빈 문자열이면 400 Bad Request를 반환합니다.
+      operationId: order/cancel-
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-orders-20260416-ABC1234567-cancel1320508390'
+            examples:
+              order/cancel-blank-reason:
+                value: "{\"cancelReason\":\"\"}"
+              order/cancel-not-allowed:
+                value: "{\"cancelReason\":\"단순 변심\"}"
+              order/cancel-payment-failed:
+                value: "{\"cancelReason\":\"단순 변심\"}"
+              order/cancel-success:
+                value: "{\"cancelReason\":\"단순 변심\"}"
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/cancel-blank-reason:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"cancelReason\",\"\
+                    message\":\"취소 사유를 입력해주세요.\"}]}"
+                order/cancel-not-allowed:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"취소할 수 없는\
+                    \ 주문 상태입니다.\",\"data\":null}"
+        "502":
+          description: "502"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/cancel-payment-failed:
+                  value: "{\"success\":false,\"status\":502,\"message\":\"결제 취소에 실\
+                    패했습니다. 관리자에게 문의하세요.\",\"data\":null}"
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                order/cancel-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 취소되었습\
+                    니다.\",\"data\":null}"
+  /v1/orders/20260416-NOTEXIST00/cancel:
+    post:
+      tags:
+      - Order
+      summary: 주문 전체 취소 - 주문 없음
+      description: 존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.
+      operationId: order/cancel-not-found
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-orders-20260416-NOTEXIST00-cancel-1889817476'
+            examples:
+              order/cancel-not-found:
+                value: "{\"cancelReason\":\"단순 변심\"}"
+      responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/cancel-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 주문입니다.\",\"data\":null}"
   /v1/products/category/{categoryId}:
     get:
       tags:
@@ -1275,8 +1509,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -1409,6 +1643,50 @@ paths:
                 user-info/find-password-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 사용자입니다.\",\"data\":null}"
+  /v1/orders/20260416-ABC1234567/cancel/partial:
+    post:
+      tags:
+      - Order
+      summary: 주문 부분 취소 - 항목 미선택
+      description: orderDetailIds가 비어있으면 400 Bad Request를 반환합니다.
+      operationId: order/cancel-partial-
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/v1-orders-20260416-ABC1234567-cancel-partial-1086755764'
+            examples:
+              order/cancel-partial-empty-ids:
+                value: "{\"orderDetailIds\":[],\"cancelReason\":\"사이즈 오주문\"}"
+              order/cancel-partial-invalid:
+                value: "{\"orderDetailIds\":[10],\"cancelReason\":\"사이즈 오주문\"}"
+              order/cancel-partial-success:
+                value: "{\"orderDetailIds\":[10,11],\"cancelReason\":\"사이즈 오주문\"}"
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/cancel-partial-empty-ids:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"orderDetailIds\"\
+                    ,\"message\":\"취소할 주문 항목을 하나 이상 선택해주세요.\"}]}"
+                order/cancel-partial-invalid:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"유효하지 않은\
+                    \ 취소 항목입니다.\",\"data\":null}"
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                order/cancel-partial-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 취소되었습\
+                    니다.\",\"data\":null}"
   /v1/products/main/category/{categoryId}:
     get:
       tags:
@@ -1700,6 +1978,12 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    v1-orders-20260416-ABC1234567-cancel1320508390:
+      type: object
+      properties:
+        cancelReason:
+          type: string
+          description: 취소 사유 (1~200자)
     ProductDetailResponse:
       title: ProductDetailResponse
       type: object
@@ -1779,6 +2063,125 @@ components:
             productName:
               type: string
               description: 상품명
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    OrderListResponse:
+      title: OrderListResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            number:
+              type: number
+              description: 현재 페이지 번호
+            numberOfElements:
+              type: number
+              description: 현재 페이지 항목 수
+            size:
+              type: number
+              description: 페이지 크기
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageable:
+              type: object
+              properties:
+                paged:
+                  type: boolean
+                  description: 페이징 적용 여부
+                pageNumber:
+                  type: number
+                  description: 현재 페이지 번호
+                offset:
+                  type: number
+                  description: 오프셋
+                pageSize:
+                  type: number
+                  description: 페이지 크기
+                unpaged:
+                  type: boolean
+                  description: 페이징 미적용 여부
+                sort:
+                  type: object
+                  properties:
+                    unsorted:
+                      type: boolean
+                      description: 정렬 미적용 여부
+                    sorted:
+                      type: boolean
+                      description: 정렬 적용 여부
+                    empty:
+                      type: boolean
+                      description: 정렬 조건 없음 여부
+                  description: 정렬 정보
+              description: 페이지 정보
+            sort:
+              type: object
+              properties:
+                unsorted:
+                  type: boolean
+                  description: 정렬 미적용 여부
+                sorted:
+                  type: boolean
+                  description: 정렬 적용 여부
+                empty:
+                  type: boolean
+                  description: 정렬 조건 없음 여부
+              description: 정렬 정보
+            first:
+              type: boolean
+              description: 첫 번째 페이지 여부
+            content:
+              type: array
+              description: 주문 목록 (결과 없음)
+              items:
+                type: object
+                properties:
+                  orderedAt:
+                    type: string
+                    description: 주문 일시
+                  representativeProductName:
+                    type: string
+                    description: 대표 상품명 (첫 번째 상품)
+                  totalQuantity:
+                    type: number
+                    description: 총 상품 수량
+                  orderNumber:
+                    type: string
+                    description: 주문 번호
+                  representativeSize:
+                    type: string
+                    description: 대표 상품 사이즈
+                  orderStatus:
+                    type: string
+                    description: "주문 상태 (PAID, PREPARING_DELIVERY, IN_DELIVERY, DELIVERED,\
+                      \ COMPLETED, CANCELLED 등)"
+                  representativeColor:
+                    type: string
+                    description: 대표 상품 색상
+                  representativeImageUrl:
+                    type: string
+                    description: 대표 상품 이미지 URL
+                  paymentAmount:
+                    type: number
+                    description: 결제 금액
+            empty:
+              type: boolean
+              description: 결과 없음 여부
+            totalElements:
+              type: number
+              description: 전체 주문 수
         success:
           type: boolean
           description: 성공 여부
@@ -1956,6 +2359,34 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    OrderStatusCountResponse:
+      title: OrderStatusCountResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            paid:
+              type: number
+              description: 결제완료 건수
+            delivered:
+              type: number
+              description: 배송완료 건수
+            preparingDelivery:
+              type: number
+              description: 배송준비중 건수
+            inDelivery:
+              type: number
+              description: 배송중 건수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     WishListSaveRequest:
       title: WishListSaveRequest
       type: object
@@ -2055,6 +2486,12 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    v1-orders-20260416-NOTEXIST00-cancel-1889817476:
+      type: object
+      properties:
+        cancelReason:
+          type: string
+          description: 취소 사유
     AddressListResponse:
       title: AddressListResponse
       type: object
@@ -2114,6 +2551,21 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    v1-orders-20260416-ABC1234567-cancel-partial-1086755764:
+      type: object
+      properties:
+        orderDetailIds:
+          type: array
+          description: 취소할 주문 항목 ID 목록 (1개 이상)
+          items:
+            oneOf:
+            - type: object
+            - type: boolean
+            - type: string
+            - type: number
+        cancelReason:
+          type: string
+          description: 취소 사유 (1~200자)
     CartSaveRequest:
       title: CartSaveRequest
       type: array
@@ -2270,6 +2722,89 @@ components:
               type: string
               description: 발송된 인증번호 (6자리)
           description: 발송 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    OrderDetailResponse:
+      title: OrderDetailResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            usedPoint:
+              type: number
+              description: 사용한 포인트
+            orderedAt:
+              type: string
+              description: 주문 일시
+            orderNumber:
+              type: string
+              description: 주문 번호
+            shippingFee:
+              type: number
+              description: 배송비 (5만원 이상 무료)
+            totalOriginalAmount:
+              type: number
+              description: 상품 정가 합계
+            orderStatus:
+              type: string
+              description: 주문 상태
+            details:
+              type: array
+              description: 주문 항목 목록
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: number
+                    description: 할인율 (%)
+                  quantity:
+                    type: number
+                    description: 수량
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  size:
+                    type: string
+                    description: 사이즈
+                  color:
+                    type: string
+                    description: 색상명
+                  imageUrl:
+                    type: string
+                    description: 상품 이미지 URL
+                  discountPrice:
+                    type: number
+                    description: 할인 적용가
+                  colorCode:
+                    type: string
+                    description: 색상 코드 (HEX)
+                  productName:
+                    type: string
+                    description: 상품명
+                  productDetailId:
+                    type: number
+                    description: 상품 상세 ID (색상/사이즈 조합)
+                  orderDetailId:
+                    type: number
+                    description: 주문 항목 ID (부분 취소 시 사용)
+                  status:
+                    type: string
+                    description: "항목 상태 (NORMAL, CANCEL_REQUESTED, CANCELLED, REFUND_REQUESTED,\
+                      \ RETURNED)"
+            paymentAmount:
+              type: number
+              description: 최종 결제 금액
+            totalSellingAmount:
+              type: number
+              description: 할인 적용 판매가 합계
         success:
           type: boolean
           description: 성공 여부
