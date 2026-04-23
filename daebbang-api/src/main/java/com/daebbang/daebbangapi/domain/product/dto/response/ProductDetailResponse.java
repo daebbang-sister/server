@@ -18,10 +18,9 @@ public record ProductDetailResponse(
     Integer discountRate,
     List<GalleryImage> gallery,
     String descriptionHtml,
-    List<ColorOption> options,
-    Boolean isWished
+    List<ColorOption> options
 ) {
-    public static ProductDetailResponse of(ProductDetailResult result, Boolean isWished) {
+    public static ProductDetailResponse of(ProductDetailResult result) {
         DiscountResult discount = DiscountCalculator.calculate(
             result.originalPrice(),
             result.discountType(),
@@ -52,7 +51,6 @@ public record ProductDetailResponse(
                         .toList()
                 ))
                 .toList())
-            .isWished(isWished)
             .build();
     }
 

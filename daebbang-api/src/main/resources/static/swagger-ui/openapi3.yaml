@@ -416,7 +416,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=UqbCeJV7byXueyUGGuQx-e1wl5xSeP7CUbUUpngMkSzdLAIsasP3SqZPXhHDGUYyLckFyNgTuv0zGp3vYtMglkA-o06_HDsV
+                value: _csrf=X8qowhHrnuJet6AlJbd0q-3aMvDQr7jdCKOlkpFZRuaQ5umfPPzN8XCO_9Jz05kXFJpAm4vrH8joy9vwP5qTqqhhJdGo14v8
       responses:
         "200":
           description: "200"
@@ -1073,6 +1073,20 @@ paths:
                     :true}]},{\"color\":\"화이트\",\"colorCode\":\"#FFFFFF\",\"sizes\"\
                     :[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"soldOut\"\
                     :false}]}],\"isWished\":false}}"
+                products/detail-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"simpleDescription\":\"편안한 루즈핏 티셔츠\",\"mainImageUrl\"\
+                    :\"http://example.com/main1.jpg\",\"originalPrice\":50000,\"sellingPrice\"\
+                    :40000,\"discountRate\":20,\"gallery\":[{\"imageUrl\":\"http://example.com/detail1.jpg\"\
+                    ,\"imageOrder\":1},{\"imageUrl\":\"http://example.com/detail2.jpg\"\
+                    ,\"imageOrder\":2}],\"descriptionHtml\":\"<p>상품 상세 설명</p>\",\"\
+                    options\":[{\"color\":\"블랙\",\"colorCode\":\"#000000\",\"sizes\"\
+                    :[{\"productDetailId\":1,\"size\":\"S\",\"stock\":10,\"soldOut\"\
+                    :false},{\"productDetailId\":2,\"size\":\"M\",\"stock\":0,\"soldOut\"\
+                    :true}]},{\"color\":\"화이트\",\"colorCode\":\"#FFFFFF\",\"sizes\"\
+                    :[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"soldOut\"\
+                    :false}]}]}}"
                 products/detail-wished:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
@@ -1249,6 +1263,35 @@ paths:
                 wish-lists/delete-02-all:
                   value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 삭제에\
                     \ 성공하였습니다.\",\"data\":null}"
+  /v1/wish-lists/check:
+    get:
+      tags:
+      - WishList
+      summary: 위시리스트 여부 조회
+      description: "상품 상세 페이지 진입 후 CSR로 위시리스트 등록 여부를 조회합니다. 등록된 경우 true, 아니면 false를\
+        \ 반환합니다."
+      operationId: wish-lists/check-0
+      parameters:
+      - name: productId
+        in: query
+        description: 조회할 상품 ID
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishListCheckResponse'
+              examples:
+                wish-lists/check-01-wished:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 여부\
+                    \ 조회에 성공하였습니다.\",\"data\":true}"
+                wish-lists/check-02-not-wished:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 여부\
+                    \ 조회에 성공하였습니다.\",\"data\":false}"
   /v1/orders/{orderNumber}/cancel:
     post:
       tags:
@@ -2712,6 +2755,22 @@ components:
               type: string
               description: 발송된 인증번호 (6자리)
           description: 발송 결과
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    WishListCheckResponse:
+      title: WishListCheckResponse
+      type: object
+      properties:
+        data:
+          type: boolean
+          description: 위시리스트 등록 여부
         success:
           type: boolean
           description: 성공 여부

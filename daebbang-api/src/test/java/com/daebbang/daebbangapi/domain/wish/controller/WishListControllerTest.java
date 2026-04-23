@@ -234,6 +234,96 @@ class WishListControllerTest {
                 )));
     }
 
+    // ======================== GET /v1/wish-lists/check ========================
+
+    @Test
+    @DisplayName("GET /v1/wish-lists/check - 위시리스트 등록 상품이면 true 반환")
+    void checkWishList_wished() throws Exception {
+        given(wishListService.isWished(anyLong(), anyLong())).willReturn(true);
+
+        mockMvc.perform(get(BASE_URL + "/check")
+                .with(authentication(authToken()))
+                .param("productId", "100")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("위시리스트 여부 조회에 성공하였습니다."))
+            .andExpect(jsonPath("$.data").value(true))
+            .andDo(document("wish-lists/check-01-wished",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("WishList")
+                    .summary("위시리스트 여부 조회")
+                    .description("상품 상세 페이지 진입 후 CSR로 위시리스트 등록 여부를 조회합니다. 등록된 경우 true, 아니면 false를 반환합니다.")
+                    .responseSchema(Schema.schema("WishListCheckResponse"))
+                    .queryParameters(
+                        parameterWithName("productId").description("조회할 상품 ID")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("위시리스트 등록 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/wish-lists/check - 미등록 상품이면 false 반환")
+    void checkWishList_notWished() throws Exception {
+        given(wishListService.isWished(anyLong(), anyLong())).willReturn(false);
+
+        mockMvc.perform(get(BASE_URL + "/check")
+                .with(authentication(authToken()))
+                .param("productId", "999")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data").value(false))
+            .andDo(document("wish-lists/check-02-not-wished",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("WishList")
+                    .summary("위시리스트 여부 조회 - 미등록")
+                    .description("위시리스트에 등록되지 않은 상품은 false를 반환합니다.")
+                    .responseSchema(Schema.schema("WishListCheckResponse"))
+                    .queryParameters(
+                        parameterWithName("productId").description("조회할 상품 ID")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("위시리스트 등록 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/wish-lists/check - productId가 0 이하이면 400 반환")
+    void checkWishList_invalidProductId() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/check")
+                .with(authentication(authToken()))
+                .param("productId", "0")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("GET /v1/wish-lists/check - 인증 없이 접근 시 401 반환")
+    void checkWishList_unauthorized() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/check")
+                .param("productId", "100")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
     // ======================== POST /v1/wish-lists ========================
 
     @Test

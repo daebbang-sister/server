@@ -11,6 +11,7 @@ import com.daebbang.daebbangcore.domain.wish.entity.WishList;
 import com.daebbang.daebbangcore.domain.wish.repository.WishListRepository;
 import com.daebbang.daebbangcore.domain.wish.service.WishListService;
 import java.util.List;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +28,7 @@ public class WishListServiceImpl implements WishListService {
     private final ProductService productService;
 
     @Override
-    public Page<WishListQueryResult> getWishList(Long userId, Pageable pageable) {
+    public Page<@NonNull WishListQueryResult> getWishList(Long userId, Pageable pageable) {
         return wishListRepository.findWishListPageByUserId(userId, pageable);
     }
 
