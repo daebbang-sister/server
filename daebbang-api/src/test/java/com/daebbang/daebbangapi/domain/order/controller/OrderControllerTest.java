@@ -6,11 +6,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -87,12 +87,9 @@ class OrderControllerTest {
             USER_ID, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
-    // ======================== POST /v1/orders/prepare ========================
-
     @Test
     @DisplayName("POST /v1/orders/prepare - 주문 준비 성공 (배송비 있음)")
     void prepare_success_withShippingFee() throws Exception {
-        // given - 30,000원짜리 1개 → 배송비 3,000원 발생
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             0
@@ -100,7 +97,6 @@ class OrderControllerTest {
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-ABC1234567", 33_000);
         given(orderService.prepare(any())).willReturn(response);
 
-        // when & then
         mockMvc.perform(post("/v1/orders/prepare")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -143,7 +139,6 @@ class OrderControllerTest {
     @Test
     @DisplayName("POST /v1/orders/prepare - 주문 준비 성공 (5만원 이상 무료 배송)")
     void prepare_success_freeShipping() throws Exception {
-        // given - 50,000원 이상 → 배송비 0원
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 2)),
             0
@@ -151,7 +146,6 @@ class OrderControllerTest {
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-DEF9876543", 60_000);
         given(orderService.prepare(any())).willReturn(response);
 
-        // when & then
         mockMvc.perform(post("/v1/orders/prepare")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -186,7 +180,6 @@ class OrderControllerTest {
     @Test
     @DisplayName("POST /v1/orders/prepare - 주문 준비 성공 (포인트 사용)")
     void prepare_success_withPoint() throws Exception {
-        // given - 포인트 3,000 사용
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             3_000
@@ -194,7 +187,6 @@ class OrderControllerTest {
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-GHI1357924", 30_000);
         given(orderService.prepare(any())).willReturn(response);
 
-        // when & then
         mockMvc.perform(post("/v1/orders/prepare")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -482,18 +474,14 @@ class OrderControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
-    // ======================== POST /v1/orders/confirm ========================
-
     @Test
     @DisplayName("POST /v1/orders/confirm - 결제 확정 성공")
     void confirm_success() throws Exception {
-        // given
         OrderConfirmRequest request = new OrderConfirmRequest(
             "20260416-ABC1234567", "toss_payment_key_abc", 33_000
         );
         willDoNothing().given(orderService).confirm(any());
 
-        // when & then
         mockMvc.perform(post("/v1/orders/confirm")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -849,15 +837,13 @@ class OrderControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
-    // ======================== POST /v1/orders/{orderNumber}/cancel ========================
-
     @Test
     @DisplayName("POST /v1/orders/{orderNumber}/cancel - 전체 취소 성공")
     void cancel_success() throws Exception {
         OrderCancelRequest request = new OrderCancelRequest("단순 변심");
         willDoNothing().given(orderService).cancel(any());
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-ABC1234567")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -877,6 +863,7 @@ class OrderControllerTest {
                         """)
                     .requestSchema(Schema.schema("OrderCancelRequest"))
                     .responseSchema(Schema.schema("SuccessResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유 (1~200자)")
                     )
@@ -895,7 +882,7 @@ class OrderControllerTest {
     void cancel_blankReason() throws Exception {
         OrderCancelRequest request = new OrderCancelRequest("");
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-ABC1234567")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -909,6 +896,7 @@ class OrderControllerTest {
                     .summary("주문 전체 취소 - 취소 사유 누락")
                     .description("취소 사유가 빈 문자열이면 400 Bad Request를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유 (빈 문자열 - 오류)")
                     )
@@ -932,7 +920,7 @@ class OrderControllerTest {
         willThrow(new BusinessException(UserErrorCode.ORDER_NOT_FOUND))
             .given(orderService).cancel(any());
 
-        mockMvc.perform(post("/v1/orders/20260416-NOTEXIST00/cancel")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-NOTEXIST00")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -946,6 +934,7 @@ class OrderControllerTest {
                     .summary("주문 전체 취소 - 주문 없음")
                     .description("존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유")
                     )
@@ -966,7 +955,7 @@ class OrderControllerTest {
         willThrow(new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED))
             .given(orderService).cancel(any());
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-ABC1234567")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -980,6 +969,7 @@ class OrderControllerTest {
                     .summary("주문 전체 취소 - 취소 불가 상태")
                     .description("배송중(IN_DELIVERY), 배송완료(DELIVERED) 등 취소 불가 상태의 주문은 400을 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유")
                     )
@@ -1000,7 +990,7 @@ class OrderControllerTest {
         willThrow(new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED))
             .given(orderService).cancel(any());
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-ABC1234567")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -1014,6 +1004,7 @@ class OrderControllerTest {
                     .summary("주문 전체 취소 - 결제 취소 실패")
                     .description("토스 결제 취소 API 호출에 실패한 경우 502를 반환합니다. DB는 롤백되며 주문 상태는 변경되지 않습니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유")
                     )
@@ -1032,14 +1023,12 @@ class OrderControllerTest {
     void cancel_unauthorized() throws Exception {
         OrderCancelRequest request = new OrderCancelRequest("단순 변심");
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-ABC1234567")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
             .andExpect(status().isUnauthorized());
     }
-
-    // ======================== POST /v1/orders/{orderNumber}/cancel/partial ========================
 
     @Test
     @DisplayName("POST /v1/orders/{orderNumber}/cancel/partial - 부분 취소 성공")
@@ -1047,7 +1036,7 @@ class OrderControllerTest {
         OrderPartialCancelRequest request = new OrderPartialCancelRequest(List.of(10L, 11L), "사이즈 오주문");
         willDoNothing().given(orderService).cancelPartial(any());
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel/partial")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel/partial", "20260416-ABC1234567")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -1067,6 +1056,7 @@ class OrderControllerTest {
                         """)
                     .requestSchema(Schema.schema("OrderPartialCancelRequest"))
                     .responseSchema(Schema.schema("SuccessResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("orderDetailIds").type(JsonFieldType.ARRAY).description("취소할 주문 항목 ID 목록 (1개 이상)"),
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유 (1~200자)")
@@ -1086,7 +1076,7 @@ class OrderControllerTest {
     void cancelPartial_emptyDetailIds() throws Exception {
         OrderPartialCancelRequest request = new OrderPartialCancelRequest(List.of(), "사이즈 오주문");
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel/partial")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel/partial", "20260416-ABC1234567")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -1100,6 +1090,7 @@ class OrderControllerTest {
                     .summary("주문 부분 취소 - 항목 미선택")
                     .description("orderDetailIds가 비어있으면 400 Bad Request를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("orderDetailIds").type(JsonFieldType.ARRAY).description("취소할 항목 ID 목록 (비어있음 - 오류)"),
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유")
@@ -1124,7 +1115,7 @@ class OrderControllerTest {
         willThrow(new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID))
             .given(orderService).cancelPartial(any());
 
-        mockMvc.perform(post("/v1/orders/20260416-ABC1234567/cancel/partial")
+        mockMvc.perform(post("/v1/orders/{orderNumber}/cancel/partial", "20260416-ABC1234567")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -1138,6 +1129,7 @@ class OrderControllerTest {
                     .summary("주문 부분 취소 - 유효하지 않은 항목")
                     .description("이미 취소된 항목이거나 해당 주문에 속하지 않는 항목 ID가 포함된 경우 400을 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .requestFields(
                         fieldWithPath("orderDetailIds").type(JsonFieldType.ARRAY).description("취소할 항목 ID 목록 (이미 취소된 항목 포함)"),
                         fieldWithPath("cancelReason").type(JsonFieldType.STRING).description("취소 사유")
@@ -1152,15 +1144,13 @@ class OrderControllerTest {
                 )));
     }
 
-    // ======================== GET /v1/orders ========================
-
     @Test
     @DisplayName("GET /v1/orders - 주문 목록 조회 성공 (기본 3개월)")
     void getOrderList_success() throws Exception {
         OrderSummaryResult summary = new OrderSummaryResult(
             1L, "20260416-ABC1234567", OrderStatus.PAID,
             LocalDateTime.of(2026, 4, 16, 10, 0, 0),
-            33_000, 2, "빵집 크루아상", "https://cdn.daebbang.com/img/croissant.jpg",
+            33_000, 2, "슬림핏 청바지", "https://cdn.daebbang.com/img/slim-jeans.jpg",
             "골드", "M"
         );
         Page<OrderSummaryResult> page = new PageImpl<>(List.of(summary), PageRequest.of(0, 10), 1);
@@ -1178,7 +1168,7 @@ class OrderControllerTest {
             .andExpect(jsonPath("$.data.content[0].orderStatus").value("PAID"))
             .andExpect(jsonPath("$.data.content[0].paymentAmount").value(33_000))
             .andExpect(jsonPath("$.data.content[0].totalQuantity").value(2))
-            .andExpect(jsonPath("$.data.content[0].representativeProductName").value("빵집 크루아상"))
+            .andExpect(jsonPath("$.data.content[0].representativeProductName").value("슬림핏 청바지"))
             .andDo(document("order/list-success",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Order")
@@ -1292,14 +1282,12 @@ class OrderControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
-    // ======================== GET /v1/orders/{orderNumber} ========================
-
     @Test
     @DisplayName("GET /v1/orders/{orderNumber} - 주문 상세 조회 성공")
     void getOrderDetail_success() throws Exception {
         OrderFullDetailResult.OrderDetailItem item = new OrderFullDetailResult.OrderDetailItem(
-            10L, 101L, "빵집 크루아상",
-            "https://cdn.daebbang.com/img/croissant.jpg",
+            10L, 101L, "슬림핏 청바지",
+            "https://cdn.daebbang.com/img/slim-jeans.jpg",
             "골드", "#FFD700", "M",
             2, 15_000, 10, 13_500, OrderDetailStatus.NORMAL
         );
@@ -1311,7 +1299,7 @@ class OrderControllerTest {
         );
         given(orderService.getOrderDetail(any(), any())).willReturn(result);
 
-        mockMvc.perform(get("/v1/orders/20260416-ABC1234567")
+        mockMvc.perform(get("/v1/orders/{orderNumber}", "20260416-ABC1234567")
                 .with(authentication(authToken())))
             .andDo(print())
             .andExpect(status().isOk())
@@ -1326,7 +1314,7 @@ class OrderControllerTest {
             .andExpect(jsonPath("$.data.paymentAmount").value(30_000))
             .andExpect(jsonPath("$.data.details[0].orderDetailId").value(10))
             .andExpect(jsonPath("$.data.details[0].productDetailId").value(101))
-            .andExpect(jsonPath("$.data.details[0].productName").value("빵집 크루아상"))
+            .andExpect(jsonPath("$.data.details[0].productName").value("슬림핏 청바지"))
             .andExpect(jsonPath("$.data.details[0].status").value("NORMAL"))
             .andDo(document("order/detail-success",
                 resource(ResourceSnippetParameters.builder()
@@ -1337,6 +1325,7 @@ class OrderControllerTest {
                         본인 주문만 조회 가능하며 타인의 주문 번호를 전달하면 404를 반환합니다.
                         orderDetailId를 통해 부분 취소 API에서 항목을 지정할 수 있습니다.
                         """)
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .responseSchema(Schema.schema("OrderDetailResponse"))
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
@@ -1374,7 +1363,7 @@ class OrderControllerTest {
         willThrow(new BusinessException(UserErrorCode.ORDER_NOT_FOUND))
             .given(orderService).getOrderDetail(any(), any());
 
-        mockMvc.perform(get("/v1/orders/20260416-NOTEXIST00")
+        mockMvc.perform(get("/v1/orders/{orderNumber}", "20260416-NOTEXIST00")
                 .with(authentication(authToken())))
             .andDo(print())
             .andExpect(status().isNotFound())
@@ -1386,6 +1375,7 @@ class OrderControllerTest {
                     .summary("주문 상세 조회 - 주문 없음")
                     .description("존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
@@ -1399,12 +1389,10 @@ class OrderControllerTest {
     @Test
     @DisplayName("GET /v1/orders/{orderNumber} - 인증 없이 접근 시 401 반환")
     void getOrderDetail_unauthorized() throws Exception {
-        mockMvc.perform(get("/v1/orders/20260416-ABC1234567"))
+        mockMvc.perform(get("/v1/orders/{orderNumber}", "20260416-ABC1234567"))
             .andDo(print())
             .andExpect(status().isUnauthorized());
     }
-
-    // ======================== GET /v1/orders/status-count ========================
 
     @Test
     @DisplayName("GET /v1/orders/status-count - 배송 현황 건수 조회 성공")
