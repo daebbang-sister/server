@@ -35,6 +35,7 @@ import com.daebbang.daebbangcore.infra.toss.dto.TossPaymentResponse;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -183,21 +184,17 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void confirm(OrderConfirmCommand command) {
-        // 1. Redis 세션 조회
         OrderSession session = orderSessionRedisRepository.findByOrderNumber(command.orderNumber())
             .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
 
-        // 2. 사용자 검증
         if (!session.getUserId().equals(command.userId())) {
             throw new BusinessException(UserErrorCode.ORDER_USER_MISMATCH);
         }
 
-        // 3. 금액 검증
         if (session.getPaymentAmount() != command.amount()) {
             throw new BusinessException(UserErrorCode.ORDER_AMOUNT_MISMATCH);
         }
 
-        // 4. 중복 처리 방지 Lock (leaseTime 없이 watchdog 자동 갱신)
         RLock confirmLock = redissonClient.getLock("order:confirm:lock:" + command.orderNumber());
         boolean acquired = false;
         try {
@@ -206,19 +203,15 @@ public class OrderServiceImpl implements OrderService {
                 throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
             }
 
-            // 5. 이미 처리된 주문 확인
             if (ordersRepository.existsByOrderNumber(command.orderNumber())) {
                 throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
             }
 
-            // 6. Toss 결제 승인
             TossPaymentResponse tossResponse = tossPaymentClient.confirm(
                 command.orderNumber(), command.paymentKey(), command.amount()
             );
 
-            // 7 ~ 10. Toss 승인 이후 DB 처리 — 실패 시 Toss 취소 + Redis 복원
             try {
-                // 7. DB 재고 감소
                 for (OrderSessionItem item : session.getItems()) {
                     int updated = productDetailsService.decreaseStock(
                         item.getProductDetailId(), item.getQuantity()
@@ -229,7 +222,6 @@ public class OrderServiceImpl implements OrderService {
                     }
                 }
 
-                // 8. 주문 저장
                 Users user = userService.getUserById(session.getUserId());
 
                 Orders order = Orders.create(
@@ -248,7 +240,6 @@ public class OrderServiceImpl implements OrderService {
                     ));
                 }
 
-                // 9. 결제 방식에 따른 주문 상태
                 if (tossResponse.isVirtualAccount()) {
                     order.waitDeposit();
                 } else {
@@ -257,9 +248,8 @@ public class OrderServiceImpl implements OrderService {
                 order.update();
                 ordersRepository.save(order);
 
-                // 10. 결제 저장
                 LocalDateTime approvedAt = tossResponse.getApprovedAt() != null
-                    ? tossResponse.getApprovedAt().toLocalDateTime()
+                    ? OffsetDateTime.parse(tossResponse.getApprovedAt()).toLocalDateTime()
                     : LocalDateTime.now();
 
                 Payment payment = Payment.create(
@@ -268,7 +258,7 @@ public class OrderServiceImpl implements OrderService {
                     tossResponse.getCurrency(),
                     tossResponse.getMethod(),
                     tossResponse.getTotalAmount(),
-                    tossResponse.getRequestedAt().toLocalDateTime(),
+                    OffsetDateTime.parse(tossResponse.getRequestedAt()).toLocalDateTime(),
                     approvedAt
                 );
                 payment.update();

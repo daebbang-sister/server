@@ -1,6 +1,5 @@
 package com.daebbang.daebbangcore.infra.toss.dto;
 
-import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,9 +21,9 @@ public class TossPaymentResponse {
 
     private int totalAmount;
 
-    private OffsetDateTime requestedAt;
+    private String requestedAt;
 
-    private OffsetDateTime approvedAt;
+    private String approvedAt;
 
     public boolean isVirtualAccount() {
         return "가상계좌".equals(this.method);
