@@ -12,7 +12,7 @@ public interface WishListService {
 
     boolean isWished(Long userId, Long productId);
 
-    void addWishList(Long userId, Long productId);
+    Long addWishList(Long userId, Long productId);
 
     void deleteWishLists(Long userId, List<Long> wishListIds);
 

@@ -39,14 +39,13 @@ public class WishListServiceImpl implements WishListService {
 
     @Override
     @Transactional
-    public void addWishList(Long userId, Long productId) {
-        // 중복 추가 방지 (데이터 정합성)
+    public Long addWishList(Long userId, Long productId) {
         wishListRepository.findWishListByUserIdAndProductId(userId, productId)
             .ifPresent(w -> { throw new BusinessException(UserErrorCode.WISH_LIST_ALREADY_EXISTS); });
 
         Users user = userService.getUserById(userId);
         Products product = productService.getOnSaleProductById(productId);
-        wishListRepository.save(WishList.create(user, product));
+        return wishListRepository.save(WishList.create(user, product)).getId();
     }
 
     @Override

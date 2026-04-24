@@ -1,6 +1,7 @@
 package com.daebbang.daebbangapi.domain.wish.controller;
 
 import com.daebbang.daebbangapi.domain.wish.dto.request.WishListSaveRequest;
+import com.daebbang.daebbangapi.domain.wish.dto.response.WishIdInfo;
 import com.daebbang.daebbangapi.domain.wish.dto.response.WishListInfo;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.CommonSuccessCode;
@@ -54,13 +55,15 @@ public class WishListController {
     }
 
     @PostMapping
-    public ResponseEntity<@NonNull CommonResponse<Void>> addWishList(
+    public ResponseEntity<@NonNull CommonResponse<WishIdInfo>> addWishList(
         @AuthenticationPrincipal Long userId,
         @RequestBody @Valid WishListSaveRequest request
     ) {
-        wishListService.addWishList(userId, request.productId());
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(CommonResponse.success(UserSuccessCode.ADD_WISH_LIST));
+            .body(CommonResponse.success(
+                UserSuccessCode.ADD_WISH_LIST,
+                WishIdInfo.toDto(wishListService.addWishList(userId, request.productId())
+            )));
     }
 
     @DeleteMapping

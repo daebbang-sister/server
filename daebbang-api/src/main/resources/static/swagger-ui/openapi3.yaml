@@ -416,7 +416,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=X8qowhHrnuJet6AlJbd0q-3aMvDQr7jdCKOlkpFZRuaQ5umfPPzN8XCO_9Jz05kXFJpAm4vrH8joy9vwP5qTqqhhJdGo14v8
+                value: _csrf=q34tOYii711px1Pos-Tk2lK5B7VWLtkKoXlH1DjrtIUOfsjTk0YVWL3G1zlE9mSL0snQvGCBKtc3Tbonlk5x7VyP0L1sGPDn
       responses:
         "200":
           description: "200"
@@ -494,11 +494,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/WishIdResponse'
               examples:
                 wish-lists/add-01-success:
                   value: "{\"success\":true,\"status\":201,\"message\":\"위시리스트 추가에\
-                    \ 성공하였습니다.\",\"data\":null}"
+                    \ 성공하였습니다.\",\"data\":{\"wishId\":1}}"
         "409":
           description: "409"
           content:
@@ -2008,6 +2008,25 @@ components:
                   description: 주소 ID
               description: 기본 배송지
           description: 회원 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    WishIdResponse:
+      title: WishIdResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            wishId:
+              type: number
+              description: 생성된 위시리스트 ID (삭제 시 사용)
         success:
           type: boolean
           description: 성공 여부
