@@ -331,7 +331,7 @@ class WishListControllerTest {
     void addWishList_success() throws Exception {
         // given
         WishListSaveRequest request = new WishListSaveRequest(100L);
-        willDoNothing().given(wishListService).addWishList(anyLong(), anyLong());
+        given(wishListService.addWishList(anyLong(), anyLong())).willReturn(1L);
 
         // when & then
         mockMvc.perform(post(BASE_URL)
@@ -343,13 +343,14 @@ class WishListControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.status").value(201))
             .andExpect(jsonPath("$.message").value("위시리스트 추가에 성공하였습니다."))
+            .andExpect(jsonPath("$.data.wishId").value(1))
             .andDo(document("wish-lists/add-01-success",
                 resource(ResourceSnippetParameters.builder()
                     .tag("WishList")
                     .summary("위시리스트 추가")
                     .description("상품 상세 페이지에서 상품을 위시리스트에 추가합니다. 이미 추가된 상품은 409를 반환합니다.")
                     .requestSchema(Schema.schema("WishListSaveRequest"))
-                    .responseSchema(Schema.schema("SuccessResponse"))
+                    .responseSchema(Schema.schema("WishIdResponse"))
                     .requestFields(
                         fieldWithPath("productId").type(JsonFieldType.NUMBER).description("추가할 상품 ID")
                     )
@@ -357,7 +358,7 @@ class WishListControllerTest {
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                        fieldWithPath("data.wishId").type(JsonFieldType.NUMBER).description("생성된 위시리스트 ID (삭제 시 사용)")
                     )
                     .build()
                 )));
