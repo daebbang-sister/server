@@ -56,6 +56,8 @@ public class SecurityConfig {
 
     private final CustomLogoutHandler logoutHandler;
     private final CustomLogoutSuccessHandler logoutSuccessHandler;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
     @Bean
     public AuthenticationManager authenticationManager(CustomUserDetailsService service, PasswordEncoder encoder) {
@@ -100,8 +102,8 @@ public class SecurityConfig {
             .oauth2Login((oauth2) -> oauth2
                 .userInfoEndpoint((config) -> config
                     .userService(oauth2Service))
-                .successHandler(new OAuth2LoginSuccessHandler(cookieUtils, authService))
-                .failureHandler(new OAuth2LoginFailureHandler())
+                .successHandler(oAuth2LoginSuccessHandler)
+                .failureHandler(oAuth2LoginFailureHandler)
             );
 
         http
