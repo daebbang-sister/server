@@ -23,6 +23,7 @@ import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangapi.domain.wish.dto.request.WishListSaveRequest;
+import java.util.Optional;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
@@ -237,9 +238,9 @@ class WishListControllerTest {
     // ======================== GET /v1/wish-lists/check ========================
 
     @Test
-    @DisplayName("GET /v1/wish-lists/check - 위시리스트 등록 상품이면 true 반환")
+    @DisplayName("GET /v1/wish-lists/check - 위시리스트 등록 상품이면 isWished=true, wishId 반환")
     void checkWishList_wished() throws Exception {
-        given(wishListService.isWished(anyLong(), anyLong())).willReturn(true);
+        given(wishListService.isWished(anyLong(), anyLong())).willReturn(Optional.of(1L));
 
         mockMvc.perform(get(BASE_URL + "/check")
                 .with(authentication(authToken()))
@@ -250,12 +251,13 @@ class WishListControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.status").value(200))
             .andExpect(jsonPath("$.message").value("위시리스트 여부 조회에 성공하였습니다."))
-            .andExpect(jsonPath("$.data").value(true))
+            .andExpect(jsonPath("$.data.isWished").value(true))
+            .andExpect(jsonPath("$.data.wishId").value(1))
             .andDo(document("wish-lists/check-01-wished",
                 resource(ResourceSnippetParameters.builder()
                     .tag("WishList")
                     .summary("위시리스트 여부 조회")
-                    .description("상품 상세 페이지 진입 후 CSR로 위시리스트 등록 여부를 조회합니다. 등록된 경우 true, 아니면 false를 반환합니다.")
+                    .description("상품 상세 페이지 진입 후 CSR로 위시리스트 등록 여부를 조회합니다. 등록된 경우 isWished=true와 wishId를 반환합니다.")
                     .responseSchema(Schema.schema("WishListCheckResponse"))
                     .queryParameters(
                         parameterWithName("productId").description("조회할 상품 ID")
@@ -264,16 +266,17 @@ class WishListControllerTest {
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("위시리스트 등록 여부")
+                        fieldWithPath("data.isWished").type(JsonFieldType.BOOLEAN).description("위시리스트 등록 여부"),
+                        fieldWithPath("data.wishId").type(JsonFieldType.NUMBER).description("위시리스트 ID (미등록 시 null)")
                     )
                     .build()
                 )));
     }
 
     @Test
-    @DisplayName("GET /v1/wish-lists/check - 미등록 상품이면 false 반환")
+    @DisplayName("GET /v1/wish-lists/check - 미등록 상품이면 isWished=false, wishId=null 반환")
     void checkWishList_notWished() throws Exception {
-        given(wishListService.isWished(anyLong(), anyLong())).willReturn(false);
+        given(wishListService.isWished(anyLong(), anyLong())).willReturn(Optional.empty());
 
         mockMvc.perform(get(BASE_URL + "/check")
                 .with(authentication(authToken()))
@@ -281,12 +284,13 @@ class WishListControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data").value(false))
+            .andExpect(jsonPath("$.data.isWished").value(false))
+            .andExpect(jsonPath("$.data.wishId").isEmpty())
             .andDo(document("wish-lists/check-02-not-wished",
                 resource(ResourceSnippetParameters.builder()
                     .tag("WishList")
                     .summary("위시리스트 여부 조회 - 미등록")
-                    .description("위시리스트에 등록되지 않은 상품은 false를 반환합니다.")
+                    .description("위시리스트에 등록되지 않은 상품은 isWished=false, wishId=null을 반환합니다.")
                     .responseSchema(Schema.schema("WishListCheckResponse"))
                     .queryParameters(
                         parameterWithName("productId").description("조회할 상품 ID")
@@ -295,7 +299,8 @@ class WishListControllerTest {
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.BOOLEAN).description("위시리스트 등록 여부")
+                        fieldWithPath("data.isWished").type(JsonFieldType.BOOLEAN).description("위시리스트 등록 여부"),
+                        fieldWithPath("data.wishId").type(JsonFieldType.NUMBER).optional().description("위시리스트 ID (미등록 시 null)")
                     )
                     .build()
                 )));
