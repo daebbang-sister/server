@@ -1,6 +1,7 @@
 package com.daebbang.daebbangapi.domain.wish.controller;
 
 import com.daebbang.daebbangapi.domain.wish.dto.request.WishListSaveRequest;
+import com.daebbang.daebbangapi.domain.wish.dto.response.WishCheckInfo;
 import com.daebbang.daebbangapi.domain.wish.dto.response.WishIdInfo;
 import com.daebbang.daebbangapi.domain.wish.dto.response.WishListInfo;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
@@ -47,11 +48,12 @@ public class WishListController {
     }
 
     @GetMapping("/check")
-    public CommonResponse<Boolean> checkWishList(
+    public CommonResponse<WishCheckInfo> checkWishList(
         @AuthenticationPrincipal Long userId,
         @RequestParam @Positive(message = "상품 ID는 1 이상이어야 합니다.") Long productId
     ) {
-        return CommonResponse.success(UserSuccessCode.CHECK_WISH_LIST, wishListService.isWished(userId, productId));
+        var result = wishListService.isWished(userId, productId);
+        return CommonResponse.success(UserSuccessCode.CHECK_WISH_LIST, new WishCheckInfo(result.isPresent(), result.orElse(null)));
     }
 
     @PostMapping
