@@ -11,6 +11,7 @@ import com.daebbang.daebbangcore.domain.wish.entity.WishList;
 import com.daebbang.daebbangcore.domain.wish.repository.WishListRepository;
 import com.daebbang.daebbangcore.domain.wish.service.WishListService;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,8 +34,8 @@ public class WishListServiceImpl implements WishListService {
     }
 
     @Override
-    public boolean isWished(Long userId, Long productId) {
-        return wishListRepository.findWishListByUserIdAndProductId(userId, productId).isPresent();
+    public Optional<Long> isWished(Long userId, Long productId) {
+        return wishListRepository.findWishListByUserIdAndProductId(userId, productId).map(WishList::getId);
     }
 
     @Override

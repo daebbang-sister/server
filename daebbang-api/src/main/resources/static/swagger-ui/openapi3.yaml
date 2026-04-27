@@ -416,7 +416,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=q34tOYii711px1Pos-Tk2lK5B7VWLtkKoXlH1DjrtIUOfsjTk0YVWL3G1zlE9mSL0snQvGCBKtc3Tbonlk5x7VyP0L1sGPDn
+                value: _csrf=LQUIV-Fxhbjmplz9WbBaxHo5hgY7Eoh1HKQ4qxRd4-PRmz3JGjxtYNJI54DLwmnJaJ1uphxbqz9YcLBYfZ0PmSNlhoHk-Q38
       responses:
         "200":
           description: "200"
@@ -1268,8 +1268,8 @@ paths:
       tags:
       - WishList
       summary: 위시리스트 여부 조회
-      description: "상품 상세 페이지 진입 후 CSR로 위시리스트 등록 여부를 조회합니다. 등록된 경우 true, 아니면 false를\
-        \ 반환합니다."
+      description: 상품 상세 페이지 진입 후 CSR로 위시리스트 등록 여부를 조회합니다. 등록된 경우 isWished=true와 wishId를
+        반환합니다.
       operationId: wish-lists/check-0
       parameters:
       - name: productId
@@ -1288,10 +1288,10 @@ paths:
               examples:
                 wish-lists/check-01-wished:
                   value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 여부\
-                    \ 조회에 성공하였습니다.\",\"data\":true}"
+                    \ 조회에 성공하였습니다.\",\"data\":{\"isWished\":true,\"wishId\":1}}"
                 wish-lists/check-02-not-wished:
                   value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 여부\
-                    \ 조회에 성공하였습니다.\",\"data\":false}"
+                    \ 조회에 성공하였습니다.\",\"data\":{\"isWished\":false,\"wishId\":null}}"
   /v1/orders/{orderNumber}/cancel:
     post:
       tags:
@@ -2359,6 +2359,28 @@ components:
         quantity:
           type: number
           description: 변경할 수량
+    WishListCheckResponse:
+      title: WishListCheckResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            isWished:
+              type: boolean
+              description: 위시리스트 등록 여부
+            wishId:
+              type: number
+              description: 위시리스트 ID (미등록 시 null)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     WishListPageResponse:
       title: WishListPageResponse
       type: object
@@ -2774,22 +2796,6 @@ components:
               type: string
               description: 발송된 인증번호 (6자리)
           description: 발송 결과
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    WishListCheckResponse:
-      title: WishListCheckResponse
-      type: object
-      properties:
-        data:
-          type: boolean
-          description: 위시리스트 등록 여부
         success:
           type: boolean
           description: 성공 여부
