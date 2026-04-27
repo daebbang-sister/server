@@ -34,7 +34,13 @@ public enum UserSuccessCode implements SuccessCode {
     ORDER_CANCELLED(200, "주문이 취소되었습니다."),
     ORDER_LIST_RETRIEVED(200, "주문 목록 조회에 성공하였습니다."),
     ORDER_DETAIL_RETRIEVED(200, "주문 상세 조회에 성공하였습니다."),
-    ORDER_STATUS_COUNT_RETRIEVED(200, "배송 현황 건수 조회에 성공하였습니다.");
+    ORDER_STATUS_COUNT_RETRIEVED(200, "배송 현황 건수 조회에 성공하였습니다."),
+
+    REVIEW_CREATED(201, "리뷰가 등록되었습니다."),
+    REVIEW_UPDATED(200, "리뷰가 수정되었습니다."),
+    REVIEW_DELETED(200, "리뷰가 삭제되었습니다."),
+    REVIEW_LIST_RETRIEVED(200, "리뷰 목록 조회에 성공하였습니다."),
+    REVIEW_STATS_RETRIEVED(200, "리뷰 통계 조회에 성공하였습니다.");
 
     private final int status;
     private final String message;
