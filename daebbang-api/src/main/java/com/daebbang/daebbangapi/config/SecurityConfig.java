@@ -1,5 +1,6 @@
 package com.daebbang.daebbangapi.config;
 
+import com.daebbang.daebbangapi.domain.oauth.repository.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.daebbang.daebbangapi.domain.security.dto.SecurityConstants;
 import com.daebbang.daebbangapi.filter.CustomExceptionFilter;
 import com.daebbang.daebbangapi.filter.JwtAuthenticationFilter;
@@ -48,6 +49,8 @@ public class SecurityConfig {
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     private final CookieUtils cookieUtils;
+
+    private final HttpCookieOAuth2AuthorizationRequestRepository oAuth2Repository;
 
     private final AuthService authService;
     private final RedisService redisService;
@@ -102,6 +105,8 @@ public class SecurityConfig {
             .oauth2Login((oauth2) -> oauth2
                 .userInfoEndpoint((config) -> config
                     .userService(oauth2Service))
+                .authorizationEndpoint((config) -> config
+                    .authorizationRequestRepository(oAuth2Repository))
                 .successHandler(oAuth2LoginSuccessHandler)
                 .failureHandler(oAuth2LoginFailureHandler)
             );

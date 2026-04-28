@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,9 +40,8 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Orders> findOrdersByUserIdAndDateRange(Long userId, LocalDateTime start,
+    public Page<@NonNull Orders> findOrdersByUserIdAndDateRange(Long userId, LocalDateTime start,
                                                        LocalDateTime end, Pageable pageable) {
-        // 1단계: ID만 페이징 (컬렉션 fetch join 없이 row 뻥튀기 방지)
         List<Long> ids = queryFactory
             .select(orders.id)
             .from(orders)
@@ -55,7 +55,6 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
             .fetch();
 
         if (ids.isEmpty()) {
-            // totalElements를 정확하게 계산하기 위해 count 쿼리 위임
             JPAQuery<Long> countQuery = queryFactory
                 .select(orders.count())
                 .from(orders)
@@ -66,7 +65,6 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
             return PageableExecutionUtils.getPage(List.of(), pageable, countQuery::fetchOne);
         }
 
-        // 2단계: ID로 LEFT JOIN FETCH (orderList 없어도 주문 포함)
         List<Orders> content = queryFactory
             .selectFrom(orders)
             .leftJoin(orders.orderList, orderDetails).fetchJoin()
