@@ -455,7 +455,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=mGnGEcbUuRW14lmoLxS2XlTMBqAsiZsal4DKMADeip3vL6MD-1CiIqLt2iyYgTydSjmCbzb7K8IZsaM38rT9AGPusq_dTZNl
+                value: _csrf=Bt1qMuonrMxT31K1ZsEM8razyGX04rbQh0vM7ns1jjtKfoPIN-sIUdMTlPR-6zCMUuw4lIXS5QTA29P9t3393U0B6w4rTeep
       responses:
         "200":
           description: "200"
@@ -1661,8 +1661,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -1915,7 +1915,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
+                    ratingCounts\":{\"2\":1,\"1\":0,\"5\":7,\"4\":5,\"3\":2}}}"
 components:
   schemas:
     ErrorResponse:
