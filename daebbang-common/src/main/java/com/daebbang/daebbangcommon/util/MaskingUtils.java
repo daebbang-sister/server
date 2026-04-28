@@ -6,6 +6,9 @@ import com.daebbang.daebbangcommon.error.UserErrorCode;
 import java.util.Objects;
 
 public class MaskingUtils {
+
+    static final String FIXED_MASK = "********";
+
     private MaskingUtils() {
         throw new BusinessException(CommonErrorCode.CANNOT_INSTANTIATE_UTIL_CLASS);
     }
@@ -14,20 +17,23 @@ public class MaskingUtils {
         if (Objects.isNull(userId) || userId.length() < 4) {
             throw new BusinessException(UserErrorCode.INVALID_USER_ID_FORMAT);
         }
-        final String FIXED_MASK = "********";
+
         return userId.substring(0, 3) + FIXED_MASK;
     }
 
-    public static String maskUsername(String username) {
-        if (Objects.isNull(username) || username.length() < 2) {
-            throw new BusinessException(UserErrorCode.INVALID_USERNAME_FORMAT);
+    public static String maskReviewerId(String userId) {
+        if (Objects.isNull(userId) || userId.isBlank()) {
+            return FIXED_MASK;
         }
-
-        int len = username.length();
-        if (len == 2) {
-            return username.charAt(0) + "*";
+        int len = userId.length();
+        int visible;
+        if (len > 4) {
+            visible = 4;
+        } else if (len > 2) {
+            visible = 2;
+        } else {
+            visible = 1;
         }
-
-        return username.charAt(0) + "*".repeat(len - 2) + username.substring(len - 1);
+        return userId.substring(0, visible) + FIXED_MASK;
     }
 }

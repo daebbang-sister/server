@@ -2,6 +2,7 @@ package com.daebbang.daebbangapi.domain.review.controller;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static com.epages.restdocs.apispec.ResourceDocumentation.headerWithName;
+import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -252,7 +253,7 @@ class ReviewControllerTest {
     void updateReview_success() throws Exception {
         willDoNothing().given(reviewService).updateReview(any());
 
-        mockMvc.perform(put("/v1/reviews/1")
+        mockMvc.perform(put("/v1/reviews/{reviewId}", 1L)
                 .with(authentication(AUTH))
                 .header("Authorization", "Bearer test-jwt-token")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -271,6 +272,9 @@ class ReviewControllerTest {
                     .tag("Review")
                     .summary("리뷰 수정")
                     .description("작성한 리뷰를 수정합니다. 적립금이 승인된 리뷰는 수정 불가합니다.")
+                    .pathParameters(
+                        parameterWithName("reviewId").description("리뷰 ID")
+                    )
                     .requestSchema(Schema.schema("UpdateReviewRequest"))
                     .responseSchema(Schema.schema("CommonVoidResponse"))
                     .requestHeaders(
@@ -296,7 +300,7 @@ class ReviewControllerTest {
     void deleteReview_success() throws Exception {
         willDoNothing().given(reviewService).deleteReview(anyLong(), anyLong());
 
-        mockMvc.perform(delete("/v1/reviews/1")
+        mockMvc.perform(delete("/v1/reviews/{reviewId}", 1L)
                 .with(authentication(AUTH))
                 .header("Authorization", "Bearer test-jwt-token"))
             .andDo(print())
@@ -308,6 +312,9 @@ class ReviewControllerTest {
                     .tag("Review")
                     .summary("리뷰 삭제")
                     .description("작성한 리뷰를 삭제합니다. 적립금이 승인된 리뷰는 삭제 불가합니다.")
+                    .pathParameters(
+                        parameterWithName("reviewId").description("리뷰 ID")
+                    )
                     .responseSchema(Schema.schema("CommonVoidResponse"))
                     .requestHeaders(
                         headerWithName("Authorization").description("Bearer JWT 토큰")
@@ -376,5 +383,162 @@ class ReviewControllerTest {
                     )
                     .build()
                 )));
+    }
+
+    @Test
+    @DisplayName("POST /v1/reviews - rating 0 이면 400 반환")
+    void createReview_fail_ratingTooLow() throws Exception {
+        mockMvc.perform(post("/v1/reviews")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "orderDetailId": 100,
+                        "rating": 0,
+                        "content": "정말 맛있는 빵이에요! 촉촉하고 달달해서 온 가족이 좋아합니다."
+                    }
+                    """))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /v1/reviews - rating 6 이면 400 반환")
+    void createReview_fail_ratingTooHigh() throws Exception {
+        mockMvc.perform(post("/v1/reviews")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "orderDetailId": 100,
+                        "rating": 6,
+                        "content": "정말 맛있는 빵이에요! 촉촉하고 달달해서 온 가족이 좋아합니다."
+                    }
+                    """))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /v1/reviews - rating 누락이면 400 반환")
+    void createReview_fail_ratingMissing() throws Exception {
+        mockMvc.perform(post("/v1/reviews")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "orderDetailId": 100,
+                        "content": "정말 맛있는 빵이에요! 촉촉하고 달달해서 온 가족이 좋아합니다."
+                    }
+                    """))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /v1/reviews - orderDetailId 누락이면 400 반환")
+    void createReview_fail_orderDetailIdMissing() throws Exception {
+        mockMvc.perform(post("/v1/reviews")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "rating": 5,
+                        "content": "정말 맛있는 빵이에요! 촉촉하고 달달해서 온 가족이 좋아합니다."
+                    }
+                    """))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /v1/reviews - content 301자면 400 반환")
+    void createReview_fail_contentTooLong() throws Exception {
+        String longContent = "가".repeat(301);
+        mockMvc.perform(post("/v1/reviews")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "orderDetailId": 100,
+                        "rating": 5,
+                        "content": "%s"
+                    }
+                    """.formatted(longContent)))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /v1/reviews - 이미지 5장이면 400 반환")
+    void createReview_fail_tooManyImages() throws Exception {
+        mockMvc.perform(post("/v1/reviews")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "orderDetailId": 100,
+                        "rating": 5,
+                        "content": "정말 맛있는 빵이에요! 촉촉하고 달달해서 온 가족이 좋아합니다.",
+                        "imageUrls": ["url1", "url2", "url3", "url4", "url5"]
+                    }
+                    """))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /v1/reviews/{reviewId} - 인증 없이 접근 시 401 반환")
+    void updateReview_unauthorized() throws Exception {
+        mockMvc.perform(put("/v1/reviews/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "rating": 4,
+                        "content": "수정된 리뷰입니다. 두 번째 방문이었는데 여전히 맛있네요."
+                    }
+                    """))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("DELETE /v1/reviews/{reviewId} - 인증 없이 접근 시 401 반환")
+    void deleteReview_unauthorized() throws Exception {
+        mockMvc.perform(delete("/v1/reviews/1"))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("GET /v1/reviews/my - 인증 없이 접근 시 401 반환")
+    void getMyReviews_unauthorized() throws Exception {
+        mockMvc.perform(get("/v1/reviews/my"))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("GET /v1/reviews/my - 리뷰 없을 때 빈 페이지 반환")
+    void getMyReviews_empty() throws Exception {
+        given(reviewService.getMyReviews(anyLong(), any()))
+            .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+        given(reviewService.getPointConfig()).willReturn(buildConfig());
+
+        mockMvc.perform(get("/v1/reviews/my")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.content.length()").value(0))
+            .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 }

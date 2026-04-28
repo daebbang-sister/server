@@ -12,7 +12,6 @@ import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,7 +65,7 @@ public class ReviewController {
     @GetMapping("/my")
     public ResponseEntity<CommonResponse<PageResponse<MyReviewItemResponse>>> getMyReviews(
         @AuthenticationPrincipal Long userId,
-        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+        @PageableDefault(size = 10) Pageable pageable
     ) {
         ReviewPointConfig config = reviewService.getPointConfig();
         PageResponse<MyReviewItemResponse> response = PageResponse.from(

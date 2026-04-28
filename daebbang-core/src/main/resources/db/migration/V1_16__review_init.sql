@@ -4,7 +4,7 @@ CREATE TABLE reviews
     user_id            BIGINT       NOT NULL COMMENT '회원 고유 아이디',
     product_id         BIGINT       NOT NULL COMMENT '상품 고유 아이디',
     order_detail_id    BIGINT       NOT NULL COMMENT '주문 상세 고유 아이디',
-    rating             TINYINT      NOT NULL COMMENT '별점 1점 ~ 5점',
+    rating             INT          NOT NULL COMMENT '별점 1점 ~ 5점',
     content            VARCHAR(300) NOT NULL COMMENT '리뷰 내용 (최소 20자, 최대 300자)',
     reply              VARCHAR(300) NULL     COMMENT '관리자 답글 (최대 300자)',
     reply_updated_at   DATETIME     NULL     COMMENT '답글 등록/수정 일자',
@@ -25,7 +25,7 @@ CREATE TABLE review_images
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '이미지 고유 아이디',
     review_id   BIGINT       NOT NULL COMMENT '리뷰 고유 아이디',
     image_url   VARCHAR(500) NOT NULL COMMENT 'S3 이미지 URL',
-    image_order TINYINT      NOT NULL COMMENT '이미지 순서 (1~4)',
+    image_order INT          NOT NULL COMMENT '이미지 순서 (1~4)',
     created_at  DATETIME     NOT NULL COMMENT '등록 일자',
     PRIMARY KEY (id),
     CONSTRAINT fk_review_images_review FOREIGN KEY (review_id) REFERENCES reviews (id)

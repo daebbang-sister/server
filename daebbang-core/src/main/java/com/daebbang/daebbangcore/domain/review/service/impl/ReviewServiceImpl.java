@@ -102,8 +102,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewPointConfig getPointConfig() {
-        return reviewPointConfigRepository.findAll().stream()
-            .findFirst()
+        return reviewPointConfigRepository.findTopByOrderByIdAsc()
             .orElseThrow(() -> new BusinessException(UserErrorCode.REVIEW_POINT_CONFIG_NOT_FOUND));
     }
 

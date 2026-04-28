@@ -13,12 +13,12 @@ import com.daebbang.daebbangcore.domain.page.PageResponse;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
 import com.daebbang.daebbangcore.domain.review.service.ReviewService;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -111,8 +111,8 @@ public class ProductController {
 
     @GetMapping("/{productId}/reviews")
     public CommonResponse<PageResponse<ProductReviewItemResponse>> getProductReviews(
-        @PathVariable Long productId,
-        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+        @PathVariable @Min(value = 1, message = "상품 ID는 1 이상이어야 합니다.") Long productId,
+        @PageableDefault(size = 10) Pageable pageable
     ) {
         return CommonResponse.success(
             UserSuccessCode.REVIEW_LIST_RETRIEVED,
@@ -125,7 +125,7 @@ public class ProductController {
 
     @GetMapping("/{productId}/reviews/stats")
     public CommonResponse<ProductReviewStatsResponse> getProductReviewStats(
-        @PathVariable Long productId
+        @PathVariable @Min(value = 1, message = "상품 ID는 1 이상이어야 합니다.") Long productId
     ) {
         return CommonResponse.success(
             UserSuccessCode.REVIEW_STATS_RETRIEVED,

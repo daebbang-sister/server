@@ -28,11 +28,12 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     public Page<@NonNull Review> findActiveReviewsByProductId(Long productId, Pageable pageable) {
         List<Review> content = queryFactory
             .selectFrom(review)
+            .leftJoin(review.user).fetchJoin()
             .where(
                 review.product.id.eq(productId),
                 review.deletedAt.isNull()
             )
-            .orderBy(review.createdAt.desc())
+            .orderBy(review.createdAt.desc(), review.id.desc())
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();
@@ -53,11 +54,12 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     public Page<@NonNull Review> findActiveReviewsByUserId(Long userId, Pageable pageable) {
         List<Review> content = queryFactory
             .selectFrom(review)
+            .leftJoin(review.product).fetchJoin()
             .where(
                 review.user.id.eq(userId),
                 review.deletedAt.isNull()
             )
-            .orderBy(review.createdAt.desc())
+            .orderBy(review.createdAt.desc(), review.id.desc())
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();
@@ -79,7 +81,7 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
         List<Review> content = queryFactory
             .selectFrom(review)
             .where(review.deletedAt.isNull())
-            .orderBy(review.createdAt.desc())
+            .orderBy(review.createdAt.desc(), review.id.desc())
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();

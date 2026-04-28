@@ -18,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "reviews")
@@ -66,8 +68,9 @@ public class Review extends DefaultBase {
 
     private LocalDateTime pointApprovedAt;
 
+    @BatchSize(size = 20)
+    @OrderBy("imageOrder ASC")
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @jakarta.persistence.OrderBy("imageOrder ASC")
     private final List<ReviewImage> images = new ArrayList<>();
 
     @Builder
