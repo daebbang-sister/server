@@ -27,13 +27,24 @@ import com.daebbang.daebbangcore.domain.product.dto.ProductSizeOption;
 import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
 import com.daebbang.daebbangcore.domain.product.entity.ProductStatus;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
+import com.daebbang.daebbangcore.domain.review.dto.ReviewStatsResult;
+import com.daebbang.daebbangcore.domain.review.entity.Review;
+import com.daebbang.daebbangcore.domain.review.entity.ReviewImage;
+import com.daebbang.daebbangcore.domain.review.service.ReviewService;
+import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import com.epages.restdocs.apispec.SimpleType;
 import com.daebbang.daebbangcommon.sort.SortDirection;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import org.springframework.data.domain.Page;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +73,9 @@ class ProductControllerTest {
 
     @MockitoBean
     private ProductService productService;
+
+    @MockitoBean
+    private ReviewService reviewService;
 
     private static final String BASE_URL = "/v1/products";
     private static final Long USER_ID = 1L;
@@ -888,5 +902,179 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.message").value("잘못된 입력값입니다."));
+    }
+
+    private Review mockReview(boolean withImage, boolean withReply) {
+        Review review = mock(Review.class);
+        Users user = Users.createLocalUser("testuser123", "encoded", "홍길동", "test@example.com", "01012345678");
+
+        when(review.getId()).thenReturn(1L);
+        when(review.getUser()).thenReturn(user);
+        when(review.getRating()).thenReturn(5);
+        when(review.getContent()).thenReturn("정말 맛있는 빵이에요! 촉촉하고 달달해서 온 가족이 좋아합니다.");
+        when(review.getCreatedAt()).thenReturn(LocalDateTime.of(2026, 4, 27, 10, 0));
+
+        if (withReply) {
+            when(review.getReply()).thenReturn("소중한 리뷰 감사합니다.");
+            when(review.getReplyUpdatedAt()).thenReturn(LocalDateTime.of(2026, 4, 28, 10, 0));
+        } else {
+            when(review.getReply()).thenReturn(null);
+            when(review.getReplyUpdatedAt()).thenReturn(null);
+        }
+
+        if (withImage) {
+            ReviewImage image = mock(ReviewImage.class);
+            when(image.getImageUrl()).thenReturn("https://s3.example.com/review/image1.jpg");
+            when(review.getImages()).thenReturn(List.of(image));
+        } else {
+            when(review.getImages()).thenReturn(List.of());
+        }
+        return review;
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/reviews - 상품 리뷰 목록 조회 성공 (포토 + 답글 포함)")
+    void getProductReviews_success() throws Exception {
+        Page<Review> page = new PageImpl<>(List.of(mockReview(true, true)), PageRequest.of(0, 10), 1);
+        given(reviewService.getProductReviews(anyLong(), any())).willReturn(page);
+
+        mockMvc.perform(get(BASE_URL + "/{productId}/reviews", 10L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.content.length()").value(1))
+            .andExpect(jsonPath("$.data.content[0].maskedLoginId").value("test********"))
+            .andExpect(jsonPath("$.data.content[0].rating").value(5))
+            .andExpect(jsonPath("$.data.content[0].reply").value("소중한 리뷰 감사합니다."))
+            .andDo(document("product/product-review-list",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 리뷰 목록 조회")
+                    .description("""
+                        특정 상품의 리뷰 목록을 조회합니다. 최신순, 한 페이지에 10개.
+                        작성자 아이디는 앞 4글자만 표기되고 나머지는 *로 마스킹됩니다.
+                        """)
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseSchema(Schema.schema("ProductReviewListResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.content").type(JsonFieldType.ARRAY).description("리뷰 목록"),
+                        fieldWithPath("data.content[].reviewId").type(JsonFieldType.NUMBER).description("리뷰 ID"),
+                        fieldWithPath("data.content[].maskedLoginId").type(JsonFieldType.STRING).description("마스킹된 아이디"),
+                        fieldWithPath("data.content[].createdAt").type(JsonFieldType.STRING).description("작성 일자"),
+                        fieldWithPath("data.content[].rating").type(JsonFieldType.NUMBER).description("별점 (1~5)"),
+                        fieldWithPath("data.content[].content").type(JsonFieldType.STRING).description("리뷰 내용 (최소 20자~최대 300자)"),
+                        fieldWithPath("data.content[].imageUrls").type(JsonFieldType.ARRAY).description("이미지 URL 목록 (0~4장)"),
+                        fieldWithPath("data.content[].reply").type(JsonFieldType.STRING).optional().description("관리자 답글 (없으면 null)"),
+                        fieldWithPath("data.content[].replyUpdatedAt").type(JsonFieldType.STRING).optional().description("답글 일자 (없으면 null)"),
+                        fieldWithPath("data.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
+                        fieldWithPath("data.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
+                        fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 리뷰 수"),
+                        fieldWithPath("data.totalPages").type(JsonFieldType.NUMBER).description("전체 페이지 수"),
+                        fieldWithPath("data.last").type(JsonFieldType.BOOLEAN).description("마지막 페이지 여부")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/reviews - 리뷰 없을 때 빈 페이지 반환")
+    void getProductReviews_empty() throws Exception {
+        given(reviewService.getProductReviews(anyLong(), any()))
+            .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        mockMvc.perform(get(BASE_URL + "/{productId}/reviews", 10L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.content.length()").value(0))
+            .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/reviews - productId 가 0 이하면 400 반환")
+    void getProductReviews_invalidProductId() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/{productId}/reviews", 0L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/reviews/stats - 리뷰 통계 조회 성공")
+    void getProductReviewStats_success() throws Exception {
+        ReviewStatsResult stats = new ReviewStatsResult(
+            15L,
+            4.3,
+            Map.of(1, 0L, 2, 1L, 3, 2L, 4, 5L, 5, 7L)
+        );
+        given(reviewService.getProductReviewStats(anyLong())).willReturn(stats);
+
+        mockMvc.perform(get(BASE_URL + "/{productId}/reviews/stats", 10L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.totalCount").value(15))
+            .andExpect(jsonPath("$.data.averageRating").value(4.3))
+            .andDo(document("product/product-review-stats",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("상품 리뷰 통계 조회")
+                    .description("상품의 리뷰 통계를 조회합니다. 총 리뷰 수, 평균 별점, 별점별 리뷰 수를 반환합니다.")
+                    .pathParameters(
+                        parameterWithName("productId").description("상품 ID").type(SimpleType.INTEGER)
+                    )
+                    .responseSchema(Schema.schema("ProductReviewStatsResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("총 리뷰 수"),
+                        fieldWithPath("data.averageRating").type(JsonFieldType.NUMBER).description("평균 별점 (소수점 1자리)"),
+                        fieldWithPath("data.ratingCounts").type(JsonFieldType.OBJECT).description("별점별 리뷰 수"),
+                        fieldWithPath("data.ratingCounts.1").type(JsonFieldType.NUMBER).description("1점 리뷰 수"),
+                        fieldWithPath("data.ratingCounts.2").type(JsonFieldType.NUMBER).description("2점 리뷰 수"),
+                        fieldWithPath("data.ratingCounts.3").type(JsonFieldType.NUMBER).description("3점 리뷰 수"),
+                        fieldWithPath("data.ratingCounts.4").type(JsonFieldType.NUMBER).description("4점 리뷰 수"),
+                        fieldWithPath("data.ratingCounts.5").type(JsonFieldType.NUMBER).description("5점 리뷰 수")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/reviews/stats - 통계 0건도 모든 별점 키 포함")
+    void getProductReviewStats_zero() throws Exception {
+        ReviewStatsResult stats = new ReviewStatsResult(
+            0L,
+            0.0,
+            Map.of(1, 0L, 2, 0L, 3, 0L, 4, 0L, 5, 0L)
+        );
+        given(reviewService.getProductReviewStats(anyLong())).willReturn(stats);
+
+        mockMvc.perform(get(BASE_URL + "/{productId}/reviews/stats", 10L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.totalCount").value(0))
+            .andExpect(jsonPath("$.data.averageRating").value(0.0))
+            .andExpect(jsonPath("$.data.ratingCounts.5").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/{productId}/reviews/stats - productId 가 0 이하면 400 반환")
+    void getProductReviewStats_invalidProductId() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/{productId}/reviews/stats", 0L)
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
     }
 }

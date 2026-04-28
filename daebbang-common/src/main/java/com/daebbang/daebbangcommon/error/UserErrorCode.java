@@ -62,7 +62,15 @@ public enum UserErrorCode implements ErrorCode {
     ORDER_PARTIAL_CANCEL_INVALID(400, "유효하지 않은 취소 항목입니다."),
     ORDER_DATE_RANGE_INVALID(400, "조회 시작일이 종료일보다 늦을 수 없습니다."),
     POINT_EXCEEDS_PAYMENT(400, "포인트가 결제 금액을 초과합니다."),
-    STOCK_RESTORE_FAILED(500, "재고 복원에 실패했습니다. 관리자에게 문의하세요.");
+    STOCK_RESTORE_FAILED(500, "재고 복원에 실패했습니다. 관리자에게 문의하세요."),
+
+    ORDER_DETAIL_NOT_FOUND(404, "존재하지 않는 주문 상세입니다."),
+    ORDER_NOT_COMPLETED(400, "주문 완료 상태에서만 리뷰를 작성할 수 있습니다."),
+
+    REVIEW_NOT_FOUND(404, "존재하지 않는 리뷰입니다."),
+    REVIEW_ALREADY_EXISTS(409, "이미 리뷰를 작성한 주문 항목입니다."),
+    REVIEW_ALREADY_APPROVED(409, "적립금이 승인된 리뷰는 수정 또는 삭제할 수 없습니다."),
+    REVIEW_POINT_CONFIG_NOT_FOUND(404, "리뷰 포인트 설정을 찾을 수 없습니다.");
 
     private final int status;
     private final String message;
