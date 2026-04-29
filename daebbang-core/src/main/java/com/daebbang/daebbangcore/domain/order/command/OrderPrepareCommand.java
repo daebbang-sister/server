@@ -12,6 +12,8 @@ public record OrderPrepareCommand(
     String address,
     String detailAddress,
     int shippingFee,
+    String orderNote,
     boolean isAddToAddressBook,
+    boolean isDefaultAddress,
     String addressAlias
 ) {}

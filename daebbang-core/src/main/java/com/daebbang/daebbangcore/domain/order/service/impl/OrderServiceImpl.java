@@ -108,7 +108,8 @@ public class OrderServiceImpl implements OrderService {
 
         if (command.isAddToAddressBook()) {
             addressService.save(user, new AddressCommand(
-                command.addressAlias(), command.zipCode(), command.address(), command.detailAddress(), false
+                command.addressAlias(), command.zipCode(), command.address(), command.detailAddress(),
+                command.isDefaultAddress()
             ));
         }
 
@@ -188,6 +189,7 @@ public class OrderServiceImpl implements OrderService {
             .zipCode(command.zipCode())
             .address(command.address())
             .detailAddress(command.detailAddress())
+            .orderNote(command.orderNote())
             .build();
 
         orderSessionRedisRepository.save(orderNumber, session);

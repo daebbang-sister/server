@@ -25,4 +25,5 @@ public class OrderSession {
     private String zipCode;
     private String address;
     private String detailAddress;
+    private String orderNote;
 }

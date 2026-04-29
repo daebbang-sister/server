@@ -93,7 +93,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-ABC1234567", 33_000);
         given(orderService.prepare(any())).willReturn(response);
@@ -131,7 +131,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비 (산간지역 여부에 따라 프론트에서 결정; 5만원 이상 구매 시 0)"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록에 추가 여부 (true면 배송지 목록에 저장)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (예: '회사', '집') - isAddToAddressBook=true일 때 사용, 선택")
                     )
                     .responseFields(
@@ -151,7 +153,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 2)),
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            0, false, null
+            0, null, false, false, null
         );
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-DEF9876543", 60_000);
         given(orderService.prepare(any())).willReturn(response);
@@ -181,7 +183,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비 (5만원 이상 구매 시 0)"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -201,7 +205,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             3_000, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-GHI1357924", 30_000);
         given(orderService.prepare(any())).willReturn(response);
@@ -231,7 +235,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -250,7 +256,7 @@ class OrderControllerTest {
     void prepare_emptyItems() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(), 0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
 
         mockMvc.perform(post("/v1/orders/prepare")
@@ -276,7 +282,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -298,7 +306,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 0)),
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
 
         mockMvc.perform(post("/v1/orders/prepare")
@@ -326,7 +334,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -348,7 +358,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             -1, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
 
         mockMvc.perform(post("/v1/orders/prepare")
@@ -376,7 +386,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -398,7 +410,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 999)),
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
         willThrow(new BusinessException(UserErrorCode.OUT_OF_STOCK))
             .given(orderService).prepare(any());
@@ -429,7 +441,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -448,7 +462,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
         willThrow(new BusinessException(UserErrorCode.STOCK_LOCK_FAILED))
             .given(orderService).prepare(any());
@@ -479,7 +493,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -498,7 +514,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             99_999, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
         willThrow(new BusinessException(UserErrorCode.POINT_EXCEEDS_PAYMENT))
             .given(orderService).prepare(any());
@@ -529,7 +545,9 @@ class OrderControllerTest {
                         fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
                         fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -548,7 +566,7 @@ class OrderControllerTest {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
-            3_000, false, null
+            3_000, null, false, false, null
         );
 
         mockMvc.perform(post("/v1/orders/prepare")

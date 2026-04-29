@@ -24,7 +24,9 @@ public record OrderPrepareRequest(
     @NotBlank(message = "상세주소는 필수입니다.")
     @Size(max = 100, message = "상세주소는 100자 이내여야 합니다.") String detailAddress,
     @Min(value = 0, message = "배송비는 0 이상이어야 합니다.") int shippingFee,
+    @Nullable @Size(max = 100, message = "배송 요청사항은 100자 이내여야 합니다.") String orderNote,
     boolean isAddToAddressBook,
+    boolean isDefaultAddress,
     @Nullable @Size(max = 50, message = "주소록 별칭은 50자 이내여야 합니다.") String addressAlias
 ) {
     public OrderPrepareCommand toCommand(Long userId) {
@@ -38,7 +40,9 @@ public record OrderPrepareRequest(
             address,
             detailAddress,
             shippingFee,
+            orderNote,
             isAddToAddressBook,
+            isDefaultAddress,
             addressAlias
         );
     }
