@@ -13,5 +13,7 @@ public record OrderSummaryResult(
     String representativeProductName,
     String representativeImageUrl,
     String representativeColor,
-    String representativeSize
+    String representativeSize,
+    int representativeUnitPrice,
+    int representativeQuantity
 ) {}

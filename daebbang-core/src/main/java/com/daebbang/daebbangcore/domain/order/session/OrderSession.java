@@ -20,4 +20,9 @@ public class OrderSession {
     private int totalOriginalAmount;
     private int totalSellingAmount;
     private int paymentAmount;
+    private String receiver;
+    private String receiverPhoneNumber;
+    private String zipCode;
+    private String address;
+    private String detailAddress;
 }

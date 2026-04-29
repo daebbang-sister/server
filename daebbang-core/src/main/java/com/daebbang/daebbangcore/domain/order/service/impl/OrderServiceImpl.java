@@ -18,6 +18,8 @@ import com.daebbang.daebbangcore.domain.order.entity.Orders;
 import com.daebbang.daebbangcore.domain.order.entity.Payment;
 import com.daebbang.daebbangcore.domain.order.event.StockInvalidateEvent;
 import com.daebbang.daebbangcore.domain.order.repository.OrdersRepository;
+import com.daebbang.daebbangcore.domain.address.command.AddressCommand;
+import com.daebbang.daebbangcore.domain.address.service.AddressService;
 import com.daebbang.daebbangcore.domain.order.service.OrderService;
 import com.daebbang.daebbangcore.domain.order.service.PaymentService;
 import com.daebbang.daebbangcore.domain.order.service.StockCacheService;
@@ -71,6 +73,7 @@ public class OrderServiceImpl implements OrderService {
     private static final Duration CANCEL_IDEMPOTENCY_TTL = Duration.ofHours(24);
 
     private final UserService userService;
+    private final AddressService addressService;
     private final ProductDetailsService productDetailsService;
     private final OrdersRepository ordersRepository;
     private final PaymentService paymentService;
@@ -83,7 +86,6 @@ public class OrderServiceImpl implements OrderService {
     private final PlatformTransactionManager transactionManager;
     private final StringRedisTemplate stringRedisTemplate;
 
-    // read tx: 검증 단계에서 커넥션 조기 반환
     private TransactionTemplate readTx() {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.setReadOnly(true);
@@ -91,7 +93,6 @@ public class OrderServiceImpl implements OrderService {
         return tx;
     }
 
-    // write tx: Toss 호출 후 DB 반영
     private TransactionTemplate writeTx() {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -104,6 +105,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderPrepareResponse prepare(OrderPrepareCommand command) {
         Users user = userService.getUserById(command.userId());
+
+        if (command.isAddToAddressBook()) {
+            addressService.save(user, new AddressCommand(
+                command.addressAlias(), command.zipCode(), command.address(), command.detailAddress(), false
+            ));
+        }
 
         List<OrderSessionItem> sessionItems = new ArrayList<>();
         Map<Long, Integer> decreasedStocks = new LinkedHashMap<>();
@@ -154,7 +161,11 @@ public class OrderServiceImpl implements OrderService {
         int totalSellingAmount = sessionItems.stream()
             .mapToInt(OrderSessionItem::getDiscountPrice)
             .sum();
-        int shippingFee = totalSellingAmount >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_FEE;
+
+        int shippingFee = command.shippingFee();
+        if (totalSellingAmount >= FREE_SHIPPING_THRESHOLD && shippingFee != 0) {
+            throw new BusinessException(UserErrorCode.ORDER_SHIPPING_FEE_INVALID);
+        }
 
         if (command.usedPoint() > totalSellingAmount + shippingFee) {
             throw new BusinessException(UserErrorCode.POINT_EXCEEDS_PAYMENT);
@@ -172,6 +183,11 @@ public class OrderServiceImpl implements OrderService {
             .totalOriginalAmount(totalOriginalAmount)
             .totalSellingAmount(totalSellingAmount)
             .paymentAmount(paymentAmount)
+            .receiver(command.receiver())
+            .receiverPhoneNumber(command.receiverPhoneNumber())
+            .zipCode(command.zipCode())
+            .address(command.address())
+            .detailAddress(command.detailAddress())
             .build();
 
         orderSessionRedisRepository.save(orderNumber, session);
@@ -459,6 +475,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetails> details = order.getOrderList();
         OrderDetails first = details.isEmpty() ? null : details.get(0);
         int totalQuantity = details.stream().mapToInt(OrderDetails::getQuantity).sum();
+        int representativeUnitPrice = first != null ? first.getDiscountPrice() / first.getQuantity() : 0;
 
         return new OrderSummaryResult(
             order.getId(),
@@ -470,7 +487,9 @@ public class OrderServiceImpl implements OrderService {
             first != null ? first.getProductDetail().getProduct().getProductName() : null,
             first != null ? first.getProductDetail().getProduct().getMainImageUrl() : null,
             first != null ? first.getProductDetail().getColor() : null,
-            first != null ? first.getProductDetail().getSize() : null
+            first != null ? first.getProductDetail().getSize() : null,
+            representativeUnitPrice,
+            first != null ? first.getQuantity() : 0
         );
     }
 

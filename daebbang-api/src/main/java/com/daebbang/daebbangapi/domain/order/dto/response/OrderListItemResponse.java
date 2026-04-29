@@ -13,7 +13,9 @@ public record OrderListItemResponse(
     String representativeProductName,
     String representativeImageUrl,
     String representativeColor,
-    String representativeSize
+    String representativeSize,
+    int representativeUnitPrice,
+    int representativeQuantity
 ) {
     public static OrderListItemResponse from(OrderSummaryResult result) {
         return new OrderListItemResponse(
@@ -25,7 +27,9 @@ public record OrderListItemResponse(
             result.representativeProductName(),
             result.representativeImageUrl(),
             result.representativeColor(),
-            result.representativeSize()
+            result.representativeSize(),
+            result.representativeUnitPrice(),
+            result.representativeQuantity()
         );
     }
 }
