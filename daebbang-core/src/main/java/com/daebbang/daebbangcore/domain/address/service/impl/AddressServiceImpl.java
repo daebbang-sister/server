@@ -32,9 +32,37 @@ public class AddressServiceImpl implements AddressService {
                 .ifPresent(Address::unsetDefault);
         }
         AddressVO addressVO = AddressVO.of(command.zipCode(), command.address(), command.detailAddress());
-        Address address = Address.create(user, user.getName(), user.getPhoneNumber(), command.alias(), addressVO, command.isDefault());
+        Address address = Address.create(user, command.receiver(), command.receiverPhoneNumber(),
+            command.alias(), addressVO, command.isDefault());
         address.update();
         addressRepository.save(address);
+    }
+
+    @Override
+    @Transactional
+    public void update(Long userId, Long addressId, AddressCommand command) {
+        Address address = addressRepository.findByIdAndUserIdActive(addressId, userId)
+            .orElseThrow(() -> new BusinessException(UserErrorCode.ADDRESS_NOT_FOUND));
+
+        if (command.isDefault()) {
+            addressRepository.findDefaultByUserId(userId)
+                .filter(defaultAddr -> !defaultAddr.getId().equals(addressId))
+                .ifPresent(Address::unsetDefault);
+        }
+
+        AddressVO addressVO = AddressVO.of(command.zipCode(), command.address(), command.detailAddress());
+        address.updateInfo(command.receiver(), command.receiverPhoneNumber(),
+            command.alias(), addressVO, command.isDefault());
+        address.update();
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(Long userId, Long addressId) {
+        Address address = addressRepository.findByIdAndUserIdActive(addressId, userId)
+            .orElseThrow(() -> new BusinessException(UserErrorCode.ADDRESS_NOT_FOUND));
+        address.delete();
+        address.update();
     }
 
     @Override

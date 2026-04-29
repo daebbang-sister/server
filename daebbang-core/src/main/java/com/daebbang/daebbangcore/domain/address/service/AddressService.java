@@ -10,6 +10,10 @@ public interface AddressService {
 
     void save(Users user, AddressCommand command);
 
+    void update(Long userId, Long addressId, AddressCommand command);
+
+    void deleteById(Long userId, Long addressId);
+
     void deleteAllByUserId(Long userId);
 
     List<Address> findAllByUserId(Long userId);

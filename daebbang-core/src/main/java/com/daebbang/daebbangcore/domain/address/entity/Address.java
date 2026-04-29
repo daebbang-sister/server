@@ -67,6 +67,15 @@ public class Address extends DefaultBase {
             .build();
     }
 
+    public void updateInfo(String receiver, String receiverPhoneNumber, String alias,
+        AddressVO addressVO, boolean isDefault) {
+        this.receiver = receiver;
+        this.receiverPhoneNumber = receiverPhoneNumber;
+        this.alias = alias;
+        this.addressVO = addressVO;
+        this.isDefault = isDefault;
+    }
+
     public void unsetDefault() {
         this.isDefault = false;
     }

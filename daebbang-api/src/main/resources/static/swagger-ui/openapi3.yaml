@@ -45,6 +45,56 @@ paths:
                 address/get-addresses-empty:
                   value: "{\"success\":true,\"status\":200,\"message\":\"주소 목록 조회에\
                     \ 성공하였습니다.\",\"data\":[]}"
+    post:
+      tags:
+      - Address
+      summary: 주소 등록
+      description: "새로운 배송지를 등록합니다. 최대 5개까지 등록 가능하며, isDefault가 true이면 기존 기본 배송지가\
+        \ 해제됩니다."
+      operationId: address/add-address
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/AddressSaveRequest'
+            examples:
+              address/add-address:
+                value: "{\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\":true,\"\
+                  address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
+                  :\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
+              address/add-address-limit-exceeded:
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
+                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
+                  \",\"address\":\"서울시 강남구 테헤란로\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+              examples:
+                address/add-address:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"새 주소 등록에\
+                    \ 성공하였습니다.\",\"data\":null}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                address/add-address-limit-exceeded:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"주소록은 최대\
+                    \ 5개까지 등록 가능합니다.\",\"data\":null}"
   /v1/carts:
     get:
       tags:
@@ -453,10 +503,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-users486549215'
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=OHSiEXXlmXk_VmyDf-Zx6qbUxC5JFBsJo7HfcEL0lWyruBaDXETDcxHRqBoSNwi3HMtF2sDm6U94LXkkm4C5RCaS8wqc3XXl
+                value: _csrf=P4mxQDHhSZTzbuPoxATEr26zQwff9DKoL2sXQBPReOh_OZJlCbjTdQDVcfXeC9Pc8inwy1-Ebj_owwaFHg9zIiOwGtwbAKUE
       responses:
         "200":
           description: "200"
@@ -573,6 +623,113 @@ paths:
                 wish-lists/delete-01-selected:
                   value: "{\"success\":true,\"status\":200,\"message\":\"위시리스트 삭제에\
                     \ 성공하였습니다.\",\"data\":null}"
+  /v1/addresses/{addressId}:
+    put:
+      tags:
+      - Address
+      summary: 주소 수정
+      description: 기존 배송지 정보를 수정합니다. isDefault가 true이면 기존 기본 배송지가 해제됩니다.
+      operationId: address/update-address
+      parameters:
+      - name: addressId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/AddressUpdateRequest'
+            examples:
+              address/update-address:
+                value: "{\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\":false,\"\
+                  address\":\"서울시 서초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\"\
+                  :\"김철수\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
+              address/update-address-not-found:
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
+                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
+                  \",\"address\":\"서울시 강남구 테헤란로\"}"
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+              examples:
+                address/update-address:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주소 수정에 성공\
+                    하였습니다.\",\"data\":null}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                address/update-address-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 주소입니다.\",\"data\":null}"
+    delete:
+      tags:
+      - Address
+      summary: 주소 삭제
+      description: 배송지를 삭제합니다 (소프트 삭제).
+      operationId: address/delete-address
+      parameters:
+      - name: addressId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
+            examples:
+              address/delete-address:
+                value: _csrf=tp-5oaeZi5mzzxz__uMcEGRM2276vJLRFwLerLwH31BU_mo3h6aMxJ-t6Pue_XiZzc4odAJ_9lfKiPT8czDvmIs26TUxylwC
+              address/delete-address-not-found:
+                value: _csrf=UflwT6eS4kJ9E9MqGeiJ_0Wp332VyicXfiIs-rw-7LkegfGjNc0WK8Wm1HJQcOJMesW9m3LM8hylrEU6SRQam4UK1YEps5WV
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+              examples:
+                address/delete-address:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주소 삭제에 성공\
+                    하였습니다.\",\"data\":null}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                address/delete-address-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 주소입니다.\",\"data\":null}"
   /v1/carts/all:
     delete:
       tags:
@@ -1690,8 +1847,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -1944,7 +2101,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
+                    ratingCounts\":{\"3\":2,\"2\":1,\"1\":0,\"5\":7,\"4\":5}}}"
 components:
   schemas:
     ErrorResponse:
@@ -2260,6 +2417,31 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    AddressSaveRequest:
+      title: AddressSaveRequest
+      type: object
+      properties:
+        zipCode:
+          type: string
+          description: 우편번호
+        isDefault:
+          type: boolean
+          description: 기본 배송지 여부
+        address:
+          type: string
+          description: 도로명 주소
+        receiver:
+          type: string
+          description: 수령인 이름
+        receiverPhoneNumber:
+          type: string
+          description: 수령인 전화번호 (010-XXXX-XXXX)
+        detailAddress:
+          type: string
+          description: 상세 주소
+        alias:
+          type: string
+          description: "주소 별칭 (예: 집, 회사)"
     WishListSaveRequest:
       title: WishListSaveRequest
       type: object
@@ -2815,6 +2997,19 @@ components:
         phoneNumber:
           type: string
           description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
+    CommonResponse:
+      title: CommonResponse
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     ProductReviewListResponse:
       title: ProductReviewListResponse
       type: object
@@ -2999,7 +3194,7 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-users486549215:
+    v1-addresses-addressId486549215:
       type: object
     AddressListResponse:
       title: AddressListResponse
@@ -3060,6 +3255,31 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    AddressUpdateRequest:
+      title: AddressUpdateRequest
+      type: object
+      properties:
+        zipCode:
+          type: string
+          description: 우편번호
+        isDefault:
+          type: boolean
+          description: 기본 배송지 여부
+        address:
+          type: string
+          description: 도로명 주소
+        receiver:
+          type: string
+          description: 수령인 이름
+        receiverPhoneNumber:
+          type: string
+          description: 수령인 전화번호 (010-XXXX-XXXX)
+        detailAddress:
+          type: string
+          description: 상세 주소
+        alias:
+          type: string
+          description: "주소 별칭 (예: 집, 회사)"
     UserInfoResponse:
       title: UserInfoResponse
       type: object

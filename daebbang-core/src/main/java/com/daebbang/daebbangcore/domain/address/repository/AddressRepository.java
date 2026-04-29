@@ -20,4 +20,7 @@ public interface AddressRepository extends JpaRepository<@NonNull Address, @NonN
 
     @Query("SELECT COUNT(a) FROM Address a WHERE a.user.id = :userId AND a.deletedAt IS NULL")
     int countActiveByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT a FROM Address a WHERE a.id = :addressId AND a.user.id = :userId AND a.deletedAt IS NULL")
+    Optional<Address> findByIdAndUserIdActive(@Param("addressId") Long addressId, @Param("userId") Long userId);
 }
