@@ -475,7 +475,9 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetails> details = order.getOrderList();
         OrderDetails first = details.isEmpty() ? null : details.get(0);
         int totalQuantity = details.stream().mapToInt(OrderDetails::getQuantity).sum();
-        int representativeUnitPrice = first != null ? first.getDiscountPrice() / first.getQuantity() : 0;
+        int representativeUnitPrice = (first != null && first.getQuantity() > 0)
+            ? first.getDiscountPrice() / first.getQuantity()
+            : 0;
 
         return new OrderSummaryResult(
             order.getId(),
