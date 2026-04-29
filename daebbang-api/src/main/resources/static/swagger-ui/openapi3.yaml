@@ -292,7 +292,8 @@ paths:
                     ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
                     ,\"paymentAmount\":33000,\"totalQuantity\":2,\"representativeProductName\"\
                     :\"슬림핏 청바지\",\"representativeImageUrl\":\"https://cdn.daebbang.com/img/slim-jeans.jpg\"\
-                    ,\"representativeColor\":\"골드\",\"representativeSize\":\"M\"}],\"\
+                    ,\"representativeColor\":\"골드\",\"representativeSize\":\"M\",\"\
+                    representativeUnitPrice\":30000,\"representativeQuantity\":1}],\"\
                     empty\":false,\"first\":true,\"last\":true,\"number\":0,\"numberOfElements\"\
                     :1,\"pageable\":{\"offset\":0,\"pageNumber\":0,\"pageSize\":10,\"\
                     paged\":true,\"sort\":{\"empty\":true,\"sorted\":false,\"unsorted\"\
@@ -455,7 +456,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=Bt1qMuonrMxT31K1ZsEM8razyGX04rbQh0vM7ns1jjtKfoPIN-sIUdMTlPR-6zCMUuw4lIXS5QTA29P9t3393U0B6w4rTeep
+                value: _csrf=OHSiEXXlmXk_VmyDf-Zx6qbUxC5JFBsJo7HfcEL0lWyruBaDXETDcxHRqBoSNwi3HMtF2sDm6U94LXkkm4C5RCaS8wqc3XXl
       responses:
         "200":
           description: "200"
@@ -759,34 +760,62 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: '#/components/schemas/v1-orders-prepare1866161413'
+              $ref: '#/components/schemas/v1-orders-prepare-1990526072'
             examples:
               order/prepare-empty-items:
-                value: "{\"items\":[],\"usedPoint\":0}"
+                value: "{\"items\":[],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"01012345678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란\
+                  로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"orderNote\"\
+                  :null,\"isAddToAddressBook\":false,\"isDefaultAddress\":false,\"\
+                  addressAlias\":null}"
               order/prepare-invalid-quantity:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":0}],\"usedPoint\"\
-                  :0}"
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-lock-failed:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :0}"
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-negative-point:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :-1}"
+                  :-1,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-out-of-stock:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":999}],\"usedPoint\"\
-                  :0}"
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-point-exceeds:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :99999}"
+                  :99999,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-success:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :0}"
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-success-free-shipping:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":2}],\"usedPoint\"\
-                  :0}"
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":0,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-success-with-point:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :3000}"
+                  :3000,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
       responses:
         "400":
           description: "400"
@@ -1915,7 +1944,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"2\":1,\"1\":0,\"5\":7,\"4\":5,\"3\":2}}}"
+                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
 components:
   schemas:
     ErrorResponse:
@@ -2048,125 +2077,6 @@ components:
             totalCount:
               type: number
               description: 총 리뷰 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    OrderListResponse:
-      title: OrderListResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            number:
-              type: number
-              description: 현재 페이지 번호
-            numberOfElements:
-              type: number
-              description: 현재 페이지 항목 수
-            size:
-              type: number
-              description: 페이지 크기
-            last:
-              type: boolean
-              description: 마지막 페이지 여부
-            totalPages:
-              type: number
-              description: 전체 페이지 수
-            pageable:
-              type: object
-              properties:
-                paged:
-                  type: boolean
-                  description: 페이징 적용 여부
-                pageNumber:
-                  type: number
-                  description: 현재 페이지 번호
-                offset:
-                  type: number
-                  description: 오프셋
-                pageSize:
-                  type: number
-                  description: 페이지 크기
-                unpaged:
-                  type: boolean
-                  description: 페이징 미적용 여부
-                sort:
-                  type: object
-                  properties:
-                    unsorted:
-                      type: boolean
-                      description: 정렬 미적용 여부
-                    sorted:
-                      type: boolean
-                      description: 정렬 적용 여부
-                    empty:
-                      type: boolean
-                      description: 정렬 조건 없음 여부
-                  description: 정렬 정보
-              description: 페이지 정보
-            sort:
-              type: object
-              properties:
-                unsorted:
-                  type: boolean
-                  description: 정렬 미적용 여부
-                sorted:
-                  type: boolean
-                  description: 정렬 적용 여부
-                empty:
-                  type: boolean
-                  description: 정렬 조건 없음 여부
-              description: 정렬 정보
-            first:
-              type: boolean
-              description: 첫 번째 페이지 여부
-            content:
-              type: array
-              description: 주문 목록 (결과 없음)
-              items:
-                type: object
-                properties:
-                  orderedAt:
-                    type: string
-                    description: 주문 일시
-                  representativeProductName:
-                    type: string
-                    description: 대표 상품명 (첫 번째 상품)
-                  totalQuantity:
-                    type: number
-                    description: 총 상품 수량
-                  orderNumber:
-                    type: string
-                    description: 주문 번호
-                  representativeSize:
-                    type: string
-                    description: 대표 상품 사이즈
-                  orderStatus:
-                    type: string
-                    description: "주문 상태 (PAID, PREPARING_DELIVERY, IN_DELIVERY, DELIVERED,\
-                      \ COMPLETED, CANCELLED 등)"
-                  representativeColor:
-                    type: string
-                    description: 대표 상품 색상
-                  representativeImageUrl:
-                    type: string
-                    description: 대표 상품 이미지 URL
-                  paymentAmount:
-                    type: number
-                    description: 결제 금액
-            empty:
-              type: boolean
-              description: 결과 없음 여부
-            totalElements:
-              type: number
-              description: 전체 주문 수
         success:
           type: boolean
           description: 성공 여부
@@ -2530,6 +2440,131 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    OrderListResponse:
+      title: OrderListResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            number:
+              type: number
+              description: 현재 페이지 번호
+            numberOfElements:
+              type: number
+              description: 현재 페이지 항목 수
+            size:
+              type: number
+              description: 페이지 크기
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageable:
+              type: object
+              properties:
+                paged:
+                  type: boolean
+                  description: 페이징 적용 여부
+                pageNumber:
+                  type: number
+                  description: 현재 페이지 번호
+                offset:
+                  type: number
+                  description: 오프셋
+                pageSize:
+                  type: number
+                  description: 페이지 크기
+                unpaged:
+                  type: boolean
+                  description: 페이징 미적용 여부
+                sort:
+                  type: object
+                  properties:
+                    unsorted:
+                      type: boolean
+                      description: 정렬 미적용 여부
+                    sorted:
+                      type: boolean
+                      description: 정렬 적용 여부
+                    empty:
+                      type: boolean
+                      description: 정렬 조건 없음 여부
+                  description: 정렬 정보
+              description: 페이지 정보
+            sort:
+              type: object
+              properties:
+                unsorted:
+                  type: boolean
+                  description: 정렬 미적용 여부
+                sorted:
+                  type: boolean
+                  description: 정렬 적용 여부
+                empty:
+                  type: boolean
+                  description: 정렬 조건 없음 여부
+              description: 정렬 정보
+            first:
+              type: boolean
+              description: 첫 번째 페이지 여부
+            content:
+              type: array
+              description: 주문 목록 (결과 없음)
+              items:
+                type: object
+                properties:
+                  orderedAt:
+                    type: string
+                    description: 주문 일시
+                  representativeProductName:
+                    type: string
+                    description: 대표 상품명 (첫 번째 상품)
+                  totalQuantity:
+                    type: number
+                    description: 총 상품 수량
+                  orderNumber:
+                    type: string
+                    description: 주문 번호
+                  representativeSize:
+                    type: string
+                    description: 대표 상품 사이즈
+                  orderStatus:
+                    type: string
+                    description: "주문 상태 (PAID, PREPARING_DELIVERY, IN_DELIVERY, DELIVERED,\
+                      \ COMPLETED, CANCELLED 등)"
+                  representativeQuantity:
+                    type: number
+                    description: 대표 상품 주문 수량
+                  representativeColor:
+                    type: string
+                    description: 대표 상품 색상
+                  representativeImageUrl:
+                    type: string
+                    description: 대표 상품 이미지 URL
+                  representativeUnitPrice:
+                    type: number
+                    description: 대표 상품 단가 (할인 적용 후)
+                  paymentAmount:
+                    type: number
+                    description: 결제 금액
+            empty:
+              type: boolean
+              description: 결과 없음 여부
+            totalElements:
+              type: number
+              description: 전체 주문 수
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     ProductDetailResponse:
       title: ProductDetailResponse
       type: object
@@ -2689,24 +2724,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-orders-prepare1866161413:
-      type: object
-      properties:
-        usedPoint:
-          type: number
-          description: 사용 포인트 (결제 금액에서 차감)
-        items:
-          type: array
-          description: 주문 상품 목록
-          items:
-            type: object
-            properties:
-              quantity:
-                type: number
-                description: 주문 수량
-              productDetailId:
-                type: number
-                description: 상품 상세 ID
     ProductMainCardListResponse:
       title: ProductMainCardListResponse
       type: object
@@ -2865,6 +2882,54 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    v1-orders-prepare-1990526072:
+      type: object
+      properties:
+        usedPoint:
+          type: number
+          description: 사용 포인트 (결제 금액에서 차감)
+        zipCode:
+          type: string
+          description: 우편번호
+        address:
+          type: string
+          description: 기본 주소
+        shippingFee:
+          type: number
+          description: 배송비
+        receiver:
+          type: string
+          description: 수령인 이름
+        orderNote:
+          type: string
+          description: "배송 요청사항 (100자 이내, 선택)"
+        receiverPhoneNumber:
+          type: string
+          description: 수령인 연락처
+        detailAddress:
+          type: string
+          description: 상세 주소
+        addressAlias:
+          type: string
+          description: "주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)"
+        isDefaultAddress:
+          type: boolean
+          description: 기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)
+        items:
+          type: array
+          description: 주문 상품 목록
+          items:
+            type: object
+            properties:
+              quantity:
+                type: number
+                description: 주문 수량
+              productDetailId:
+                type: number
+                description: 상품 상세 ID
+        isAddToAddressBook:
+          type: boolean
+          description: 주소록 추가 여부
     v1-orders-orderNumber-cancel1320508390:
       type: object
       properties:
