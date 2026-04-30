@@ -12,6 +12,9 @@ dependencies {
     // common dependency
     api(project(":daebbang-common"))
 
+    // jackson 3 (Spring Boot 4 default)
+    api("tools.jackson.core:jackson-databind")
+
     // jpa
     api("org.springframework.boot:spring-boot-starter-data-jpa")
 
