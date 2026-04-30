@@ -1,8 +1,8 @@
 package com.daebbang.daebbangcore.domain.order.session;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +27,7 @@ public class OrderStockReserveRedisRepository {
             String json = objectMapper.writeValueAsString(items);
             redisTemplate.opsForValue().set(PREFIX + orderNumber, json, TTL);
             log.info("[StockReserve] 저장 - orderNumber: {}", orderNumber);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("[StockReserve] 직렬화 실패 - orderNumber: {}", orderNumber, e);
             throw new RuntimeException("StockReserve 직렬화 실패", e);
         }
@@ -39,7 +39,7 @@ public class OrderStockReserveRedisRepository {
 
         try {
             return Optional.of(objectMapper.readValue(raw.toString(), new TypeReference<List<OrderSessionItem>>() {}));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("[StockReserve] 역직렬화 실패 - orderNumber: {}", orderNumber, e);
             throw new RuntimeException("StockReserve 역직렬화 실패", e);
         }

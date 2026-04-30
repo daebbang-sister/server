@@ -43,8 +43,6 @@ subprojects {
 
     configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
         dependencies {
-            dependency("tools.jackson.core:jackson-core:3.1.0")
-            dependency("com.fasterxml.jackson.core:jackson-core:2.21.1")
             dependency("org.springframework.security:spring-security-web:7.0.4")
             dependency("org.apache.tomcat.embed:tomcat-embed-core:11.0.20")
             dependency("io.netty:netty-codec-http:4.2.11.Final")

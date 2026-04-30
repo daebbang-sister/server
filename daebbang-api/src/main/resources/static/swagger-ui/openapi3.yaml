@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\":true,\"\
-                  address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
-                  :\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"receiver\":\"홍길동\",\"detailAddress\":\"101호\",\"address\"\
+                  :\"서울시 강남구 테헤란로\",\"isDefault\":true,\"alias\":\"집\",\"zipCode\"\
+                  :\"12345\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
               address/add-address-limit-exceeded:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
-                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
-                  \",\"address\":\"서울시 강남구 테헤란로\"}"
+                value: "{\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"zipCode\"\
+                  :\"12345\",\"isDefault\":false,\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"address\":\"서울시 강남구 테헤란로\"}"
       responses:
         "201":
           description: "201"
@@ -506,7 +506,7 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=P4mxQDHhSZTzbuPoxATEr26zQwff9DKoL2sXQBPReOh_OZJlCbjTdQDVcfXeC9Pc8inwy1-Ebj_owwaFHg9zIiOwGtwbAKUE
+                value: _csrf=5OPebAFZEei7OzLqMIgUgN8ce1uQ_f_mYzqdJbMR8vTVHAU0hdvpXGBqJ9mWCACPBqUgtr5_VmKlzcnLWwiuHNV3k5KwejdQ
       responses:
         "200":
           description: "200"
@@ -651,13 +651,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\":false,\"\
-                  address\":\"서울시 서초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\"\
-                  :\"김철수\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
+                value: "{\"receiver\":\"김철수\",\"detailAddress\":\"202호\",\"address\"\
+                  :\"서울시 서초구 반포대로\",\"isDefault\":false,\"alias\":\"회사\",\"zipCode\"\
+                  :\"54321\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
               address/update-address-not-found:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
-                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
-                  \",\"address\":\"서울시 강남구 테헤란로\"}"
+                value: "{\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"zipCode\"\
+                  :\"12345\",\"isDefault\":false,\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"address\":\"서울시 강남구 테헤란로\"}"
       responses:
         "200":
           description: "200"
@@ -706,9 +706,9 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
-                value: _csrf=tp-5oaeZi5mzzxz__uMcEGRM2276vJLRFwLerLwH31BU_mo3h6aMxJ-t6Pue_XiZzc4odAJ_9lfKiPT8czDvmIs26TUxylwC
+                value: _csrf=baQxAFxodaKsbb6mxi4cGXRm6nWgo3Cq95g_Cz5LzjjPUxA7WZ0BZD9aRMaBWtyfpQMoIUcEx0yTwBaHw6kIOwgp-AmrNXUK
               address/delete-address-not-found:
-                value: _csrf=UflwT6eS4kJ9E9MqGeiJ_0Wp332VyicXfiIs-rw-7LkegfGjNc0WK8Wm1HJQcOJMesW9m3LM8hylrEU6SRQam4UK1YEps5WV
+                value: _csrf=zNFlYZj5B54VFK6eGFNH9h-dApQczk2t-AWTTbEx6Rv_IWkS_LNcAqvAPqg4I82ofH5zziqkL6x_qnqAzTf3ftBU3X_NEQoq
       responses:
         "200":
           description: "200"
@@ -2101,7 +2101,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"3\":2,\"2\":1,\"1\":0,\"5\":7,\"4\":5}}}"
+                    ratingCounts\":{\"5\":7,\"1\":0,\"2\":1,\"3\":2,\"4\":5}}}"
 components:
   schemas:
     ErrorResponse:

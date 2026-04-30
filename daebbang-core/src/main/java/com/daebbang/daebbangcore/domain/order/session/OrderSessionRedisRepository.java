@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.order.session;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class OrderSessionRedisRepository {
             String json = objectMapper.writeValueAsString(session);
             redisTemplate.opsForValue().set(PREFIX + orderNumber, json, TTL);
             log.info("[OrderSession] 저장 - orderNumber: {}", orderNumber);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("[OrderSession] 직렬화 실패 - orderNumber: {}", orderNumber, e);
             throw new RuntimeException("OrderSession 직렬화에 실패했습니다.", e);
         }
@@ -37,7 +37,7 @@ public class OrderSessionRedisRepository {
 
         try {
             return Optional.of(objectMapper.readValue(raw.toString(), OrderSession.class));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("[OrderSession] 역직렬화 실패 - orderNumber: {}", orderNumber, e);
             throw new RuntimeException("OrderSession 역직렬화에 실패했습니다.", e);
         }
