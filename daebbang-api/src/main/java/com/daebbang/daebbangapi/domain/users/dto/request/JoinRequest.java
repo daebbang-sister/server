@@ -45,7 +45,8 @@ public record JoinRequest(
     public static UserJoinCommand toCommand(JoinRequest joinRequest) {
         AddressVO addr = joinRequest.address();
         AddressCommand addressCommand = addr != null
-            ? new AddressCommand(addr.alias(), addr.zipCode(), addr.address(), addr.detailAddress(), true)
+            ? new AddressCommand(joinRequest.name, joinRequest.phoneNumber,
+                addr.alias(), addr.zipCode(), addr.address(), addr.detailAddress(), true)
             : null;
         return UserJoinCommand.builder()
             .name(joinRequest.name)

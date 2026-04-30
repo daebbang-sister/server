@@ -3,7 +3,6 @@ package com.daebbang.daebbangapi.domain.users.controller;
 import com.daebbang.daebbangapi.domain.users.dto.request.CheckDuplicationIdRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.UserInfo;
-import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.address.entity.Address;
@@ -29,7 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "/v1/users")
 public class UserController {
 
-    private final UserMapper userMapper;
     private final UserService userService;
     private final AddressService addressService;
 

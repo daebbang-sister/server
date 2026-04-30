@@ -24,7 +24,6 @@ import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.dto.request.JoinRequest;
 import com.daebbang.daebbangapi.domain.users.dto.vo.AddressVO;
-import com.daebbang.daebbangapi.domain.users.mapper.UserMapper;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
@@ -68,9 +67,6 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
-
-    @MockitoBean
-    private UserMapper userMapper;
 
     @MockitoBean
     private AddressService addressService;

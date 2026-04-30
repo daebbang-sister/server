@@ -54,7 +54,7 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<CommonResponse<Void>> deleteReview(
+    public ResponseEntity<@NonNull CommonResponse<Void>> deleteReview(
         @AuthenticationPrincipal Long userId,
         @PathVariable Long reviewId
     ) {
@@ -63,7 +63,7 @@ public class ReviewController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<CommonResponse<PageResponse<MyReviewItemResponse>>> getMyReviews(
+    public ResponseEntity<@NonNull CommonResponse<PageResponse<MyReviewItemResponse>>> getMyReviews(
         @AuthenticationPrincipal Long userId,
         @PageableDefault(size = 10) Pageable pageable
     ) {

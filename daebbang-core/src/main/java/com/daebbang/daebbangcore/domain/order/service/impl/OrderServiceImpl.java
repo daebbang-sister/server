@@ -108,6 +108,7 @@ public class OrderServiceImpl implements OrderService {
 
         if (command.isAddToAddressBook()) {
             addressService.save(user, new AddressCommand(
+                command.receiver(), command.receiverPhoneNumber(),
                 command.addressAlias(), command.zipCode(), command.address(), command.detailAddress(),
                 command.isDefaultAddress()
             ));
