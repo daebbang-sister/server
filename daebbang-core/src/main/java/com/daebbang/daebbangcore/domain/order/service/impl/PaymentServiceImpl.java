@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.order.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import com.daebbang.daebbangcore.domain.order.entity.Orders;
 import com.daebbang.daebbangcore.domain.order.entity.Payment;
 import com.daebbang.daebbangcore.domain.order.entity.PaymentCancels;
@@ -28,7 +28,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Payment findByOrder(Orders order) {
         return paymentRepository.findByOrder(order)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.PAYMENT_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.PAYMENT_NOT_FOUND));
     }
 
     /**

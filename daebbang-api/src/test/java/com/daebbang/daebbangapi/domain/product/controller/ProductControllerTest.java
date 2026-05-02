@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.ProductErrorCode;
 import com.daebbang.daebbangcore.domain.product.dto.ProductCardQueryResult;
 import com.daebbang.daebbangcore.domain.product.dto.ProductColorOption;
 import com.daebbang.daebbangcore.domain.product.dto.ProductDetailResult;
@@ -601,7 +601,7 @@ class ProductControllerTest {
     void getProductDetail_notFound() throws Exception {
         // given
         given(productService.getProductDetail(anyLong()))
-            .willThrow(new BusinessException(UserErrorCode.PRODUCT_NOT_FOUND));
+            .willThrow(new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get(BASE_URL + "/{productId}", 999L)

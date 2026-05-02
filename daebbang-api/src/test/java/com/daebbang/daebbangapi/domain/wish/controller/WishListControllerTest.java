@@ -25,7 +25,8 @@ import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangapi.domain.wish.dto.request.WishListSaveRequest;
 import java.util.Optional;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.WishErrorCode;
+import com.daebbang.daebbangcommon.error.ProductErrorCode;
 import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
 import com.daebbang.daebbangcore.domain.wish.dto.WishListQueryResult;
 import com.daebbang.daebbangcore.domain.wish.service.WishListService;
@@ -374,7 +375,7 @@ class WishListControllerTest {
     void addWishList_alreadyExists() throws Exception {
         // given
         WishListSaveRequest request = new WishListSaveRequest(100L);
-        willThrow(new BusinessException(UserErrorCode.WISH_LIST_ALREADY_EXISTS))
+        willThrow(new BusinessException(WishErrorCode.WISH_LIST_ALREADY_EXISTS))
             .given(wishListService).addWishList(anyLong(), anyLong());
 
         // when & then
@@ -412,7 +413,7 @@ class WishListControllerTest {
     void addWishList_productNotFound() throws Exception {
         // given
         WishListSaveRequest request = new WishListSaveRequest(999L);
-        willThrow(new BusinessException(UserErrorCode.PRODUCT_NOT_FOUND))
+        willThrow(new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND))
             .given(wishListService).addWishList(anyLong(), anyLong());
 
         // when & then

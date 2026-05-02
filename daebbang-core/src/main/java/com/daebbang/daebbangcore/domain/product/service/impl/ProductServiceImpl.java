@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.product.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.ProductErrorCode;
 import com.daebbang.daebbangcommon.sort.SortDirection;
 import com.daebbang.daebbangcore.domain.category.entity.Category;
 import com.daebbang.daebbangcore.domain.category.service.CategoryService;
@@ -73,13 +73,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Products getOnSaleProductById(Long productId) {
         return productRepository.findByIdAndStatusAndNotDeleted(productId, ProductStatus.SALE)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.PRODUCT_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
     @Override
     public ProductDetailResult getProductDetail(Long productId) {
         ProductDetailQueryResult detail = productRepository.findProductDetailById(productId)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.PRODUCT_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         return new ProductDetailResult(
             detail.id(),

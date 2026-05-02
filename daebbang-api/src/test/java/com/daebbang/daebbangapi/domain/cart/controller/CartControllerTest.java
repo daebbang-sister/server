@@ -28,7 +28,7 @@ import com.daebbang.daebbangapi.domain.cart.dto.request.CartUpdate;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.CartErrorCode;
 import com.daebbang.daebbangcore.domain.cart.entity.Carts;
 import com.daebbang.daebbangcore.domain.cart.service.CartService;
 import com.daebbang.daebbangcore.domain.product.entity.DiscountType;
@@ -486,7 +486,7 @@ class CartControllerTest {
     void updateCarts_cartNotFound() throws Exception {
         // given
         CartUpdate request = new CartUpdate(2L, 3);
-        willThrow(new BusinessException(UserErrorCode.CART_NOT_FOUND))
+        willThrow(new BusinessException(CartErrorCode.CART_NOT_FOUND))
             .given(cartService).updateCarts(anyLong(), anyLong(), anyLong(), any(Integer.class));
 
         // when & then

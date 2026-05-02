@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.infra.toss;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import com.daebbang.daebbangcore.infra.toss.dto.TossConfirmRequest;
 import com.daebbang.daebbangcore.infra.toss.dto.TossPaymentResponse;
 import tools.jackson.databind.ObjectMapper;
@@ -54,7 +54,7 @@ public class TossPaymentClient {
             if (response.statusCode() != 200) {
                 log.error("[Toss] 결제 승인 실패 - orderId: {}, status: {}",
                     orderId, response.statusCode());
-                throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
+                throw new BusinessException(OrderErrorCode.PAYMENT_CONFIRMATION_FAILED);
             }
 
             return objectMapper.readValue(response.body(), TossPaymentResponse.class);
@@ -63,10 +63,10 @@ public class TossPaymentClient {
             throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
+            throw new BusinessException(OrderErrorCode.PAYMENT_CONFIRMATION_FAILED);
         } catch (Exception e) {
             log.error("[Toss] 결제 승인 중 예외 - orderId: {}, error: {}", orderId, e.getMessage(), e);
-            throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
+            throw new BusinessException(OrderErrorCode.PAYMENT_CONFIRMATION_FAILED);
         }
     }
 
@@ -99,17 +99,17 @@ public class TossPaymentClient {
             if (response.statusCode() != 200) {
                 log.error("[Toss] 결제 취소 실패 - paymentKey: {}, status: {}",
                     paymentKey, response.statusCode());
-                throw new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED);
+                throw new BusinessException(OrderErrorCode.PAYMENT_CANCEL_FAILED);
             }
 
         } catch (BusinessException e) {
             throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED);
+            throw new BusinessException(OrderErrorCode.PAYMENT_CANCEL_FAILED);
         } catch (Exception e) {
             log.error("[Toss] 결제 취소 중 예외 - paymentKey: {}, error: {}", paymentKey, e.getMessage(), e);
-            throw new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED);
+            throw new BusinessException(OrderErrorCode.PAYMENT_CANCEL_FAILED);
         }
     }
 

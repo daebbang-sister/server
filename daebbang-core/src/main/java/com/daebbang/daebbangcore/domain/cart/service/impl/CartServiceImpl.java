@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.cart.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.CartErrorCode;
 import com.daebbang.daebbangcore.domain.cart.command.CartSaveCommand;
 import com.daebbang.daebbangcore.domain.cart.entity.Carts;
 import com.daebbang.daebbangcore.domain.cart.repository.CartRepository;
@@ -85,6 +85,6 @@ public class CartServiceImpl implements CartService {
 
     private Carts getCarts(Long cartId, Long userId) {
         return cartRepository.findByIdAndUserId(cartId, userId)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.CART_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(CartErrorCode.CART_NOT_FOUND));
     }
 }

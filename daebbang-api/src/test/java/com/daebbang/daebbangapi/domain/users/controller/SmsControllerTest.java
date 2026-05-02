@@ -19,6 +19,7 @@ import com.daebbang.daebbangapi.domain.users.dto.request.SmsSendRequest;
 import com.daebbang.daebbangapi.domain.users.dto.request.SmsVerifyRequest;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.SmsErrorCode;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
@@ -180,7 +181,7 @@ class SmsControllerTest {
         // given
         SmsVerifyRequest request = new SmsVerifyRequest("010-1234-5678", "000000");
 
-        willThrow(new BusinessException(UserErrorCode.AUTH_CODE_MISMATCH))
+        willThrow(new BusinessException(SmsErrorCode.AUTH_CODE_MISMATCH))
             .given(smsService).verifyAuthCode(anyString(), anyString());
 
         // when & then
@@ -220,7 +221,7 @@ class SmsControllerTest {
         // given
         SmsVerifyRequest request = new SmsVerifyRequest("010-1234-5678", "123456");
 
-        willThrow(new BusinessException(UserErrorCode.AUTH_CODE_EXPIRED))
+        willThrow(new BusinessException(SmsErrorCode.AUTH_CODE_EXPIRED))
             .given(smsService).verifyAuthCode(anyString(), anyString());
 
         // when & then

@@ -5,7 +5,6 @@ import com.daebbang.daebbangapi.domain.users.dto.request.SmsVerifyRequest;
 import com.daebbang.daebbangapi.domain.users.dto.response.SmsSendAuthCode;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcommon.success.CommonSuccessCode;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.user.service.UserService;

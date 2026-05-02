@@ -5,7 +5,7 @@ import com.daebbang.daebbangcommon.dto.authority.TokenInfo;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CommonErrorCode;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.AuthErrorCode;
 import com.daebbang.daebbangcommon.success.CommonSuccessCode;
 import com.daebbang.daebbangcommon.util.ValidationUtils;
 import com.daebbang.daebbangcore.domain.auth.service.AuthService;
@@ -89,7 +89,7 @@ public class UserLoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void unsuccessfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, AuthenticationException failed)
         throws IOException, ServletException {
-        CommonResponse<?> error = CommonResponse.error(UserErrorCode.INVALID_LOGIN_INFO);
+        CommonResponse<?> error = CommonResponse.error(AuthErrorCode.INVALID_LOGIN_INFO);
         writeResponse(response, mapper, HttpStatus.UNAUTHORIZED, error);
     }
 

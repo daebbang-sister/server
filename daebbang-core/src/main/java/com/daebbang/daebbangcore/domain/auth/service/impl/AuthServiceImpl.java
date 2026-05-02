@@ -2,7 +2,7 @@ package com.daebbang.daebbangcore.domain.auth.service.impl;
 
 import com.daebbang.daebbangcommon.dto.authority.TokenInfo;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.AuthErrorCode;
 import com.daebbang.daebbangcore.domain.auth.service.AuthService;
 import com.daebbang.daebbangcore.domain.user.entity.UserStatus;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
@@ -32,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
 
         // refresh 검증
         if (!jwtUtils.validateToken(refreshToken)) {
-            throw new BusinessException(UserErrorCode.EXPIRED_TOKEN);
+            throw new BusinessException(AuthErrorCode.EXPIRED_TOKEN);
         }
 
         // refresh 를 통한 userId, role 체크
@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
         // 기존 refresh 토큰이 redis에 저장된것과 일치한 지 체크
         String savedToken = redisService.getData("RT:" + userId);
         if (Objects.isNull(savedToken) || !savedToken.equalsIgnoreCase(refreshToken)) {
-            throw new BusinessException(UserErrorCode.INVALID_TOKEN);
+            throw new BusinessException(AuthErrorCode.INVALID_TOKEN);
         }
 
         // access 및 refresh 새로 발급
