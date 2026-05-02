@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.infra.service;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.EmailErrorCode;
 import com.daebbang.daebbangcore.infra.util.EmailUtils;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -40,7 +40,7 @@ public class EmailService {
             sendEmail(email, "[대빵언니] 임시 비밀번호 안내입니다.", content);
         } catch (Exception e) {
             log.error("[Email 템플릿 읽기 오류] : {}", e.getMessage());
-            throw new BusinessException(UserErrorCode.EMAIL_SEND_FAILED);
+            throw new BusinessException(EmailErrorCode.EMAIL_SEND_FAILED);
         }
     }
 
@@ -58,13 +58,13 @@ public class EmailService {
             emailSender.send(message);
         } catch (MailAuthenticationException e) {
             log.error("[Email 인증 오류] SMTP 인증 실패 : {}", e.getMessage());
-            throw new BusinessException(UserErrorCode.EMAIL_SEND_FAILED);
+            throw new BusinessException(EmailErrorCode.EMAIL_SEND_FAILED);
         } catch (MailSendException e) {
             log.error("[Email 발송 오류] 전송 실패 : {}", e.getMessage());
-            throw new BusinessException(UserErrorCode.EMAIL_SEND_FAILED);
+            throw new BusinessException(EmailErrorCode.EMAIL_SEND_FAILED);
         } catch (Exception e) {
             log.error("[Email 기타 오류] 예상치 못한 오류 발생 : {}", e.getMessage());
-            throw new BusinessException(UserErrorCode.EMAIL_SEND_FAILED);
+            throw new BusinessException(EmailErrorCode.EMAIL_SEND_FAILED);
         }
     }
 }

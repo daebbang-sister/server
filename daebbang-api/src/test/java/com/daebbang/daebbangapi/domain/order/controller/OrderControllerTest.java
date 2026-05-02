@@ -23,9 +23,9 @@ import com.daebbang.daebbangapi.domain.order.dto.request.OrderConfirmRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderItemRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderPartialCancelRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderPrepareRequest;
-import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
+import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import com.daebbang.daebbangcore.domain.order.dto.OrderFullDetailResult;
 import com.daebbang.daebbangcore.domain.order.dto.OrderPrepareResponse;
 import com.daebbang.daebbangcore.domain.order.dto.OrderStatusCountResult;
@@ -412,7 +412,7 @@ class OrderControllerTest {
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
-        willThrow(new BusinessException(UserErrorCode.OUT_OF_STOCK))
+        willThrow(new BusinessException(OrderErrorCode.OUT_OF_STOCK))
             .given(orderService).prepare(any());
 
         mockMvc.perform(post("/v1/orders/prepare")
@@ -464,7 +464,7 @@ class OrderControllerTest {
             0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
-        willThrow(new BusinessException(UserErrorCode.STOCK_LOCK_FAILED))
+        willThrow(new BusinessException(OrderErrorCode.STOCK_LOCK_FAILED))
             .given(orderService).prepare(any());
 
         mockMvc.perform(post("/v1/orders/prepare")
@@ -516,7 +516,7 @@ class OrderControllerTest {
             99_999, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
-        willThrow(new BusinessException(UserErrorCode.POINT_EXCEEDS_PAYMENT))
+        willThrow(new BusinessException(OrderErrorCode.POINT_EXCEEDS_PAYMENT))
             .given(orderService).prepare(any());
 
         mockMvc.perform(post("/v1/orders/prepare")
@@ -736,7 +736,7 @@ class OrderControllerTest {
         OrderConfirmRequest request = new OrderConfirmRequest(
             "20260416-EXPIRED0000", "toss_payment_key_abc", 33_000
         );
-        willThrow(new BusinessException(UserErrorCode.ORDER_NOT_FOUND))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_NOT_FOUND))
             .given(orderService).confirm(any());
 
         mockMvc.perform(post("/v1/orders/confirm")
@@ -775,7 +775,7 @@ class OrderControllerTest {
         OrderConfirmRequest request = new OrderConfirmRequest(
             "20260416-ABC1234567", "toss_payment_key_abc", 99_999
         );
-        willThrow(new BusinessException(UserErrorCode.ORDER_AMOUNT_MISMATCH))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_AMOUNT_MISMATCH))
             .given(orderService).confirm(any());
 
         mockMvc.perform(post("/v1/orders/confirm")
@@ -814,7 +814,7 @@ class OrderControllerTest {
         OrderConfirmRequest request = new OrderConfirmRequest(
             "20260416-ABC1234567", "toss_payment_key_abc", 33_000
         );
-        willThrow(new BusinessException(UserErrorCode.ORDER_USER_MISMATCH))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_USER_MISMATCH))
             .given(orderService).confirm(any());
 
         mockMvc.perform(post("/v1/orders/confirm")
@@ -853,7 +853,7 @@ class OrderControllerTest {
         OrderConfirmRequest request = new OrderConfirmRequest(
             "20260416-ABC1234567", "toss_payment_key_abc", 33_000
         );
-        willThrow(new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_ALREADY_PROCESSED))
             .given(orderService).confirm(any());
 
         mockMvc.perform(post("/v1/orders/confirm")
@@ -892,7 +892,7 @@ class OrderControllerTest {
         OrderConfirmRequest request = new OrderConfirmRequest(
             "20260416-ABC1234567", "toss_payment_key_abc", 33_000
         );
-        willThrow(new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED))
+        willThrow(new BusinessException(OrderErrorCode.PAYMENT_CONFIRMATION_FAILED))
             .given(orderService).confirm(any());
 
         mockMvc.perform(post("/v1/orders/confirm")
@@ -1019,7 +1019,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/{orderNumber}/cancel - 존재하지 않는 주문이면 404 반환")
     void cancel_orderNotFound() throws Exception {
         OrderCancelRequest request = new OrderCancelRequest("단순 변심");
-        willThrow(new BusinessException(UserErrorCode.ORDER_NOT_FOUND))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_NOT_FOUND))
             .given(orderService).cancel(any());
 
         mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-NOTEXIST00")
@@ -1054,7 +1054,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/{orderNumber}/cancel - 취소 불가 상태(배송중)이면 400 반환")
     void cancel_notAllowed() throws Exception {
         OrderCancelRequest request = new OrderCancelRequest("단순 변심");
-        willThrow(new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED))
             .given(orderService).cancel(any());
 
         mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-ABC1234567")
@@ -1089,7 +1089,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/{orderNumber}/cancel - 토스 결제 취소 실패 시 502 반환")
     void cancel_paymentCancelFailed() throws Exception {
         OrderCancelRequest request = new OrderCancelRequest("단순 변심");
-        willThrow(new BusinessException(UserErrorCode.PAYMENT_CANCEL_FAILED))
+        willThrow(new BusinessException(OrderErrorCode.PAYMENT_CANCEL_FAILED))
             .given(orderService).cancel(any());
 
         mockMvc.perform(post("/v1/orders/{orderNumber}/cancel", "20260416-ABC1234567")
@@ -1214,7 +1214,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/{orderNumber}/cancel/partial - 유효하지 않은 항목(이미 취소됨)이면 400 반환")
     void cancelPartial_invalidItem() throws Exception {
         OrderPartialCancelRequest request = new OrderPartialCancelRequest(List.of(10L), "사이즈 오주문");
-        willThrow(new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_PARTIAL_CANCEL_INVALID))
             .given(orderService).cancelPartial(any());
 
         mockMvc.perform(post("/v1/orders/{orderNumber}/cancel/partial", "20260416-ABC1234567")
@@ -1464,7 +1464,7 @@ class OrderControllerTest {
     @Test
     @DisplayName("GET /v1/orders/{orderNumber} - 존재하지 않는 주문이면 404 반환")
     void getOrderDetail_notFound() throws Exception {
-        willThrow(new BusinessException(UserErrorCode.ORDER_NOT_FOUND))
+        willThrow(new BusinessException(OrderErrorCode.ORDER_NOT_FOUND))
             .given(orderService).getOrderDetail(any(), any());
 
         mockMvc.perform(get("/v1/orders/{orderNumber}", "20260416-NOTEXIST00")

@@ -13,7 +13,7 @@ import com.daebbang.daebbangcore.domain.order.dto.OrderPrepareResponse;
 import com.daebbang.daebbangcore.domain.order.service.OrderService;
 import jakarta.validation.Valid;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -134,7 +134,7 @@ public class OrderController {
         }
         LocalDateTime start = startDate.atStartOfDay();
         if (start.isAfter(end)) {
-            throw new BusinessException(UserErrorCode.ORDER_DATE_RANGE_INVALID);
+            throw new BusinessException(OrderErrorCode.ORDER_DATE_RANGE_INVALID);
         }
         return start.isBefore(oneYearAgo) ? oneYearAgo : start;
     }

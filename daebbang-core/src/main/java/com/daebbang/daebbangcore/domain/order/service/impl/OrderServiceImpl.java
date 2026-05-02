@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.order.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import com.daebbang.daebbangcore.domain.order.command.OrderCancelCommand;
 import com.daebbang.daebbangcore.domain.order.command.OrderConfirmCommand;
 import com.daebbang.daebbangcore.domain.order.command.OrderItemCommand;
@@ -125,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
                 try {
                     acquired = lock.tryLock(3, 5, TimeUnit.SECONDS);
                     if (!acquired) {
-                        throw new BusinessException(UserErrorCode.STOCK_LOCK_FAILED);
+                        throw new BusinessException(OrderErrorCode.STOCK_LOCK_FAILED);
                     }
 
                     stockCacheService.decreaseStock(item.productDetailId(), item.quantity());
@@ -147,7 +147,7 @@ public class OrderServiceImpl implements OrderService {
 
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new BusinessException(UserErrorCode.STOCK_LOCK_FAILED);
+                    throw new BusinessException(OrderErrorCode.STOCK_LOCK_FAILED);
                 } finally {
                     if (acquired) lock.unlock();
                 }
@@ -166,11 +166,11 @@ public class OrderServiceImpl implements OrderService {
 
         int shippingFee = command.shippingFee();
         if (totalSellingAmount >= FREE_SHIPPING_THRESHOLD && shippingFee != 0) {
-            throw new BusinessException(UserErrorCode.ORDER_SHIPPING_FEE_INVALID);
+            throw new BusinessException(OrderErrorCode.ORDER_SHIPPING_FEE_INVALID);
         }
 
         if (command.usedPoint() > totalSellingAmount + shippingFee) {
-            throw new BusinessException(UserErrorCode.POINT_EXCEEDS_PAYMENT);
+            throw new BusinessException(OrderErrorCode.POINT_EXCEEDS_PAYMENT);
         }
         int paymentAmount = totalSellingAmount + shippingFee - command.usedPoint();
 
@@ -204,14 +204,14 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void confirm(OrderConfirmCommand command) {
         OrderSession session = orderSessionRedisRepository.findByOrderNumber(command.orderNumber())
-            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
 
         if (!session.getUserId().equals(command.userId())) {
-            throw new BusinessException(UserErrorCode.ORDER_USER_MISMATCH);
+            throw new BusinessException(OrderErrorCode.ORDER_USER_MISMATCH);
         }
 
         if (session.getPaymentAmount() != command.amount()) {
-            throw new BusinessException(UserErrorCode.ORDER_AMOUNT_MISMATCH);
+            throw new BusinessException(OrderErrorCode.ORDER_AMOUNT_MISMATCH);
         }
 
         RLock confirmLock = redissonClient.getLock("order:confirm:lock:" + command.orderNumber());
@@ -219,11 +219,11 @@ public class OrderServiceImpl implements OrderService {
         try {
             acquired = confirmLock.tryLock(3, TimeUnit.SECONDS);
             if (!acquired) {
-                throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
+                throw new BusinessException(OrderErrorCode.ORDER_ALREADY_PROCESSED);
             }
 
             if (ordersRepository.existsByOrderNumber(command.orderNumber())) {
-                throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
+                throw new BusinessException(OrderErrorCode.ORDER_ALREADY_PROCESSED);
             }
 
             TossPaymentResponse tossResponse = tossPaymentClient.confirm(
@@ -237,7 +237,7 @@ public class OrderServiceImpl implements OrderService {
                     );
                     if (updated == 0) {
                         log.error("[Order] DB 재고 부족 - productDetailId: {}", item.getProductDetailId());
-                        throw new BusinessException(UserErrorCode.OUT_OF_STOCK);
+                        throw new BusinessException(OrderErrorCode.OUT_OF_STOCK);
                     }
                 }
 
@@ -297,12 +297,12 @@ public class OrderServiceImpl implements OrderService {
                     stockCacheService.restoreStock(i.getProductDetailId(), i.getQuantity()));
                 stockReserveRedisRepository.delete(command.orderNumber());
                 if (e instanceof BusinessException) throw e;
-                throw new BusinessException(UserErrorCode.PAYMENT_CONFIRMATION_FAILED);
+                throw new BusinessException(OrderErrorCode.PAYMENT_CONFIRMATION_FAILED);
             }
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
+            throw new BusinessException(OrderErrorCode.ORDER_ALREADY_PROCESSED);
         } finally {
             if (acquired) confirmLock.unlock();
         }
@@ -320,18 +320,18 @@ public class OrderServiceImpl implements OrderService {
             CancelPrecheck precheck = Objects.requireNonNull(readTx().execute(status -> {
                 Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
                         command.orderNumber(), command.userId())
-                    .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+                    .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
 
                 if (order.getOrderStatus() != OrderStatus.PAID
                     && order.getOrderStatus() != OrderStatus.WAITING_DEPOSIT
                     && order.getOrderStatus() != OrderStatus.PREPARING_DELIVERY) {
-                    throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+                    throw new BusinessException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED);
                 }
 
                 Payment payment = paymentService.findByOrder(order);
                 int cancelableAmount = payment.getTotalAmount() - payment.getTotalCancelAmount();
                 if (cancelableAmount <= 0) {
-                    throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+                    throw new BusinessException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED);
                 }
 
                 return new CancelPrecheck(payment.getPaymentKey(), cancelableAmount);
@@ -345,7 +345,7 @@ public class OrderServiceImpl implements OrderService {
             writeTx().execute(status -> {
                 Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
                         command.orderNumber(), command.userId())
-                    .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+                    .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
                 Payment payment = paymentService.findByOrder(order);
 
                 List<OrderDetails> cancelTargets = order.getOrderList().stream()
@@ -376,11 +376,11 @@ public class OrderServiceImpl implements OrderService {
             PartialCancelPrecheck precheck = Objects.requireNonNull(readTx().execute(status -> {
                 Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
                         command.orderNumber(), command.userId())
-                    .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+                    .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
 
                 if (order.getOrderStatus() != OrderStatus.PAID
                     && order.getOrderStatus() != OrderStatus.PREPARING_DELIVERY) {
-                    throw new BusinessException(UserErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+                    throw new BusinessException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED);
                 }
 
                 List<Long> targetIds = command.orderDetailIds();
@@ -389,10 +389,10 @@ public class OrderServiceImpl implements OrderService {
                     .toList();
 
                 if (targetDetails.size() != targetIds.size()) {
-                    throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+                    throw new BusinessException(OrderErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
                 }
                 if (targetDetails.stream().anyMatch(d -> d.getStatus() != OrderDetailStatus.NORMAL)) {
-                    throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+                    throw new BusinessException(OrderErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
                 }
 
                 int cancelAmount = targetDetails.stream()
@@ -409,7 +409,7 @@ public class OrderServiceImpl implements OrderService {
                 Payment payment = paymentService.findByOrder(order);
                 int remainingAmount = payment.getTotalAmount() - payment.getTotalCancelAmount();
                 if (cancelAmount > remainingAmount || cancelAmount <= 0) {
-                    throw new BusinessException(UserErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
+                    throw new BusinessException(OrderErrorCode.ORDER_PARTIAL_CANCEL_INVALID);
                 }
 
                 List<Long> targetDetailIds = targetDetails.stream().map(OrderDetails::getId).toList();
@@ -424,7 +424,7 @@ public class OrderServiceImpl implements OrderService {
             writeTx().execute(status -> {
                 Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(
                         command.orderNumber(), command.userId())
-                    .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+                    .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
                 Payment payment = paymentService.findByOrder(order);
 
                 List<OrderDetails> targetDetails = order.getOrderList().stream()
@@ -464,7 +464,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderFullDetailResult getOrderDetail(Long userId, String orderNumber) {
         Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(orderNumber, userId)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
         return toFullDetailResult(order);
     }
 
@@ -551,12 +551,12 @@ public class OrderServiceImpl implements OrderService {
         try {
             acquired = cancelLock.tryLock(3, TimeUnit.SECONDS);
             if (!acquired) {
-                throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
+                throw new BusinessException(OrderErrorCode.ORDER_ALREADY_PROCESSED);
             }
             action.run();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BusinessException(UserErrorCode.ORDER_ALREADY_PROCESSED);
+            throw new BusinessException(OrderErrorCode.ORDER_ALREADY_PROCESSED);
         } finally {
             if (acquired) cancelLock.unlock();
         }
@@ -569,7 +569,7 @@ public class OrderServiceImpl implements OrderService {
             );
             if (updated != 1) {
                 log.error("[Order] 재고 복원 실패 - productDetailId: {}", detail.getProductDetail().getId());
-                throw new BusinessException(UserErrorCode.STOCK_RESTORE_FAILED);
+                throw new BusinessException(OrderErrorCode.STOCK_RESTORE_FAILED);
             }
         }
         List<Long> productDetailIds = details.stream()

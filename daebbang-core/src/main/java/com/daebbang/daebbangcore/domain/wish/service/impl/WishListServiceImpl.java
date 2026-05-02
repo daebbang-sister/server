@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.wish.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.WishErrorCode;
 import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
@@ -42,7 +42,7 @@ public class WishListServiceImpl implements WishListService {
     @Transactional
     public Long addWishList(Long userId, Long productId) {
         wishListRepository.findWishListByUserIdAndProductId(userId, productId)
-            .ifPresent(w -> { throw new BusinessException(UserErrorCode.WISH_LIST_ALREADY_EXISTS); });
+            .ifPresent(w -> { throw new BusinessException(WishErrorCode.WISH_LIST_ALREADY_EXISTS); });
 
         Users user = userService.getUserById(userId);
         Products product = productService.getOnSaleProductById(productId);

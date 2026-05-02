@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.order.service;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import com.daebbang.daebbangcore.domain.order.event.StockInvalidateEvent;
 import com.daebbang.daebbangcore.domain.product.service.ProductDetailsService;
 import java.time.Duration;
@@ -40,7 +40,7 @@ public class StockCacheService {
         if (result == null || result < 0) {
             stringRedisTemplate.opsForValue().increment(key, quantity);
             log.warn("[Stock] 재고 부족 - productDetailId: {}, 요청수량: {}", productDetailId, quantity);
-            throw new BusinessException(UserErrorCode.OUT_OF_STOCK);
+            throw new BusinessException(OrderErrorCode.OUT_OF_STOCK);
         }
 
         log.info("[Stock] 감소 완료 - productDetailId: {}, 차감: {}, 잔여: {}", productDetailId, quantity, result);

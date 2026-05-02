@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.user.entity;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OAuth2ErrorCode;
 import java.util.Arrays;
 import lombok.Getter;
 
@@ -20,6 +20,6 @@ public enum Provider {
         return Arrays.stream(values())
                     .filter(p -> p.registrationId.equalsIgnoreCase(id))
                     .findFirst()
-                    .orElseThrow(() -> new BusinessException(UserErrorCode.UNSUPPORTED_SOCIAL_PROVIDER));
+                    .orElseThrow(() -> new BusinessException(OAuth2ErrorCode.UNSUPPORTED_SOCIAL_PROVIDER));
     }
 }

@@ -23,9 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
-import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
+import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.AddressErrorCode;
 import com.daebbang.daebbangcore.domain.address.command.AddressCommand;
 import com.daebbang.daebbangcore.domain.address.entity.Address;
 import com.daebbang.daebbangcore.domain.address.entity.AddressVO;
@@ -259,7 +259,7 @@ class AddressControllerTest {
     void addAddress_limitExceeded() throws Exception {
         Users user = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "01012345678");
         given(userService.getUserById(anyLong())).willReturn(user);
-        willThrow(new BusinessException(UserErrorCode.ADDRESS_LIMIT_EXCEEDED))
+        willThrow(new BusinessException(AddressErrorCode.ADDRESS_LIMIT_EXCEEDED))
             .given(addressService).save(any(Users.class), any(AddressCommand.class));
 
         Map<String, Object> request = Map.of(
@@ -359,7 +359,7 @@ class AddressControllerTest {
     @Test
     @DisplayName("PUT /v1/addresses/{addressId} - 존재하지 않는 주소 수정 시 404 반환")
     void updateAddress_notFound() throws Exception {
-        willThrow(new BusinessException(UserErrorCode.ADDRESS_NOT_FOUND))
+        willThrow(new BusinessException(AddressErrorCode.ADDRESS_NOT_FOUND))
             .given(addressService).update(anyLong(), eq(999L), any(AddressCommand.class));
 
         Map<String, Object> request = Map.of(
@@ -438,7 +438,7 @@ class AddressControllerTest {
     @Test
     @DisplayName("DELETE /v1/addresses/{addressId} - 존재하지 않는 주소 삭제 시 404 반환")
     void deleteAddress_notFound() throws Exception {
-        willThrow(new BusinessException(UserErrorCode.ADDRESS_NOT_FOUND))
+        willThrow(new BusinessException(AddressErrorCode.ADDRESS_NOT_FOUND))
             .given(addressService).deleteById(anyLong(), eq(999L));
 
         mockMvc.perform(delete("/v1/addresses/{addressId}", 999L)

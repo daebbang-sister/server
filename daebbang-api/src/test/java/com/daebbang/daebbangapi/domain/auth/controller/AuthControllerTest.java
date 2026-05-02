@@ -18,7 +18,7 @@ import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.utils.CookieUtils;
 import com.daebbang.daebbangcommon.dto.authority.TokenInfo;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.AuthErrorCode;
 import com.daebbang.daebbangcore.domain.auth.service.AuthService;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
@@ -121,7 +121,7 @@ class AuthControllerTest {
         // given
         String expiredToken = "expired-refresh-token";
 
-        willThrow(new BusinessException(UserErrorCode.EXPIRED_TOKEN))
+        willThrow(new BusinessException(AuthErrorCode.EXPIRED_TOKEN))
             .given(authService).rotateRefreshToken(expiredToken);
 
         // when & then
@@ -155,7 +155,7 @@ class AuthControllerTest {
         // given
         String invalidToken = "invalid-refresh-token";
 
-        willThrow(new BusinessException(UserErrorCode.INVALID_TOKEN))
+        willThrow(new BusinessException(AuthErrorCode.INVALID_TOKEN))
             .given(authService).rotateRefreshToken(invalidToken);
 
         // when & then

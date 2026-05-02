@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.infra.service;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.SmsErrorCode;
 import com.daebbang.daebbangcore.infra.util.SMSUtils;
 import com.solapi.sdk.message.exception.SolapiMessageNotReceivedException;
 import com.solapi.sdk.message.model.Message;
@@ -40,10 +40,10 @@ public class SmsService {
             log.info("[SMS] 인증번호 발송 - to: {}, code: {}", phoneNumber, authCode);
         } catch (SolapiMessageNotReceivedException e) {
             log.error("[SMS] 인증번호 발송 실패 - to: {}, 발생한 에러 목록: {}, 에러: {}", phoneNumber, e.getFailedMessageList(), e.getMessage(), e);
-            throw new BusinessException(UserErrorCode.SMS_SEND_FAILED);
+            throw new BusinessException(SmsErrorCode.SMS_SEND_FAILED);
         } catch (Exception e) {
             log.error("[SMS] 인증번호 발송 실패 - to: {}, 에러: {}", phoneNumber, e.getMessage(), e);
-            throw new BusinessException(UserErrorCode.SMS_SEND_FAILED);
+            throw new BusinessException(SmsErrorCode.SMS_SEND_FAILED);
         }
 
         redisService.setData(SMS_KEY + phoneNumber, authCode, Duration.ofMinutes(5));
@@ -55,11 +55,11 @@ public class SmsService {
         String savedCode = redisService.getData(SMS_KEY + phoneNumber);
         if (Objects.isNull(savedCode)) {
             log.warn("[SMS] 인증 실패 - 만료되었거나 발송 이력 없음: {}", phoneNumber);
-            throw new BusinessException(UserErrorCode.AUTH_CODE_EXPIRED);
+            throw new BusinessException(SmsErrorCode.AUTH_CODE_EXPIRED);
         }
         if (!savedCode.equalsIgnoreCase(authCode)) {
             log.warn("[SMS] 인증 실패 - 코드 불일치: input:{}, saved:{}", authCode, savedCode);
-            throw new BusinessException(UserErrorCode.AUTH_CODE_MISMATCH);
+            throw new BusinessException(SmsErrorCode.AUTH_CODE_MISMATCH);
         }
         redisService.setData(SMS_KEY + phoneNumber, "DONE", Duration.ofMinutes(10));
         log.info("[SMS] 인증 완료 - phoneNumber: {}", phoneNumber);

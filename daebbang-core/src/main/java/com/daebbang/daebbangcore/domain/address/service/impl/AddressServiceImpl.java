@@ -1,7 +1,7 @@
 package com.daebbang.daebbangcore.domain.address.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.AddressErrorCode;
 import com.daebbang.daebbangcore.domain.address.command.AddressCommand;
 import com.daebbang.daebbangcore.domain.address.entity.Address;
 import com.daebbang.daebbangcore.domain.address.entity.AddressVO;
@@ -25,7 +25,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void save(Users user, AddressCommand command) {
         if (addressRepository.countActiveByUserId(user.getId()) >= 5) {
-            throw new BusinessException(UserErrorCode.ADDRESS_LIMIT_EXCEEDED);
+            throw new BusinessException(AddressErrorCode.ADDRESS_LIMIT_EXCEEDED);
         }
         if (command.isDefault()) {
             addressRepository.findDefaultByUserId(user.getId())
@@ -42,7 +42,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void update(Long userId, Long addressId, AddressCommand command) {
         Address address = addressRepository.findByIdAndUserIdActive(addressId, userId)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.ADDRESS_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(AddressErrorCode.ADDRESS_NOT_FOUND));
 
         if (command.isDefault()) {
             addressRepository.findDefaultByUserId(userId)
@@ -60,7 +60,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void deleteById(Long userId, Long addressId) {
         Address address = addressRepository.findByIdAndUserIdActive(addressId, userId)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.ADDRESS_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(AddressErrorCode.ADDRESS_NOT_FOUND));
         address.delete();
         address.update();
     }

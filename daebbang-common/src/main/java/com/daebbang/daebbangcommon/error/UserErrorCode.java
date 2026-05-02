@@ -7,71 +7,15 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum UserErrorCode implements ErrorCode {
 
-    INVALID_TOKEN(401, "유효하지 않은 토큰입니다."),
-    EXPIRED_TOKEN(401, "만료된 토큰입니다."),
-    UNSUPPORTED_TOKEN(401, "지원되지 않는 토큰 형식입니다."),
-
-    UNSUPPORTED_SOCIAL_PROVIDER(400, "지원하지 않는 소셜 로그인 제공자입니다."),
-    INVALID_OAUTH2_ATTRIBUTES(400, "소셜 서비스로부터 사용자 정보를 가져올 수 없습니다."),
-    OAUTH2_AUTHENTICATION_FAILED(401, "소셜 로그인 인증에 실패했습니다."),
-
     INVALID_PHONE_NUMBER(400, "전화번호 형식이 올바르지 않습니다."),
+    INVALID_PHONE_NUMBER_FORMAT(400, "유효하지 않은 전화번호 형식입니다."),
     INVALID_USER_ID_FORMAT(400, "아이디 형식이 올바르지 않습니다."),
     INVALID_USER_PASSWORD_FORMAT(400, "비밀번호 형식이 올바르지 않습니다."),
     INVALID_USERNAME_FORMAT(400, "회원 이름 형식이 올바르지 않습니다."),
-    AUTH_CODE_MISMATCH(400, "인증번호 코드가 일치하지 않습니다."),
-    AUTH_CODE_EXPIRED(401, "인증번호가 만료되었거나 일치하지 않습니다."),
-    EXCEEDED_SENDING_LIMIT(429, "인증번호 발송 횟수가 초과되었습니다. 잠시 후 다시 시도해주세요."),
-    SMS_SEND_FAILED(500, "인증문자 발송에 실패했습니다. 관리자에게 문의하세요."),
-
-    INVALID_EMAIL_FORMAT(400, "유효하지 않은 이메일 형식입니다."),
-    EMAIL_SEND_TIMEOUT(408, "이메일 발송 시간이 초과되었습니다."),
-    DAILY_EMAIL_LIMIT_EXCEEDED(429, "일일 이메일 발송 횟수가 초과되었습니다."),
-    EMAIL_SEND_FAILED(500, "이메일 발송에 실패했습니다. 관리자에게 문의하세요."),
-
-    INVALID_PHONE_NUMBER_FORMAT(400, "유효하지 않은 전화번호 형식입니다."),
-    INVALID_LOGIN_INFO(401, "아이디 또는 비밀번호가 일치하지 않습니다."),
     INVALID_PASSWORD(401, "비밀번호가 일치하지 않습니다."),
     USER_NOT_FOUND(404, "존재하지 않는 사용자입니다."),
     DUPLICATE_PHONE_NUMBER(409, "이미 사용 중인 핸드폰 번호입니다."),
-    DUPLICATE_LOGIN_ID(409, "이미 사용 중인 아이디입니다."),
-
-    CATEGORY_NOT_FOUND(404, "존재하지 않는 카테고리입니다."),
-    PRODUCT_NOT_FOUND(404, "존재하지 않는 상품입니다."),
-    PRODUCT_DETAILS_NOT_FOUND(404, "존재하지 않는 상세 상품입니다."),
-
-    CART_NOT_FOUND(404, "존재하지 않는 카트 번호입니다."),
-
-    WISH_LIST_NOT_FOUND(404, "존재하지 않는 위시리스트 항목입니다."),
-    WISH_LIST_ALREADY_EXISTS(409, "이미 위시리스트에 추가된 상품입니다."),
-
-    ADDRESS_NOT_FOUND(404, "존재하지 않는 주소입니다."),
-    ADDRESS_LIMIT_EXCEEDED(409, "주소록은 최대 5개까지 등록 가능합니다."),
-
-    ORDER_NOT_FOUND(404, "존재하지 않는 주문입니다."),
-    ORDER_AMOUNT_MISMATCH(400, "결제 금액이 주문 금액과 일치하지 않습니다."),
-    ORDER_USER_MISMATCH(403, "주문자 정보가 일치하지 않습니다."),
-    ORDER_ALREADY_PROCESSED(409, "이미 처리된 주문입니다."),
-    OUT_OF_STOCK(409, "재고가 부족합니다."),
-    STOCK_LOCK_FAILED(503, "재고 처리 중입니다. 잠시 후 다시 시도해주세요."),
-    PAYMENT_CONFIRMATION_FAILED(502, "결제 승인에 실패했습니다. 관리자에게 문의하세요."),
-    PAYMENT_NOT_FOUND(404, "결제 정보를 찾을 수 없습니다."),
-    PAYMENT_CANCEL_FAILED(502, "결제 취소에 실패했습니다. 관리자에게 문의하세요."),
-
-    ORDER_SHIPPING_FEE_INVALID(400, "배송비가 올바르지 않습니다."),
-    ORDER_CANCEL_NOT_ALLOWED(400, "취소할 수 없는 주문 상태입니다."),
-    ORDER_PARTIAL_CANCEL_INVALID(400, "유효하지 않은 취소 항목입니다."),
-    ORDER_DATE_RANGE_INVALID(400, "조회 시작일이 종료일보다 늦을 수 없습니다."),
-    POINT_EXCEEDS_PAYMENT(400, "포인트가 결제 금액을 초과합니다."),
-    STOCK_RESTORE_FAILED(500, "재고 복원에 실패했습니다. 관리자에게 문의하세요."),
-
-    ORDER_DETAIL_NOT_FOUND(404, "존재하지 않는 주문 상세입니다."),
-    ORDER_NOT_COMPLETED(400, "주문 완료 상태에서만 리뷰를 작성할 수 있습니다."),
-
-    REVIEW_NOT_FOUND(404, "존재하지 않는 리뷰입니다."),
-    REVIEW_ALREADY_EXISTS(409, "이미 리뷰를 작성한 주문 항목입니다."),
-    REVIEW_ALREADY_APPROVED(409, "적립금이 승인된 리뷰는 수정 또는 삭제할 수 없습니다."),
-    REVIEW_POINT_CONFIG_NOT_FOUND(404, "리뷰 포인트 설정을 찾을 수 없습니다.");
+    DUPLICATE_LOGIN_ID(409, "이미 사용 중인 아이디입니다.");
 
     private final int status;
     private final String message;

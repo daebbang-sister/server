@@ -2,6 +2,7 @@ package com.daebbang.daebbangcore.domain.user.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.SmsErrorCode;
 import com.daebbang.daebbangcore.domain.address.service.AddressService;
 import com.daebbang.daebbangcore.domain.user.command.PasswordPort;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
@@ -39,7 +40,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(UserErrorCode.DUPLICATE_LOGIN_ID);
         }
         if (!smsService.isVerified(joinCommand.phoneNumber())) {
-            throw new BusinessException(UserErrorCode.AUTH_CODE_EXPIRED);
+            throw new BusinessException(SmsErrorCode.AUTH_CODE_EXPIRED);
         }
         String encoded = passwordPort.encode(joinCommand.password());
 

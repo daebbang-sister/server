@@ -6,7 +6,7 @@ import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.infra.converter.ReviewPointStatusConverter;
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.ReviewErrorCode;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -96,7 +96,7 @@ public class Review extends DefaultBase {
 
     public void updateContent(int rating, String content) {
         if (this.pointStatus == ReviewPointStatus.APPROVED) {
-            throw new BusinessException(UserErrorCode.REVIEW_ALREADY_APPROVED);
+            throw new BusinessException(ReviewErrorCode.REVIEW_ALREADY_APPROVED);
         }
         this.rating = rating;
         this.content = content;
@@ -133,7 +133,7 @@ public class Review extends DefaultBase {
 
     public void softDelete() {
         if (this.pointStatus == ReviewPointStatus.APPROVED) {
-            throw new BusinessException(UserErrorCode.REVIEW_ALREADY_APPROVED);
+            throw new BusinessException(ReviewErrorCode.REVIEW_ALREADY_APPROVED);
         }
         this.delete();
     }

@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"receiver\":\"\
-                  홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  isDefault\":true,\"alias\":\"집\",\"zipCode\":\"12345\"}"
+                value: "{\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\"\
+                  :true,\"address\":\"서울시 강남구 테헤란로\"}"
               address/add-address-limit-exceeded:
-                value: "{\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"\
-                  receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\":false,\"\
-                  receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
+                  :\"12345\",\"receiver\":\"홍길동\"}"
       responses:
         "201":
           description: "201"
@@ -503,10 +503,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-addresses-addressId486549215'
+              $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=1w3F9Z1NhyimmpPWtNUQAY8zOxkFcdtQCtAXbITSFjhfrQIqsT78kfh9sRCLrvDkjPgkNekBFngyRuJ9a-R1COK3J1o9mDsY
+                value: _csrf=RknfwixYxx6Pj7H8rTekYvSRsRrQ5-wU-FqHqB6drgBcuS-Acn3u-01s8iqivoXElBqQBJL3nCLlhNw5zm_hyXz5yGJqjx3k
       responses:
         "200":
           description: "200"
@@ -651,13 +651,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"receiver\":\"\
-                  김철수\",\"detailAddress\":\"202호\",\"address\":\"서울시 서초구 반포대로\",\"\
-                  isDefault\":false,\"alias\":\"회사\",\"zipCode\":\"54321\"}"
+                value: "{\"detailAddress\":\"202호\",\"receiver\":\"김철수\",\"receiverPhoneNumber\"\
+                  :\"010-9876-5432\",\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\"\
+                  :false,\"address\":\"서울시 서초구 반포대로\"}"
               address/update-address-not-found:
-                value: "{\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"\
-                  receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\":false,\"\
-                  receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
+                  :\"12345\",\"receiver\":\"홍길동\"}"
       responses:
         "200":
           description: "200"
@@ -703,12 +703,12 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-addresses-addressId486549215'
+              $ref: '#/components/schemas/v1-users486549215'
             examples:
               address/delete-address:
-                value: _csrf=dxrVZXaHRqLJQV8yyZQv7cQz2EWDW8MNRZXFVSiZ9dwiPqDITirnBhK-dpLkJD4C-7kb2v0H9XznbaYgd_f9ZRH6x-sbBpTw
+                value: _csrf=YdOXxguOwf5XiNrmgGy8rAnd6WZH9LNWvHrz9IX9cfbjGUhTWLek9TK7pJt66evXtUGImj67xAd3xoR7iUzBkLGYEs_XKX43
               address/delete-address-not-found:
-                value: _csrf=T-o9hcH0lnWbiMQoRAnyNzNN38aYRm6A0-gTNgc_iBYVa3kve45Z4fbA8ke2u6JNISTGVFV_8qT-f1et4I0jUz4OvSVwCUkY
+                value: _csrf=MdMt6KQWfLklv0wUQWdAK_YlmOieMGvojsHPGpKtHkfyZCBxB-JMjJEjTo8I2i8leEp0SpcTtYmsBVPFtvOuKfCVfHeRUUZC
       responses:
         "200":
           description: "200"
@@ -1847,8 +1847,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -2101,7 +2101,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"4\":5,\"5\":7,\"1\":0,\"2\":1,\"3\":2}}}"
+                    ratingCounts\":{\"5\":7,\"4\":5,\"3\":2,\"2\":1,\"1\":0}}}"
 components:
   schemas:
     ErrorResponse:
@@ -2417,13 +2417,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    WishListSaveRequest:
-      title: WishListSaveRequest
-      type: object
-      properties:
-        productId:
-          type: number
-          description: 추가할 상품 ID
     AddressSaveRequest:
       title: AddressSaveRequest
       type: object
@@ -2449,6 +2442,13 @@ components:
         alias:
           type: string
           description: "주소 별칭 (예: 집, 회사)"
+    WishListSaveRequest:
+      title: WishListSaveRequest
+      type: object
+      properties:
+        productId:
+          type: number
+          description: 추가할 상품 ID
     MyReviewListResponse:
       title: MyReviewListResponse
       type: object
@@ -3194,7 +3194,7 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-addresses-addressId486549215:
+    v1-users486549215:
       type: object
     AddressListResponse:
       title: AddressListResponse

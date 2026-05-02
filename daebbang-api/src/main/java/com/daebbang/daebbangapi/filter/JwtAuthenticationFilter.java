@@ -2,7 +2,7 @@ package com.daebbang.daebbangapi.filter;
 
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.error.ErrorCode;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.AuthErrorCode;
 import com.daebbang.daebbangcore.infra.service.RedisService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             if (checkValidToken(token)) {
                 if (isBlackListUser(token)) {
-                    sendErrorResponse(response, UserErrorCode.EXPIRED_TOKEN);
+                    sendErrorResponse(response, AuthErrorCode.EXPIRED_TOKEN);
                     return;
                 }
 
@@ -55,19 +55,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (SecurityException e) {
             log.warn("잘못된 JWT 서명입니다.", e);
-            sendErrorResponse(response, UserErrorCode.INVALID_TOKEN);
+            sendErrorResponse(response, AuthErrorCode.INVALID_TOKEN);
             return;
         } catch (ExpiredJwtException e) {
             log.warn("만료된 JWT 토큰입니다.", e);
-            sendErrorResponse(response, UserErrorCode.EXPIRED_TOKEN);
+            sendErrorResponse(response, AuthErrorCode.EXPIRED_TOKEN);
             return;
         } catch (UnsupportedJwtException e) {
             log.warn("지원하지 않은 JWT 토큰 형식입니다.", e);
-            sendErrorResponse(response, UserErrorCode.UNSUPPORTED_TOKEN);
+            sendErrorResponse(response, AuthErrorCode.UNSUPPORTED_TOKEN);
             return;
         } catch (Exception e) {
             log.warn("JWT 토큰이 비어있거나 잘못되었습니다.");
-            sendErrorResponse(response, UserErrorCode.INVALID_TOKEN);
+            sendErrorResponse(response, AuthErrorCode.INVALID_TOKEN);
             return;
         }
 

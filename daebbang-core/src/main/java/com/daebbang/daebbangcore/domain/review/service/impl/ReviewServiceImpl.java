@@ -1,7 +1,8 @@
 package com.daebbang.daebbangcore.domain.review.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
-import com.daebbang.daebbangcommon.error.UserErrorCode;
+import com.daebbang.daebbangcommon.error.OrderErrorCode;
+import com.daebbang.daebbangcommon.error.ReviewErrorCode;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetailStatus;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetails;
 import com.daebbang.daebbangcore.domain.order.entity.OrderStatus;
@@ -39,15 +40,15 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public void createReview(CreateReviewCommand command) {
         if (reviewRepository.existsByOrderDetailIdAndDeletedAtIsNull(command.orderDetailId())) {
-            throw new BusinessException(UserErrorCode.REVIEW_ALREADY_EXISTS);
+            throw new BusinessException(ReviewErrorCode.REVIEW_ALREADY_EXISTS);
         }
 
         OrderDetails orderDetail = orderDetailsRepository
             .findByIdAndUserIdAndStatus(command.orderDetailId(), command.userId(), OrderDetailStatus.NORMAL)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.ORDER_DETAIL_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_DETAIL_NOT_FOUND));
 
         if (orderDetail.getOrder().getOrderStatus() != OrderStatus.COMPLETED) {
-            throw new BusinessException(UserErrorCode.ORDER_NOT_COMPLETED);
+            throw new BusinessException(OrderErrorCode.ORDER_NOT_COMPLETED);
         }
 
         Users user = userService.getUserById(command.userId());
@@ -68,7 +69,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public void updateReview(UpdateReviewCommand command) {
         Review review = reviewRepository.findActiveByIdAndUserId(command.reviewId(), command.userId())
-            .orElseThrow(() -> new BusinessException(UserErrorCode.REVIEW_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ReviewErrorCode.REVIEW_NOT_FOUND));
 
         review.updateContent(command.rating(), command.content());
 
@@ -80,7 +81,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public void deleteReview(Long userId, Long reviewId) {
         Review review = reviewRepository.findActiveByIdAndUserId(reviewId, userId)
-            .orElseThrow(() -> new BusinessException(UserErrorCode.REVIEW_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ReviewErrorCode.REVIEW_NOT_FOUND));
 
         review.softDelete();
     }
@@ -103,7 +104,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public ReviewPointConfig getPointConfig() {
         return reviewPointConfigRepository.findTopByOrderByIdAsc()
-            .orElseThrow(() -> new BusinessException(UserErrorCode.REVIEW_POINT_CONFIG_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ReviewErrorCode.REVIEW_POINT_CONFIG_NOT_FOUND));
     }
 
     private void addImages(Review review, List<String> imageUrls) {
