@@ -23,7 +23,7 @@ import com.daebbang.daebbangapi.domain.order.dto.request.OrderConfirmRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderItemRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderPartialCancelRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderPrepareRequest;
-import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
+import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import com.daebbang.daebbangcore.domain.order.dto.OrderFullDetailResult;

@@ -4,13 +4,13 @@ import com.daebbang.daebbangapi.domain.oauth.repository.HttpCookieOAuth2Authoriz
 import com.daebbang.daebbangapi.domain.security.dto.SecurityConstants;
 import com.daebbang.daebbangapi.filter.CustomExceptionFilter;
 import com.daebbang.daebbangapi.filter.JwtAuthenticationFilter;
-import com.daebbang.daebbangapi.domain.users.filter.UserLoginFilter;
+import com.daebbang.daebbangapi.domain.user.filter.UserLoginFilter;
 import com.daebbang.daebbangapi.handler.CustomLogoutHandler;
 import com.daebbang.daebbangapi.handler.CustomLogoutSuccessHandler;
 import com.daebbang.daebbangapi.handler.OAuth2LoginFailureHandler;
 import com.daebbang.daebbangapi.handler.OAuth2LoginSuccessHandler;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
-import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
+import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangapi.utils.CookieUtils;
 import com.daebbang.daebbangcore.domain.auth.service.AuthService;
 import com.daebbang.daebbangcore.infra.service.RedisService;

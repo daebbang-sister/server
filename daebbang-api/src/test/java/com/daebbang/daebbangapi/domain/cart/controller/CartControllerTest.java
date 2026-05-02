@@ -26,7 +26,7 @@ import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.cart.dto.request.CartSaveRequest;
 import com.daebbang.daebbangapi.domain.cart.dto.request.CartUpdate;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
-import com.daebbang.daebbangapi.domain.users.service.CustomUserDetailsService;
+import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.CartErrorCode;
 import com.daebbang.daebbangcore.domain.cart.entity.Carts;
@@ -115,11 +115,6 @@ class CartControllerTest {
         return cart;
     }
 
-    /**
-     * DiscountType.ALWAYS - 상시 할인 장바구니 항목 mock
-     * DiscountCalculator.calculate() → DiscountResult.discounted(sellingPrice, discountRate)
-     * sellingPrice = floor(30000 * (100 - 10) / 100.0) = 27000, discountRate = 10
-     */
     private Carts mockCartAlwaysDiscount(Long cartId, int quantity) {
         Carts cart = mock(Carts.class);
         ProductDetails productDetail = mock(ProductDetails.class);
