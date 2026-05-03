@@ -105,7 +105,14 @@ public class S3Service {
         try {
             URL url = new URL(imageUrl);
             String path = url.getPath();
-            return path.startsWith("/") ? path.substring(1) : path;
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
+            String bucketPrefix = bucket + "/";
+            if (path.startsWith(bucketPrefix)) {
+                path = path.substring(bucketPrefix.length());
+            }
+            return path;
         } catch (MalformedURLException e) {
             log.error("[S3 URL 파싱 오류] url={}", imageUrl, e);
             throw new BusinessException(ImageErrorCode.IMAGE_DELETE_FAILED);

@@ -169,19 +169,8 @@ class ReviewControllerTest {
                     .summary("리뷰 작성")
                     .description("""
                         주문 완료된 상품에 대해 리뷰를 작성합니다. multipart/form-data 형식.
-<<<<<<< Updated upstream
-
-                        Parts:
-                        - data (application/json) — 리뷰 정보 JSON
-                          - orderDetailId (number, required): 주문 상세 ID
-                          - rating (number, required, 1~5): 별점
-                          - content (string, required, 20~300자): 리뷰 내용
-                        - images (binary[], optional, 최대 4장) — 첨부 이미지 (jpg, jpeg, png, webp)
-
-=======
                         - data (application/json): 리뷰 정보 JSON
                         - images (binary[], 선택, 최대 4장): 첨부 이미지 (jpg/jpeg/png/webp)
->>>>>>> Stashed changes
                         - 이미지 없으면 일반 리뷰, 1장 이상이면 포토 리뷰 적립금 적용
                         - 적립금은 초기 대기 상태로 등록됨
                         """)
@@ -281,7 +270,6 @@ class ReviewControllerTest {
                 .file(imagePart("img3.jpg"))
                 .file(imagePart("img4.jpg"))
                 .file(imagePart("img5.jpg"))
-<<<<<<< Updated upstream
                 .with(authentication(AUTH))
                 .header("Authorization", "Bearer test-jwt-token")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
@@ -306,32 +294,6 @@ class ReviewControllerTest {
                 .with(authentication(AUTH))
                 .header("Authorization", "Bearer test-jwt-token")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
-=======
-                .with(authentication(AUTH))
-                .header("Authorization", "Bearer test-jwt-token")
-                .contentType(MediaType.MULTIPART_FORM_DATA))
-            .andDo(print())
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("이미지는 최대 4장까지 등록 가능합니다."));
-    }
-
-    @Test
-    @DisplayName("POST /v1/reviews - 리뷰 내용이 20자 미만이면 400 반환")
-    void createReview_fail_contentTooShort() throws Exception {
-        String json = """
-            {
-                "orderDetailId": 100,
-                "rating": 5,
-                "content": "짧은 리뷰"
-            }
-            """;
-
-        mockMvc.perform(multipart("/v1/reviews")
-                .file(jsonPart(json))
-                .with(authentication(AUTH))
-                .header("Authorization", "Bearer test-jwt-token")
-                .contentType(MediaType.MULTIPART_FORM_DATA))
->>>>>>> Stashed changes
             .andDo(print())
             .andExpect(status().isBadRequest());
 
@@ -480,23 +442,10 @@ class ReviewControllerTest {
                     .summary("리뷰 수정")
                     .description("""
                         작성한 리뷰를 수정합니다. multipart/form-data 형식.
-<<<<<<< Updated upstream
-
-                        Parts:
-                        - data (application/json) — 수정 정보 JSON
-                          - rating (number, required, 1~5): 별점
-                          - content (string, required, 20~300자): 리뷰 내용
-                          - keepImageUrls (string[], optional): 유지할 기존 이미지 URL 목록
-                        - images (binary[], optional) — 새로 추가할 이미지
-
-                        - keepImageUrls + images 합계는 최대 4장
-                        - 기존 이미지 중 keepImageUrls에 없는 항목은 S3에서도 자동 삭제
-=======
                         - data (application/json): 수정 정보 JSON
                         - images (binary[], 선택): 새로 추가할 이미지
                         - keepImageUrls + images 합계는 최대 4장
                         - 기존 이미지 중 keepImageUrls에 없는 항목은 S3에서 자동 삭제
->>>>>>> Stashed changes
                         - 적립금이 승인된 리뷰는 수정 불가
                         """)
                     .pathParameters(
@@ -553,8 +502,6 @@ class ReviewControllerTest {
     }
 
     @Test
-<<<<<<< Updated upstream
-=======
     @DisplayName("PUT /v1/reviews/{reviewId} - keepImageUrls가 기존 리뷰 이미지에 없으면 INVALID_KEEP_IMAGE_URL")
     void updateReview_fail_invalidKeepImageUrl() throws Exception {
         willThrow(new BusinessException(ImageErrorCode.INVALID_KEEP_IMAGE_URL))
@@ -580,7 +527,6 @@ class ReviewControllerTest {
     }
 
     @Test
->>>>>>> Stashed changes
     @DisplayName("PUT /v1/reviews/{reviewId} - 인증 없이 접근 시 401 반환")
     void updateReview_unauthorized() throws Exception {
         String json = """
