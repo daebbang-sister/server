@@ -67,6 +67,7 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
+<<<<<<< Updated upstream
                 value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"receiver\":\"\
                   홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
                   isDefault\":true,\"alias\":\"집\",\"zipCode\":\"12345\"}"
@@ -74,6 +75,15 @@ paths:
                 value: "{\"isDefault\":false,\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
                   :\"홍길동\",\"zipCode\":\"12345\"}"
+=======
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"zipCode\":\"\
+                  12345\",\"alias\":\"집\",\"isDefault\":true,\"address\":\"서울시 강남구\
+                  \ 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\"}"
+              address/add-address-limit-exceeded:
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
+                  ,\"detailAddress\":\"101호\"}"
+>>>>>>> Stashed changes
       responses:
         "201":
           description: "201"
@@ -361,12 +371,18 @@ paths:
       tags:
       - Review
       summary: 리뷰 작성
+<<<<<<< Updated upstream
       description: "주문 완료된 상품에 대해 리뷰를 작성합니다. multipart/form-data 형식.\n\nParts:\n-\
         \ data (application/json) — 리뷰 정보 JSON\n  - orderDetailId (number, required):\
         \ 주문 상세 ID\n  - rating (number, required, 1~5): 별점\n  - content (string, required,\
         \ 20~300자): 리뷰 내용\n- images (binary[], optional, 최대 4장) — 첨부 이미지 (jpg, jpeg,\
         \ png, webp)\n\n- 이미지 없으면 일반 리뷰, 1장 이상이면 포토 리뷰 적립금 적용\n- 적립금은 초기 대기 상태로 등록\
         됨\n"
+=======
+      description: "주문 완료된 상품에 대해 리뷰를 작성합니다. multipart/form-data 형식.\n- data (application/json):\
+        \ 리뷰 정보 JSON\n- images (binary[], 선택, 최대 4장): 첨부 이미지 (jpg/jpeg/png/webp)\n\
+        - 이미지 없으면 일반 리뷰, 1장 이상이면 포토 리뷰 적립금 적용\n- 적립금은 초기 대기 상태로 등록됨\n"
+>>>>>>> Stashed changes
       operationId: review/create-review-
       parameters:
       - name: Authorization
@@ -495,7 +511,11 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
+<<<<<<< Updated upstream
                 value: _csrf=7I7EtYU4p0kvfCgQfMWVagdc8dVNk_HPq7YrKAVrr5wqqyqK3bb21OEPkXoCTU10TOihDDdk3O0v9cHiyoZKTDRemPhInBPs
+=======
+                value: _csrf=GeTR9zgQ10nQOUqM5DqFznNqTtFooGxlsXmyQ2Ds4SH1wvwCfYLlz14n4i39XHjq0Bex90pdY7Nbl1tIgU2LIQPfgEfNp8w0
+>>>>>>> Stashed changes
       responses:
         "200":
           description: "200"
@@ -640,6 +660,7 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
+<<<<<<< Updated upstream
                 value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"receiver\":\"\
                   김철수\",\"detailAddress\":\"202호\",\"address\":\"서울시 서초구 반포대로\",\"\
                   isDefault\":false,\"alias\":\"회사\",\"zipCode\":\"54321\"}"
@@ -647,6 +668,15 @@ paths:
                 value: "{\"isDefault\":false,\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
                   :\"홍길동\",\"zipCode\":\"12345\"}"
+=======
+                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"zipCode\":\"\
+                  54321\",\"alias\":\"회사\",\"isDefault\":false,\"address\":\"서울시 서\
+                  초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\":\"김철수\"}"
+              address/update-address-not-found:
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
+                  ,\"detailAddress\":\"101호\"}"
+>>>>>>> Stashed changes
       responses:
         "200":
           description: "200"
@@ -695,9 +725,15 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
+<<<<<<< Updated upstream
                 value: _csrf=HVo8QBv5i2cTn1LaX3iw03J_CxKC4r6GsjMOlbkl8ZA7UPnkfz5Yciyf6QQ-_DO-OlWE4kccJivk0t2r1lJooYpDwKINaZvW
               address/delete-address-not-found:
                 value: _csrf=hYZb3FV5nkMKojdfov5lwJ8aB3T4k-dUiLdX26syx8_jwBwk4LRu7GIfqiInwQ5tktNR9P0vKhWb99R57IYx6JtQoanQ-C4T
+=======
+                value: _csrf=NfAURjNmoGz_lpXDRVUKiXmGQ_drvJMGB1svgXhpakQjArQxAZZ1JFYEwVjS9PCnfHg-vxi2bs4IjvIrN2sZ40laWCdAZ4ID
+              address/delete-address-not-found:
+                value: _csrf=e9XEX-ap2-xVxfWExfRHasnyFSpgN54XhuMAldGDHXhm9dyEGOf9PYKdvY1485e99NlzUv6ROEtRVqc6voIzpei7JU0AwOW0
+>>>>>>> Stashed changes
       responses:
         "200":
           description: "200"
@@ -1306,12 +1342,19 @@ paths:
       tags:
       - Review
       summary: 리뷰 수정
+<<<<<<< Updated upstream
       description: "작성한 리뷰를 수정합니다. multipart/form-data 형식.\n\nParts:\n- data (application/json)\
         \ — 수정 정보 JSON\n  - rating (number, required, 1~5): 별점\n  - content (string,\
         \ required, 20~300자): 리뷰 내용\n  - keepImageUrls (string[], optional): 유지할 기\
         존 이미지 URL 목록\n- images (binary[], optional) — 새로 추가할 이미지\n\n- keepImageUrls\
         \ + images 합계는 최대 4장\n- 기존 이미지 중 keepImageUrls에 없는 항목은 S3에서도 자동 삭제\n- 적립금이\
         \ 승인된 리뷰는 수정 불가\n"
+=======
+      description: "작성한 리뷰를 수정합니다. multipart/form-data 형식.\n- data (application/json):\
+        \ 수정 정보 JSON\n- images (binary[], 선택): 새로 추가할 이미지\n- keepImageUrls + images\
+        \ 합계는 최대 4장\n- 기존 이미지 중 keepImageUrls에 없는 항목은 S3에서 자동 삭제\n- 적립금이 승인된 리뷰는 수\
+        정 불가\n"
+>>>>>>> Stashed changes
       operationId: review/update-review
       parameters:
       - name: reviewId
@@ -2086,7 +2129,11 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
+<<<<<<< Updated upstream
                     ratingCounts\":{\"2\":1,\"3\":2,\"4\":5,\"5\":7,\"1\":0}}}"
+=======
+                    ratingCounts\":{\"4\":5,\"3\":2,\"2\":1,\"1\":0,\"5\":7}}}"
+>>>>>>> Stashed changes
 components:
   schemas:
     ErrorResponse:

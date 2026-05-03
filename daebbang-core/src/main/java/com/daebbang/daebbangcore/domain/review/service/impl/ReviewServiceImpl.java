@@ -71,6 +71,10 @@ public class ReviewServiceImpl implements ReviewService {
         );
 
         List<String> uploadedUrls = uploadAll(images);
+<<<<<<< Updated upstream
+=======
+        registerS3CleanupOnRollback(uploadedUrls);
+>>>>>>> Stashed changes
         addImages(review, uploadedUrls);
         reviewRepository.save(review);
 
@@ -92,10 +96,24 @@ public class ReviewServiceImpl implements ReviewService {
         review.updateContent(command.rating(), command.content());
 
         List<String> existingUrls = review.getImages().stream().map(ReviewImage::getImageUrl).toList();
+<<<<<<< Updated upstream
+=======
+        Set<String> existingSet = new HashSet<>(existingUrls);
+        for (String keepUrl : keepUrls) {
+            if (!existingSet.contains(keepUrl)) {
+                throw new BusinessException(ImageErrorCode.INVALID_KEEP_IMAGE_URL);
+            }
+        }
+
+>>>>>>> Stashed changes
         Set<String> keepSet = new HashSet<>(keepUrls);
         List<String> removedUrls = existingUrls.stream().filter(url -> !keepSet.contains(url)).toList();
 
         List<String> uploadedUrls = uploadAll(newImages);
+<<<<<<< Updated upstream
+=======
+        registerS3CleanupOnRollback(uploadedUrls);
+>>>>>>> Stashed changes
 
         review.clearImages();
         List<String> finalUrls = new ArrayList<>(keepUrls.size() + uploadedUrls.size());
@@ -104,7 +122,10 @@ public class ReviewServiceImpl implements ReviewService {
         addImages(review, finalUrls);
 
         registerS3CleanupOnCommit(removedUrls);
+<<<<<<< Updated upstream
         registerS3CleanupOnRollback(uploadedUrls);
+=======
+>>>>>>> Stashed changes
     }
 
     @Override

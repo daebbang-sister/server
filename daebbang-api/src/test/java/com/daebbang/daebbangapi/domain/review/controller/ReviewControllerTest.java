@@ -14,6 +14,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestPartFields;
+import static org.springframework.restdocs.request.RequestDocumentation.partWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParts;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -166,6 +169,7 @@ class ReviewControllerTest {
                     .summary("리뷰 작성")
                     .description("""
                         주문 완료된 상품에 대해 리뷰를 작성합니다. multipart/form-data 형식.
+<<<<<<< Updated upstream
 
                         Parts:
                         - data (application/json) — 리뷰 정보 JSON
@@ -174,6 +178,10 @@ class ReviewControllerTest {
                           - content (string, required, 20~300자): 리뷰 내용
                         - images (binary[], optional, 최대 4장) — 첨부 이미지 (jpg, jpeg, png, webp)
 
+=======
+                        - data (application/json): 리뷰 정보 JSON
+                        - images (binary[], 선택, 최대 4장): 첨부 이미지 (jpg/jpeg/png/webp)
+>>>>>>> Stashed changes
                         - 이미지 없으면 일반 리뷰, 1장 이상이면 포토 리뷰 적립금 적용
                         - 적립금은 초기 대기 상태로 등록됨
                         """)
@@ -189,6 +197,14 @@ class ReviewControllerTest {
                         fieldWithPath("data").type(JsonFieldType.NULL).optional().description("없음")
                     )
                     .build()
+                ),
+                requestParts(
+                    partWithName("data").description("리뷰 정보 (application/json)")
+                ),
+                requestPartFields("data",
+                    fieldWithPath("orderDetailId").type(JsonFieldType.NUMBER).description("주문 상세 ID"),
+                    fieldWithPath("rating").type(JsonFieldType.NUMBER).description("별점 (1~5)"),
+                    fieldWithPath("content").type(JsonFieldType.STRING).description("리뷰 내용 (20~300자)")
                 )));
     }
 
@@ -232,6 +248,15 @@ class ReviewControllerTest {
                         fieldWithPath("data").type(JsonFieldType.NULL).optional().description("없음")
                     )
                     .build()
+                ),
+                requestParts(
+                    partWithName("data").description("리뷰 정보 (application/json)"),
+                    partWithName("images").description("첨부 이미지 (선택, 최대 4장, jpg/jpeg/png/webp)")
+                ),
+                requestPartFields("data",
+                    fieldWithPath("orderDetailId").type(JsonFieldType.NUMBER).description("주문 상세 ID"),
+                    fieldWithPath("rating").type(JsonFieldType.NUMBER).description("별점 (1~5)"),
+                    fieldWithPath("content").type(JsonFieldType.STRING).description("리뷰 내용 (20~300자)")
                 )));
     }
 
@@ -256,6 +281,7 @@ class ReviewControllerTest {
                 .file(imagePart("img3.jpg"))
                 .file(imagePart("img4.jpg"))
                 .file(imagePart("img5.jpg"))
+<<<<<<< Updated upstream
                 .with(authentication(AUTH))
                 .header("Authorization", "Bearer test-jwt-token")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
@@ -280,6 +306,32 @@ class ReviewControllerTest {
                 .with(authentication(AUTH))
                 .header("Authorization", "Bearer test-jwt-token")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
+=======
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("이미지는 최대 4장까지 등록 가능합니다."));
+    }
+
+    @Test
+    @DisplayName("POST /v1/reviews - 리뷰 내용이 20자 미만이면 400 반환")
+    void createReview_fail_contentTooShort() throws Exception {
+        String json = """
+            {
+                "orderDetailId": 100,
+                "rating": 5,
+                "content": "짧은 리뷰"
+            }
+            """;
+
+        mockMvc.perform(multipart("/v1/reviews")
+                .file(jsonPart(json))
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+>>>>>>> Stashed changes
             .andDo(print())
             .andExpect(status().isBadRequest());
 
@@ -428,6 +480,7 @@ class ReviewControllerTest {
                     .summary("리뷰 수정")
                     .description("""
                         작성한 리뷰를 수정합니다. multipart/form-data 형식.
+<<<<<<< Updated upstream
 
                         Parts:
                         - data (application/json) — 수정 정보 JSON
@@ -438,6 +491,12 @@ class ReviewControllerTest {
 
                         - keepImageUrls + images 합계는 최대 4장
                         - 기존 이미지 중 keepImageUrls에 없는 항목은 S3에서도 자동 삭제
+=======
+                        - data (application/json): 수정 정보 JSON
+                        - images (binary[], 선택): 새로 추가할 이미지
+                        - keepImageUrls + images 합계는 최대 4장
+                        - 기존 이미지 중 keepImageUrls에 없는 항목은 S3에서 자동 삭제
+>>>>>>> Stashed changes
                         - 적립금이 승인된 리뷰는 수정 불가
                         """)
                     .pathParameters(
@@ -455,6 +514,15 @@ class ReviewControllerTest {
                         fieldWithPath("data").type(JsonFieldType.NULL).optional().description("없음")
                     )
                     .build()
+                ),
+                requestParts(
+                    partWithName("data").description("리뷰 수정 정보 (application/json)"),
+                    partWithName("images").description("새로 추가할 이미지 (선택)")
+                ),
+                requestPartFields("data",
+                    fieldWithPath("rating").type(JsonFieldType.NUMBER).description("별점 (1~5)"),
+                    fieldWithPath("content").type(JsonFieldType.STRING).description("리뷰 내용 (20~300자)"),
+                    fieldWithPath("keepImageUrls").type(JsonFieldType.ARRAY).optional().description("유지할 기존 이미지 URL 목록 (선택)")
                 )));
     }
 
@@ -485,6 +553,34 @@ class ReviewControllerTest {
     }
 
     @Test
+<<<<<<< Updated upstream
+=======
+    @DisplayName("PUT /v1/reviews/{reviewId} - keepImageUrls가 기존 리뷰 이미지에 없으면 INVALID_KEEP_IMAGE_URL")
+    void updateReview_fail_invalidKeepImageUrl() throws Exception {
+        willThrow(new BusinessException(ImageErrorCode.INVALID_KEEP_IMAGE_URL))
+            .given(reviewService).updateReview(any());
+
+        String json = """
+            {
+                "rating": 4,
+                "content": "수정된 리뷰입니다. 두 번째 방문이었는데 여전히 맛있네요.",
+                "keepImageUrls": ["https://s3.example.com/review/not-mine.jpg"]
+            }
+            """;
+
+        mockMvc.perform(multipart("/v1/reviews/{reviewId}", 1L)
+                .file(jsonPart(json))
+                .with(req -> { req.setMethod("PUT"); return req; })
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("유지할 수 없는 이미지가 포함되어 있습니다."));
+    }
+
+    @Test
+>>>>>>> Stashed changes
     @DisplayName("PUT /v1/reviews/{reviewId} - 인증 없이 접근 시 401 반환")
     void updateReview_unauthorized() throws Exception {
         String json = """
