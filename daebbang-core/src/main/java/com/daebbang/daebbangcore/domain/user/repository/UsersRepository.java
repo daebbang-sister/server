@@ -87,4 +87,19 @@ public interface UsersRepository extends JpaRepository<@NonNull Users, @NonNull 
         @Param("email") String email,
         @Param("excludeStatus") UserStatus excludeStatus
     );
+
+    @Query("""
+    SELECT u
+    FROM Users u
+    WHERE u.name = :username
+      AND u.loginId = :loginId
+      AND u.email = :email
+      AND u.status != :excludeStatus
+    """)
+    Optional<Users> findActiveUser(
+        @Param("username") String username,
+        @Param("loginId") String loginId,
+        @Param("email") String email,
+        @Param("excludeStatus") UserStatus excludeStatus
+    );
 }

@@ -6,7 +6,6 @@ import com.daebbang.daebbangapi.domain.user.dto.response.UserIdFind;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
-import com.daebbang.daebbangcore.infra.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserInfoController {
 
     private final UserService userService;
-    private final EmailService emailService;
 
     @GetMapping("/id")
     public CommonResponse<UserIdFind> findUserIdListByUsernameAndEmail(
@@ -39,8 +37,7 @@ public class UserInfoController {
     public ResponseEntity<@NonNull CommonResponse<Void>> findUserPasswordByUserInfo(
         @Valid @RequestBody UserPasswordFindRequest request
     ) {
-        userService.verifyUserActiveToFindPassword(request.username(), request.userId(), request.userEmail());
-        emailService.sendTemporaryPassword(request.userEmail());
+        userService.issueTemporaryPassword(request.username(), request.userId(), request.userEmail());
         return ResponseEntity
                             .status(HttpStatus.CREATED)
                             .body(CommonResponse.success(UserSuccessCode.SEND_EMAIL));

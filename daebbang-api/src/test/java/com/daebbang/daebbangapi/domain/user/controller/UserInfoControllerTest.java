@@ -21,7 +21,6 @@ import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
-import com.daebbang.daebbangcore.infra.service.EmailService;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 import java.util.List;
@@ -52,9 +51,6 @@ public class UserInfoControllerTest {
 
     @MockitoBean
     private UserService userService;
-
-    @MockitoBean
-    private EmailService emailService;
 
     @Test
     @DisplayName("GET /v1/users/find/id - 아이디 찾기 성공")
@@ -218,8 +214,7 @@ public class UserInfoControllerTest {
         // given
         UserPasswordFindRequest request = new UserPasswordFindRequest("홍길동", "testuser123", "test@example.com");
 
-        willDoNothing().given(userService).verifyUserActiveToFindPassword("홍길동", "testuser123", "test@example.com");
-        willDoNothing().given(emailService).sendTemporaryPassword("test@example.com");
+        willDoNothing().given(userService).issueTemporaryPassword("홍길동", "testuser123", "test@example.com");
 
         // when & then
         mockMvc.perform(post("/v1/users/find/password")
@@ -383,7 +378,7 @@ public class UserInfoControllerTest {
         UserPasswordFindRequest request = new UserPasswordFindRequest("홍길동", "testuser123", "test@example.com");
 
         willThrow(new BusinessException(UserErrorCode.USER_NOT_FOUND))
-            .given(userService).verifyUserActiveToFindPassword("홍길동", "testuser123", "test@example.com");
+            .given(userService).issueTemporaryPassword("홍길동", "testuser123", "test@example.com");
 
         // when & then
         mockMvc.perform(post("/v1/users/find/password")
