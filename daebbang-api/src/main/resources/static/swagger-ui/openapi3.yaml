@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"zipCode\":\"\
-                  12345\",\"alias\":\"집\",\"isDefault\":true,\"address\":\"서울시 강남구\
-                  \ 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\"}"
+                value: "{\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\"\
+                  :true,\"address\":\"서울시 강남구 테헤란로\"}"
               address/add-address-limit-exceeded:
-                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
-                  ,\"detailAddress\":\"101호\"}"
+                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
+                  :\"12345\",\"receiver\":\"홍길동\"}"
       responses:
         "201":
           description: "201"
@@ -492,7 +492,7 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=uFxY73ONOagoMzx1EJOiYyakqn3xWqc8WNzM8CPhFb4TiJmk3WQ93BW7Cs0FUV1Gdb6WABPBh0XFbJYRbOX1kkWFI9olu6HC
+                value: _csrf=F1MKvbOsNDv5Wp28pb0KM0WIUWUZwhJHmYArc-1qLhbv3jtHIWE4jYSaV1_UPKWOwJA-Cn2wfAd9-yRq-rAcRd8LGiKNuF90
       responses:
         "200":
           description: "200"
@@ -637,13 +637,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"zipCode\":\"\
-                  54321\",\"alias\":\"회사\",\"isDefault\":false,\"address\":\"서울시 서\
-                  초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\":\"김철수\"}"
+                value: "{\"detailAddress\":\"202호\",\"receiver\":\"김철수\",\"receiverPhoneNumber\"\
+                  :\"010-9876-5432\",\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\"\
+                  :false,\"address\":\"서울시 서초구 반포대로\"}"
               address/update-address-not-found:
-                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
-                  ,\"detailAddress\":\"101호\"}"
+                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
+                  :\"12345\",\"receiver\":\"홍길동\"}"
       responses:
         "200":
           description: "200"
@@ -692,9 +692,9 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
-                value: _csrf=31yH34Jf5t2TX3KfXhNaQs14ebzLoWzJokLyhmE26kmTAP2suj7i7uA81OS-akarPz5uIK5PVN75lljkkyeXtVZQ3nGlY86a
+                value: _csrf=om6S_q5lv7im4x4KeBHuM2JLHYtCOG_eIybIxpmZDg2BHzfQmgyqyplT246L1CpsHjzaClV4MOp0DA3zEBD496n6aj_keVHk
               address/delete-address-not-found:
-                value: _csrf=uXmHmTjEIIkOJDy52AaVqfaWJOdA0Mc-auncbixc34Uc4JLe20q-_A-gRr0jQgiKuyuhmMPwCd5ys6MTDNzlWxlp67N-2fS4
+                value: _csrf=A2xDL1s23UPh_2lVG84xZdaJ3LDe0FqA4cGxbbpMsxSNpFr6ZlgmTTgBuHXMz11sf-MFU-C58dLssTyt06CCXY4v0XG5lWnD
       responses:
         "200":
           description: "200"
