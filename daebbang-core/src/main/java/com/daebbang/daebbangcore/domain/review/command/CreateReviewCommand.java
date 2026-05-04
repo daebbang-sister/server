@@ -1,5 +1,6 @@
 package com.daebbang.daebbangcore.domain.review.command;
 
+import com.daebbang.daebbangcore.infra.storage.UploadFile;
 import java.util.List;
 
 public record CreateReviewCommand(
@@ -7,6 +8,6 @@ public record CreateReviewCommand(
     Long orderDetailId,
     int rating,
     String content,
-    List<String> imageUrls
+    List<UploadFile> images
 ) {
 }

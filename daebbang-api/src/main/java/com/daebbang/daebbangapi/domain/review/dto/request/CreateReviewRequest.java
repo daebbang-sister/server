@@ -1,6 +1,7 @@
 package com.daebbang.daebbangapi.domain.review.dto.request;
 
 import com.daebbang.daebbangcore.domain.review.command.CreateReviewCommand;
+import com.daebbang.daebbangcore.infra.storage.UploadFile;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -19,12 +20,9 @@ public record CreateReviewRequest(
 
     @NotBlank(message = "리뷰 내용은 필수입니다.")
     @Size(min = 20, max = 300, message = "리뷰 내용은 최소 20자, 최대 300자입니다.")
-    String content,
-
-    @Size(max = 4, message = "이미지는 최대 4장까지 등록 가능합니다.")
-    List<String> imageUrls
+    String content
 ) {
-    public CreateReviewCommand toCommand(Long userId) {
-        return new CreateReviewCommand(userId, orderDetailId, rating, content, imageUrls);
+    public CreateReviewCommand toCommand(Long userId, List<UploadFile> images) {
+        return new CreateReviewCommand(userId, orderDetailId, rating, content, images);
     }
 }
