@@ -119,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
 
         LocalDate today = LocalDate.now();
         boolean reserved = false;
-        String orderNumber;
+        String orderNumber = null;
         int paymentAmount;
         try {
             for (OrderItemCommand item : command.items()) {
@@ -163,10 +163,11 @@ public class OrderServiceImpl implements OrderService {
                 .mapToInt(OrderSessionItem::getDiscountPrice)
                 .sum();
 
-            int shippingFee = command.shippingFee();
-            if (totalSellingAmount >= FREE_SHIPPING_THRESHOLD && shippingFee != 0) {
+            int expectedShippingFee = totalSellingAmount >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_FEE;
+            if (command.shippingFee() != expectedShippingFee) {
                 throw new BusinessException(OrderErrorCode.ORDER_SHIPPING_FEE_INVALID);
             }
+            int shippingFee = expectedShippingFee;
 
             if (command.usedPoint() > totalSellingAmount + shippingFee) {
                 throw new BusinessException(OrderErrorCode.POINT_EXCEEDS_PAYMENT);
@@ -197,6 +198,18 @@ public class OrderServiceImpl implements OrderService {
             reserved = true;
         } finally {
             if (!reserved) {
+                if (orderNumber != null) {
+                    try {
+                        orderSessionRedisRepository.delete(orderNumber);
+                    } catch (Exception e) {
+                        log.warn("[Order] prepare 보상 - orderSession 삭제 실패: orderNumber={}", orderNumber, e);
+                    }
+                    try {
+                        stockReserveRedisRepository.delete(orderNumber);
+                    } catch (Exception e) {
+                        log.warn("[Order] prepare 보상 - stockReserve 삭제 실패: orderNumber={}", orderNumber, e);
+                    }
+                }
                 decreasedStocks.forEach(stockCacheService::restoreStock);
             }
         }
