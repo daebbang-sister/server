@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
-                  :\"010-1234-5678\",\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\"\
-                  :true,\"address\":\"서울시 강남구 테헤란로\"}"
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"isDefault\":true,\"alias\"\
+                  :\"집\",\"zipCode\":\"12345\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"receiver\":\"홍길동\",\"detailAddress\":\"101호\"}"
               address/add-address-limit-exceeded:
-                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
-                  :\"12345\",\"receiver\":\"홍길동\"}"
+                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
+                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
       responses:
         "201":
           description: "201"
@@ -489,10 +489,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-users486549215'
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=ccRgZx8Vd6g7M_ZeVa13RNoqsa2crJSQs_5ALLsGrgeyu-1BEvICUi4mQpkWUZVvN4BDcb9LnJWtyqO9hJ15Ttpin2WHjNRx
+                value: _csrf=q1n7Exevu8dezsspnGygMq7efgzFYE8mToeSs0YsS3pNSoTAyGzOIyfO3aRz961LqEGUB5a_UzTyVSsLeuXwhCdPfEIpe7ym
       responses:
         "200":
           description: "200"
@@ -637,13 +637,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"detailAddress\":\"202호\",\"receiver\":\"김철수\",\"receiverPhoneNumber\"\
-                  :\"010-9876-5432\",\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\"\
-                  :false,\"address\":\"서울시 서초구 반포대로\"}"
+                value: "{\"address\":\"서울시 서초구 반포대로\",\"isDefault\":false,\"alias\"\
+                  :\"회사\",\"zipCode\":\"54321\",\"receiverPhoneNumber\":\"010-9876-5432\"\
+                  ,\"receiver\":\"김철수\",\"detailAddress\":\"202호\"}"
               address/update-address-not-found:
-                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
-                  :\"12345\",\"receiver\":\"홍길동\"}"
+                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
+                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
       responses:
         "200":
           description: "200"
@@ -689,12 +689,12 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-users486549215'
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
-                value: _csrf=aQsaJg_ntsJORTwyoe29btC9M3h9LoBltbbv7F3WyGOrtbN_Cj8pQ23QhKRjdwkGx8CJWbGKHkAfHbFIgIGO2muw-Qaah4Ud
+                value: _csrf=Wfm93pgNjGUaV3vFIQ9DWvTCFT3HndZO8YhjWzNjngQykow1PMiE7K1sugc3YUj9RCJ3bJDyOAX1_OJjkrxQbgdX-j0A8bhQ
               address/delete-address-not-found:
-                value: _csrf=MDnEKLO7APSY91UwfNY68Zn2dqcXHpApVciqlv0dZDNUFj5kCQDyH4eCZZW1k2JWGfsOw6nDW8UvePEEM6vPppsoVwNncwxT
+                value: _csrf=kQlfKRF9nG15N2U1E3b54pGujsmWPhOZ7KTe5Olosnh2mo2gqG9tGiAc-ltUUlxTK1vN0qCXo_GkByG02JLp1o0J0xpH-7WS
       responses:
         "200":
           description: "200"
@@ -1391,7 +1391,7 @@ paths:
               examples:
                 sms/send-auth-code:
                   value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
-                    니다.\",\"data\":{\"authCode\":\"123456\"}}"
+                    니다.\",\"data\":null}"
         "409":
           description: "409"
           content:
@@ -1889,7 +1889,7 @@ paths:
               examples:
                 sms/send-auth-code-change:
                   value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
-                    니다.\",\"data\":{\"authCode\":\"123456\"}}"
+                    니다.\",\"data\":null}"
         "409":
           description: "409"
           content:
@@ -2228,7 +2228,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"5\":7,\"4\":5,\"3\":2,\"2\":1,\"1\":0}}}"
+                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
 components:
   schemas:
     ErrorResponse:
@@ -2421,6 +2421,13 @@ components:
         email:
           type: string
           description: 이메일 주소
+    SmsSendRequest:
+      title: SmsSendRequest
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
     CartUpdateRequest:
       title: CartUpdateRequest
       type: object
@@ -2431,13 +2438,6 @@ components:
         quantity:
           type: number
           description: 변경할 수량
-    SmsSendRequest:
-      title: SmsSendRequest
-      type: object
-      properties:
-        phoneNumber:
-          type: string
-          description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
     WishListPageResponse:
       title: WishListPageResponse
       type: object
@@ -3040,6 +3040,22 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    SmsSendResponse:
+      title: SmsSendResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     LogoutResponse:
       title: LogoutResponse
       type: object
@@ -3337,7 +3353,7 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-users486549215:
+    v1-addresses-addressId486549215:
       type: object
     MyInfoEditResponse:
       title: MyInfoEditResponse
@@ -3601,26 +3617,6 @@ components:
             totalElements:
               type: number
               description: 전체 검색 결과 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    SmsSendResponse:
-      title: SmsSendResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            authCode:
-              type: string
-              description: 발송된 인증번호 (6자리)
-          description: 발송 결과
         success:
           type: boolean
           description: 성공 여부

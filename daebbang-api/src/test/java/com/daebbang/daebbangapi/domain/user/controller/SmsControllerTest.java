@@ -84,7 +84,7 @@ class SmsControllerTest {
         String authCode = "123456";
 
         willDoNothing().given(userService).existsByPhoneNumber(anyString());
-        given(smsService.sendAuthMessage(anyString())).willReturn(authCode);
+        willDoNothing().given(smsService).sendAuthMessage(anyString());
 
         // when & then
         mockMvc.perform(post("/v1/sms/send")
@@ -96,7 +96,6 @@ class SmsControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.status").value(201))
             .andExpect(jsonPath("$.message").value("생성에 성공하였습니다."))
-            .andExpect(jsonPath("$.data.authCode").value(authCode))
             .andDo(document("sms/send-auth-code",
                 resource(ResourceSnippetParameters.builder()
                     .tag("SMS")
@@ -111,8 +110,7 @@ class SmsControllerTest {
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.OBJECT).description("발송 결과"),
-                        fieldWithPath("data.authCode").type(JsonFieldType.STRING).description("발송된 인증번호 (6자리)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
@@ -282,7 +280,7 @@ class SmsControllerTest {
         SmsSendRequest request = new SmsSendRequest("010-9999-8888");
         String authCode = "123456";
 
-        given(userService.sendChangePhoneAuthCode(anyLong(), anyString())).willReturn(authCode);
+        willDoNothing().given(userService).sendChangePhoneAuthCode(anyLong(), anyString());
 
         mockMvc.perform(post("/v1/sms/send/change")
                 .with(authentication(AUTH))
@@ -294,7 +292,6 @@ class SmsControllerTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.status").value(201))
-            .andExpect(jsonPath("$.data.authCode").value(authCode))
             .andDo(document("sms/send-auth-code-change",
                 resource(ResourceSnippetParameters.builder()
                     .tag("SMS")
@@ -312,8 +309,7 @@ class SmsControllerTest {
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.OBJECT).description("발송 결과"),
-                        fieldWithPath("data.authCode").type(JsonFieldType.STRING).description("발송된 인증번호 (6자리)")
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));

@@ -17,6 +17,7 @@ import com.daebbang.daebbangcore.infra.service.EmailService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
 import com.daebbang.daebbangcore.infra.util.EmailUtils;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -115,7 +116,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String sendChangePhoneAuthCode(Long userId, String newPhoneNumber) {
+    public void sendChangePhoneAuthCode(Long userId, String newPhoneNumber) {
         Users user = getUserById(userId);
         if (newPhoneNumber.equals(user.getPhoneNumber())) {
             throw new BusinessException(UserErrorCode.SAME_PHONE_NUMBER);
@@ -123,7 +124,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsPhoneNumberExcludingSelf(newPhoneNumber, userId, UserStatus.WITHDRAWN)) {
             throw new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER);
         }
-        return smsService.sendAuthMessage(newPhoneNumber);
+        smsService.sendAuthMessage(newPhoneNumber);
     }
 
     @Override
@@ -135,24 +136,24 @@ public class UserServiceImpl implements UserService {
             if (!user.isLocal()) {
                 throw new BusinessException(UserErrorCode.SOCIAL_PASSWORD_NOT_ALLOWED);
             }
-            if (!command.password().equals(command.passwordConfirm())) {
+            if (!Objects.requireNonNull(command.password()).equals(command.passwordConfirm())) {
                 throw new BusinessException(UserErrorCode.PASSWORD_CONFIRM_MISMATCH);
             }
             user.updatePassword(passwordPort.encode(command.password()));
         }
 
-        if (command.hasPhoneNumber() && !command.phoneNumber().equals(user.getPhoneNumber())) {
-            if (userRepository.existsPhoneNumberExcludingSelf(command.phoneNumber(), userId, UserStatus.WITHDRAWN)) {
-                throw new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER);
-            }
+        if (command.hasPhoneNumber() && !Objects.requireNonNull(command.phoneNumber()).equals(user.getPhoneNumber())) {
             if (!smsService.isVerified(command.phoneNumber())) {
                 throw new BusinessException(SmsErrorCode.AUTH_CODE_EXPIRED);
+            }
+            if (userRepository.existsPhoneNumberExcludingSelf(command.phoneNumber(), userId, UserStatus.WITHDRAWN)) {
+                throw new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER);
             }
             user.updatePhoneNumber(command.phoneNumber());
             smsService.deleteVerification(command.phoneNumber());
         }
 
-        if (command.hasEmail() && !command.email().equals(user.getEmail())) {
+        if (command.hasEmail() && !Objects.requireNonNull(command.email()).equals(user.getEmail())) {
             user.updateEmail(command.email());
         }
     }

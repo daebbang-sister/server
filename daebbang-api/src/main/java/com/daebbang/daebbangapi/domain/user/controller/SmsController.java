@@ -28,23 +28,23 @@ public class SmsController {
     private final UserService userService;
 
     @PostMapping("/send")
-    public ResponseEntity<@NonNull CommonResponse<SmsSendAuthCode>> generateAuthCode(
+    public ResponseEntity<@NonNull CommonResponse<Void>> generateAuthCode(
         @Valid @RequestBody SmsSendRequest request
     ) {
         userService.existsByPhoneNumber(request.phoneNumber());
-        String authCode = smsService.sendAuthMessage(request.phoneNumber());
+        smsService.sendAuthMessage(request.phoneNumber());
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS, SmsSendAuthCode.toDto(authCode)));
+            .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS));
     }
 
     @PostMapping("/send/change")
-    public ResponseEntity<@NonNull CommonResponse<SmsSendAuthCode>> generateAuthCodeForChange(
+    public ResponseEntity<@NonNull CommonResponse<Void>> generateAuthCodeForChange(
         @AuthenticationPrincipal Long userId,
         @Valid @RequestBody SmsSendRequest request
     ) {
-        String authCode = userService.sendChangePhoneAuthCode(userId, request.phoneNumber());
+        userService.sendChangePhoneAuthCode(userId, request.phoneNumber());
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS, SmsSendAuthCode.toDto(authCode)));
+            .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS));
     }
 
     @PostMapping("/verify")

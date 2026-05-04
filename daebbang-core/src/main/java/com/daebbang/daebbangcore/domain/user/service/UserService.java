@@ -11,7 +11,7 @@ public interface UserService {
     void joinOrUpdateSocial(Provider provider, String providerId, String name, String email, String phoneNumber);
     void existsByPhoneNumber(String phoneNumber);
     void existsActiveUsers(String loginId);
-    String sendChangePhoneAuthCode(Long userId, String newPhoneNumber);
+    void sendChangePhoneAuthCode(Long userId, String newPhoneNumber);
     void issueTemporaryPassword(String username, String userId, String email);
     Users getUser(String loginId);
     Users getUserById(Long userId);

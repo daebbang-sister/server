@@ -26,7 +26,7 @@ public class SmsService {
     private final RedisService redisService;
     private final DefaultMessageService messageService;
 
-    public String sendAuthMessage(String phoneNumber) {
+    public void sendAuthMessage(String phoneNumber) {
         String authCode = SMSUtils.generateAuthCode();
         String authMessage = SMSUtils.generateAuthMessage(authCode);
 
@@ -47,8 +47,6 @@ public class SmsService {
         }
 
         redisService.setData(SMS_KEY + phoneNumber, authCode, Duration.ofMinutes(5));
-
-        return authCode;
     }
 
     public void verifyAuthCode(String phoneNumber, String authCode) {
