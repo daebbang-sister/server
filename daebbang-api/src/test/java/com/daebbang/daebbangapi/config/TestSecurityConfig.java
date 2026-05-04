@@ -24,6 +24,14 @@ import org.springframework.security.web.SecurityFilterChain;
 @TestConfiguration
 public class TestSecurityConfig {
 
+    /**
+     * Create a test SecurityFilterChain that disables CSRF, form login, and HTTP Basic,
+     * permits a predefined set of public endpoints, requires authentication for all others,
+     * uses stateless sessions, and responds with HTTP 401 for unauthenticated requests.
+     *
+     * @param http the HttpSecurity builder to configure
+     * @return a SecurityFilterChain configured for tests where selected endpoints are publicly accessible
+     */
     @Bean
     @Order(0)
     public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {

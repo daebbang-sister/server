@@ -34,6 +34,12 @@ public class UserController {
     private final UserService userService;
     private final AddressService addressService;
 
+    /**
+     * Retrieve the authenticated user's profile information, including their default address when present.
+     *
+     * @param userId the authenticated user's ID extracted from the security context
+     * @return a CommonResponse containing a UserInfo DTO with the user's profile and default address; marked with success code {@code USER_RETRIEVED}
+     */
     @GetMapping
     public ResponseEntity<@NonNull CommonResponse<UserInfo>> getUser(@AuthenticationPrincipal Long userId) {
         Users user = userService.getUserById(userId);
@@ -44,6 +50,12 @@ public class UserController {
                             .body(CommonResponse.success(UserSuccessCode.USER_RETRIEVED, info));
     }
 
+    /**
+     * Retrieve the authenticated user's editable profile information.
+     *
+     * @param userId the authenticated user's ID extracted from the security principal
+     * @return a ResponseEntity containing a successful CommonResponse with a MyInfoEdit DTO and HTTP status 200 (OK)
+     */
     @GetMapping("/me/edit")
     public ResponseEntity<@NonNull CommonResponse<MyInfoEdit>> getMyInfoForEdit(@AuthenticationPrincipal Long userId) {
         Users user = userService.getUserById(userId);
@@ -52,6 +64,13 @@ public class UserController {
                             .body(CommonResponse.success(UserSuccessCode.USER_RETRIEVED, MyInfoEdit.from(user)));
     }
 
+    /**
+     * Updates the authenticated user's profile with the provided data.
+     *
+     * @param userId the authenticated user's id
+     * @param request the update payload containing new profile values
+     * @return a CommonResponse with no content indicating the user was updated ({@code UserSuccessCode.USER_UPDATED})
+     */
     @PatchMapping("/me")
     public ResponseEntity<@NonNull CommonResponse<Void>> updateMyInfo(
         @AuthenticationPrincipal Long userId,
@@ -63,6 +82,12 @@ public class UserController {
                             .body(CommonResponse.success(UserSuccessCode.USER_UPDATED));
     }
 
+    /**
+     * Withdraws (deletes) the authenticated user's account.
+     *
+     * @param userId the authenticated user's ID extracted from the security context
+     * @return a ResponseEntity containing a CommonResponse<Void> with success code USER_WITHDRAWN and HTTP status 200 OK
+     */
     @DeleteMapping
     public ResponseEntity<@NonNull CommonResponse<Void>> withdrawUser(@AuthenticationPrincipal Long userId) {
         userService.withdraw(userId);

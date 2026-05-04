@@ -109,11 +109,27 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
     }
 
+    /**
+     * Retrieve active users that match the given username and email for account lookup.
+     *
+     * @param username the username to match
+     * @param email the email to match
+     * @return a list of active Users that match the provided username and email (excludes withdrawn users)
+     */
     @Override
     public List<Users> getUsersByFindLoginId(String username, String email) {
         return userRepository.findActiveUserIdsByUsernameAndEmail(username, email, UserStatus.WITHDRAWN);
     }
 
+    /**
+     * Sends an SMS authentication code to verify a requested phone number change.
+     *
+     * @param userId the id of the user requesting the phone number change
+     * @param newPhoneNumber the new phone number to verify
+     * @return the authentication code or message identifier returned by the SMS service
+     * @throws BusinessException if the new phone number is identical to the user's current number (UserErrorCode.SAME_PHONE_NUMBER)
+     * @throws BusinessException if the new phone number is already used by another active user (UserErrorCode.DUPLICATE_PHONE_NUMBER)
+     */
     @Override
     public String sendChangePhoneAuthCode(Long userId, String newPhoneNumber) {
         Users user = getUserById(userId);
@@ -126,6 +142,18 @@ public class UserServiceImpl implements UserService {
         return smsService.sendAuthMessage(newPhoneNumber);
     }
 
+    /**
+     * Updates the authenticated user's profile fields (password, phone number, email) according to the provided command.
+     *
+     * Password update: only allowed for local users, requires password and confirmation to match, and the password is encoded before saving.
+     * Phone number update: only applied when different from current number; requires the new number to be unique (excluding the current user) and SMS verification, and removes the verification record after update.
+     * Email update: applied when different from the current email.
+     *
+     * @param userId  the id of the user to update
+     * @param command the update command containing optional password, phone number, and email changes
+     * @throws BusinessException if attempting to set a password for a social user (UserErrorCode.SOCIAL_PASSWORD_NOT_ALLOWED), if password confirmation does not match (UserErrorCode.PASSWORD_CONFIRM_MISMATCH), or if the new phone number is already used by another active user (UserErrorCode.DUPLICATE_PHONE_NUMBER)
+     * @throws BusinessException if SMS verification for the new phone number is missing or expired (SmsErrorCode.AUTH_CODE_EXPIRED)
+     */
     @Override
     @Transactional
     public void updateMyInfo(Long userId, MyInfoUpdateCommand command) {
@@ -157,6 +185,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * Marks the specified user as withdrawn and removes all addresses associated with the user.
+     *
+     * @param userId the identifier of the user to withdraw
+     */
     @Override
     @Transactional
     public void withdraw(Long userId) {

@@ -14,6 +14,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UsersRepository extends JpaRepository<@NonNull Users, @NonNull Long> {
 
+    /**
+     * Checks whether any user exists with the given phone number while excluding users with a specific status.
+     *
+     * @param phoneNumber   the phone number to search for
+     * @param excludeStatus the user status to exclude from the search
+     * @return              `true` if at least one matching user exists, `false` otherwise
+     */
     @Query("""
     SELECT COUNT(u) > 0
     FROM Users u
@@ -25,6 +32,14 @@ public interface UsersRepository extends JpaRepository<@NonNull Users, @NonNull 
         @Param("excludeStatus") UserStatus excludeStatus
     );
 
+    /**
+     * Determines whether any user other than the specified user has the given phone number while excluding users with the provided status.
+     *
+     * @param phoneNumber the phone number to check
+     * @param excludeUserId the ID of the user to exclude from the check
+     * @param excludeStatus the user status value to exclude from matching
+     * @return `true` if at least one matching user exists, `false` otherwise
+     */
     @Query("""
     SELECT COUNT(u) > 0
     FROM Users u
@@ -38,6 +53,13 @@ public interface UsersRepository extends JpaRepository<@NonNull Users, @NonNull 
         @Param("excludeStatus") UserStatus excludeStatus
     );
 
+    /**
+     * Determines whether a user with the given login ID exists and does not have the specified excluded status.
+     *
+     * @param loginId the login identifier to search for
+     * @param excludeStatus the user status value to exclude from the existence check
+     * @return `true` if at least one user with `loginId` exists whose status is not equal to `excludeStatus`, `false` otherwise
+     */
     @Query("""
     SELECT COUNT(u) > 0
     FROM Users u
