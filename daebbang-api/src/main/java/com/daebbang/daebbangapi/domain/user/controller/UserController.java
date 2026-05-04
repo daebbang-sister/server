@@ -2,6 +2,8 @@ package com.daebbang.daebbangapi.domain.user.controller;
 
 import com.daebbang.daebbangapi.domain.user.dto.request.CheckDuplicationIdRequest;
 import com.daebbang.daebbangapi.domain.user.dto.request.JoinRequest;
+import com.daebbang.daebbangapi.domain.user.dto.request.MyInfoUpdateRequest;
+import com.daebbang.daebbangapi.domain.user.dto.response.MyInfoEdit;
 import com.daebbang.daebbangapi.domain.user.dto.response.UserInfo;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
@@ -18,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +42,25 @@ public class UserController {
         return ResponseEntity
                             .status(HttpStatus.OK)
                             .body(CommonResponse.success(UserSuccessCode.USER_RETRIEVED, info));
+    }
+
+    @GetMapping("/me/edit")
+    public ResponseEntity<@NonNull CommonResponse<MyInfoEdit>> getMyInfoForEdit(@AuthenticationPrincipal Long userId) {
+        Users user = userService.getUserById(userId);
+        return ResponseEntity
+                            .status(HttpStatus.OK)
+                            .body(CommonResponse.success(UserSuccessCode.USER_RETRIEVED, MyInfoEdit.from(user)));
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<@NonNull CommonResponse<Void>> updateMyInfo(
+        @AuthenticationPrincipal Long userId,
+        @Valid @RequestBody MyInfoUpdateRequest request
+    ) {
+        userService.updateMyInfo(userId, request.toCommand());
+        return ResponseEntity
+                            .status(HttpStatus.OK)
+                            .body(CommonResponse.success(UserSuccessCode.USER_UPDATED));
     }
 
     @DeleteMapping

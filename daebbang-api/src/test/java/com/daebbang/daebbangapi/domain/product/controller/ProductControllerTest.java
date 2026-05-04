@@ -906,7 +906,7 @@ class ProductControllerTest {
 
     private Review mockReview(boolean withImage, boolean withReply) {
         Review review = mock(Review.class);
-        Users user = Users.createLocalUser("testuser123", "encoded", "홍길동", "test@example.com", "01012345678");
+        Users user = Users.createLocalUser("testuser123", "encoded", "홍길동", "test@example.com", "010-1234-5678");
 
         when(review.getId()).thenReturn(1L);
         when(review.getUser()).thenReturn(user);

@@ -4,7 +4,6 @@ import com.daebbang.daebbangapi.domain.user.dto.request.SmsSendRequest;
 import com.daebbang.daebbangapi.domain.user.dto.request.SmsVerifyRequest;
 import com.daebbang.daebbangapi.domain.user.dto.response.SmsSendAuthCode;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
-import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.success.CommonSuccessCode;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
@@ -14,6 +13,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,13 +28,23 @@ public class SmsController {
     private final UserService userService;
 
     @PostMapping("/send")
-    public ResponseEntity<@NonNull CommonResponse<SmsSendAuthCode>> generateAuthCode(
+    public ResponseEntity<@NonNull CommonResponse<Void>> generateAuthCode(
         @Valid @RequestBody SmsSendRequest request
     ) {
         userService.existsByPhoneNumber(request.phoneNumber());
-        String authCode = smsService.sendAuthMessage(request.phoneNumber());
+        smsService.sendAuthMessage(request.phoneNumber());
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS, SmsSendAuthCode.toDto(authCode)));
+            .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS));
+    }
+
+    @PostMapping("/send/change")
+    public ResponseEntity<@NonNull CommonResponse<Void>> generateAuthCodeForChange(
+        @AuthenticationPrincipal Long userId,
+        @Valid @RequestBody SmsSendRequest request
+    ) {
+        userService.sendChangePhoneAuthCode(userId, request.phoneNumber());
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS));
     }
 
     @PostMapping("/verify")

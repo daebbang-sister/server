@@ -36,10 +36,10 @@ paths:
                 address/get-addresses:
                   value: "{\"success\":true,\"status\":200,\"message\":\"주소 목록 조회에\
                     \ 성공하였습니다.\",\"data\":[{\"addressId\":null,\"alias\":\"집\",\"\
-                    receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\",\"\
+                    receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\",\"\
                     zipCode\":\"12345\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
                     :\"101호\",\"isDefault\":true},{\"addressId\":null,\"alias\":\"\
-                    집\",\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                    집\",\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                     ,\"zipCode\":\"12345\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
                     :\"101호\",\"isDefault\":false}]}"
                 address/get-addresses-empty:
@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\":true,\"\
-                  address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
-                  :\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"isDefault\":true,\"alias\"\
+                  :\"집\",\"zipCode\":\"12345\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"receiver\":\"홍길동\",\"detailAddress\":\"101호\"}"
               address/add-address-limit-exceeded:
-                value: "{\"receiver\":\"홍길동\",\"detailAddress\":\"101호\",\"address\"\
-                  :\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\"\
-                  :false,\"zipCode\":\"12345\"}"
+                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
+                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
       responses:
         "201":
           description: "201"
@@ -492,7 +492,7 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=P-PItv7ufMwD8Xymdn-iPB1_CG20HRf9FdZAodxI_8kdLiMtW9X5hcbcSf8uwBmQQlKWWSxKJVXSJXLQLe5wmeRxnPx_FhMV
+                value: _csrf=q1n7Exevu8dezsspnGygMq7efgzFYE8mToeSs0YsS3pNSoTAyGzOIyfO3aRz961LqEGUB5a_UzTyVSsLeuXwhCdPfEIpe7ym
       responses:
         "200":
           description: "200"
@@ -637,13 +637,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\":false,\"\
-                  address\":\"서울시 서초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\"\
-                  :\"김철수\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
+                value: "{\"address\":\"서울시 서초구 반포대로\",\"isDefault\":false,\"alias\"\
+                  :\"회사\",\"zipCode\":\"54321\",\"receiverPhoneNumber\":\"010-9876-5432\"\
+                  ,\"receiver\":\"김철수\",\"detailAddress\":\"202호\"}"
               address/update-address-not-found:
-                value: "{\"receiver\":\"홍길동\",\"detailAddress\":\"101호\",\"address\"\
-                  :\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\"\
-                  :false,\"zipCode\":\"12345\"}"
+                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
+                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
       responses:
         "200":
           description: "200"
@@ -692,9 +692,9 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
-                value: _csrf=OLt2d13-IjEqIRLp1dot9qkhnmE7t1YgpEU2W7vyyJomCCjvCtpBQGyYFwQHFSLb7fcZzs9HswNa0jANliBXadmWq6sebhnc
+                value: _csrf=Wfm93pgNjGUaV3vFIQ9DWvTCFT3HndZO8YhjWzNjngQykow1PMiE7K1sugc3YUj9RCJ3bJDyOAX1_OJjkrxQbgdX-j0A8bhQ
               address/delete-address-not-found:
-                value: _csrf=vBJsjpDU2MOflNrgK8wiemwNy6hRBsDG87WVwNDn6I0YlXnziyMI6qTtu_KyouLTTeEWHFk95pE1Z_Prx9Si9-nUirwp9xjA
+                value: _csrf=kQlfKRF9nG15N2U1E3b54pGujsmWPhOZ7KTe5Olosnh2mo2gqG9tGiAc-ltUUlxTK1vN0qCXo_GkByG02JLp1o0J0xpH-7WS
       responses:
         "200":
           description: "200"
@@ -907,55 +907,55 @@ paths:
             examples:
               order/prepare-empty-items:
                 value: "{\"items\":[],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
-                  :\"01012345678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란\
-                  로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"orderNote\"\
-                  :null,\"isAddToAddressBook\":false,\"isDefaultAddress\":false,\"\
-                  addressAlias\":null}"
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
               order/prepare-invalid-quantity:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":0}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-lock-failed:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-negative-point:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :-1,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :-1,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-out-of-stock:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":999}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-point-exceeds:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :99999,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :99999,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-success:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-success-free-shipping:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":2}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":0,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-success-with-point:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :3000,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"01012345678\"\
+                  :3000,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
@@ -1391,7 +1391,7 @@ paths:
               examples:
                 sms/send-auth-code:
                   value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
-                    니다.\",\"data\":{\"authCode\":\"123456\"}}"
+                    니다.\",\"data\":null}"
         "409":
           description: "409"
           content:
@@ -1498,6 +1498,65 @@ paths:
                 auth/reissue-tokens-missing-cookie:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null}"
+  /v1/users/me:
+    patch:
+      tags:
+      - User
+      summary: 마이페이지 회원정보 수정
+      description: "마이페이지에서 비밀번호/전화번호/이메일을 한 번에 수정합니다.\n모든 필드는 선택적이며 변경하려는 항목만 채워서\
+        \ 보내면 됩니다.\n- 비밀번호: LOCAL 회원만 가능. 비밀번호와 비밀번호 확인이 일치해야 합니다.\n- 전화번호: 기존 번호와\
+        \ 다른 경우에만 처리되며, /v1/sms/send/change → /v1/sms/verify 로 사전 인증 필요.\n- 이메일: 형\
+        식 검증 후 그대로 갱신.\n"
+      operationId: user/update-my-info
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/MyInfoUpdateRequest'
+            examples:
+              user/update-my-info:
+                value: "{\"password\":\"NewPassword1!\",\"passwordConfirm\":\"NewPassword1!\"\
+                  ,\"phoneNumber\":\"010-9999-8888\",\"email\":\"new@example.com\"\
+                  }"
+              user/update-my-info-invalid-password:
+                value: "{\"password\":\"short\",\"passwordConfirm\":\"short\",\"phoneNumber\"\
+                  :null,\"email\":null}"
+              user/update-my-info-social-password:
+                value: "{\"password\":\"Password1!\",\"passwordConfirm\":\"Password1!\"\
+                  ,\"phoneNumber\":null,\"email\":null}"
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                user/update-my-info:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 정보 수정에\
+                    \ 성공하였습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user/update-my-info-invalid-password:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
+                    니다.\",\"data\":null,\"errors\":[{\"field\":\"password\",\"message\"\
+                    :\"비밀번호는 8~16자이며, 영문/숫자/특수문자 중 2가지 이상을 조합해야 합니다.\"}]}"
+                user/update-my-info-social-password:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"소셜 로그인 회\
+                    원은 비밀번호를 변경할 수 없습니다.\",\"data\":null}"
   /v1/wish-lists/all:
     delete:
       tags:
@@ -1792,6 +1851,65 @@ paths:
                     한 리뷰 감사합니다.\",\"replyUpdatedAt\":\"2026-04-28T10:00:00\"}],\"\
                     pageNumber\":0,\"pageSize\":10,\"totalElements\":1,\"totalPages\"\
                     :1,\"last\":true}}"
+  /v1/sms/send/change:
+    post:
+      tags:
+      - SMS
+      summary: 마이페이지 전화번호 변경 인증번호 발송
+      description: "마이페이지에서 본인의 전화번호 변경을 위해 새 번호로 인증번호를 발송합니다. 인증된 사용자만 호출할 수 있으며\
+        , 본인의 기존 번호와 동일하거나 이미 다른 회원이 사용 중인 번호인 경우 거부됩니다."
+      operationId: sms/send-auth-code-change
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/SmsSendRequest'
+            examples:
+              sms/send-auth-code-change:
+                value: "{\"phoneNumber\":\"010-9999-8888\"}"
+              sms/send-auth-code-change-duplicate:
+                value: "{\"phoneNumber\":\"010-9999-8888\"}"
+              sms/send-auth-code-change-same-phone:
+                value: "{\"phoneNumber\":\"010-1234-5678\"}"
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSendResponse'
+              examples:
+                sms/send-auth-code-change:
+                  value: "{\"success\":true,\"status\":201,\"message\":\"생성에 성공하였습\
+                    니다.\",\"data\":null}"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/send-auth-code-change-duplicate:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 사용 중인\
+                    \ 핸드폰 번호입니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sms/send-auth-code-change-same-phone:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"기존 전화번호와\
+                    \ 동일합니다.\",\"data\":null}"
   /v1/users/check/id:
     get:
       tags:
@@ -1961,6 +2079,35 @@ paths:
                 user-info/find-password-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 사용자입니다.\",\"data\":null}"
+  /v1/users/me/edit:
+    get:
+      tags:
+      - User
+      summary: 마이페이지 회원정보 조회 (수정용)
+      description: 마이페이지 수정 화면에서 사용할 본인 정보를 조회합니다. 마스킹되지 않은 원본 전화번호와 provider를 함께
+        내려주어 프론트가 비밀번호 변경 가능 여부를 판단할 수 있습니다.
+      operationId: user/get-my-info-edit-local
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyInfoEditResponse'
+              examples:
+                user/get-my-info-edit-local:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"id\":null,\"provider\":\"LOCAL\",\"loginId\"\
+                    :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
+                    ,\"userPhoneNumber\":\"010-1234-5678\"}}"
   /v1/orders/{orderNumber}/cancel/partial:
     post:
       tags:
@@ -2081,7 +2228,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"5\":7,\"4\":5,\"3\":2,\"2\":1,\"1\":0}}}"
+                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
 components:
   schemas:
     ErrorResponse:
@@ -2223,6 +2370,22 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    MyInfoUpdateRequest:
+      title: MyInfoUpdateRequest
+      type: object
+      properties:
+        password:
+          type: string
+          description: 새 비밀번호
+        phoneNumber:
+          type: string
+          description: 새 전화번호
+        passwordConfirm:
+          type: string
+          description: 새 비밀번호 확인
+        email:
+          type: string
+          description: 새 이메일
     JoinUserRequest:
       title: JoinUserRequest
       type: object
@@ -2258,6 +2421,13 @@ components:
         email:
           type: string
           description: 이메일 주소
+    SmsSendRequest:
+      title: SmsSendRequest
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
     CartUpdateRequest:
       title: CartUpdateRequest
       type: object
@@ -2870,6 +3040,22 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    SmsSendResponse:
+      title: SmsSendResponse
+      type: object
+      properties:
+        data:
+          type: object
+          description: 응답 데이터 (없음)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     LogoutResponse:
       title: LogoutResponse
       type: object
@@ -2970,13 +3156,6 @@ components:
         phoneNumber:
           type: string
           description: 인증번호를 받은 전화번호
-    SmsSendRequest:
-      title: SmsSendRequest
-      type: object
-      properties:
-        phoneNumber:
-          type: string
-          description: "인증번호를 받을 전화번호 (예: 010-1234-5678, 형식: 010-XXXX-XXXX)"
     CommonResponse:
       title: CommonResponse
       type: object
@@ -3176,6 +3355,41 @@ components:
           description: HTTP 상태 코드
     v1-addresses-addressId486549215:
       type: object
+    MyInfoEditResponse:
+      title: MyInfoEditResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            loginId:
+              type: string
+              description: 로그인 ID (변경 불가)
+            provider:
+              type: string
+              description: "로그인 제공자 (LOCAL: 비밀번호 변경 가능, KAKAO: 비밀번호 변경 불가)"
+            userPhoneNumber:
+              type: string
+              description: "전화번호 (마스킹 없음, 형식: 010-XXXX-XXXX)"
+            userEmail:
+              type: string
+              description: 이메일 주소
+            id:
+              type: object
+              description: 회원 고유 ID
+            userName:
+              type: string
+              description: 회원 이름 (변경 불가)
+          description: 회원 수정용 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     AddressListResponse:
       title: AddressListResponse
       type: object
@@ -3403,26 +3617,6 @@ components:
             totalElements:
               type: number
               description: 전체 검색 결과 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    SmsSendResponse:
-      title: SmsSendResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            authCode:
-              type: string
-              description: 발송된 인증번호 (6자리)
-          description: 발송 결과
         success:
           type: boolean
           description: 성공 여부

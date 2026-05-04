@@ -4,6 +4,7 @@ import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcommon.error.SmsErrorCode;
 import com.daebbang.daebbangcore.domain.address.service.AddressService;
+import com.daebbang.daebbangcore.domain.user.command.MyInfoUpdateCommand;
 import com.daebbang.daebbangcore.domain.user.command.PasswordPort;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;
@@ -16,6 +17,7 @@ import com.daebbang.daebbangcore.infra.service.EmailService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
 import com.daebbang.daebbangcore.infra.util.EmailUtils;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -111,6 +113,49 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Users> getUsersByFindLoginId(String username, String email) {
         return userRepository.findActiveUserIdsByUsernameAndEmail(username, email, UserStatus.WITHDRAWN);
+    }
+
+    @Override
+    public void sendChangePhoneAuthCode(Long userId, String newPhoneNumber) {
+        Users user = getUserById(userId);
+        if (newPhoneNumber.equals(user.getPhoneNumber())) {
+            throw new BusinessException(UserErrorCode.SAME_PHONE_NUMBER);
+        }
+        if (userRepository.existsPhoneNumberExcludingSelf(newPhoneNumber, userId, UserStatus.WITHDRAWN)) {
+            throw new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER);
+        }
+        smsService.sendAuthMessage(newPhoneNumber);
+    }
+
+    @Override
+    @Transactional
+    public void updateMyInfo(Long userId, MyInfoUpdateCommand command) {
+        Users user = getUserById(userId);
+
+        if (command.hasPassword()) {
+            if (!user.isLocal()) {
+                throw new BusinessException(UserErrorCode.SOCIAL_PASSWORD_NOT_ALLOWED);
+            }
+            if (!Objects.requireNonNull(command.password()).equals(command.passwordConfirm())) {
+                throw new BusinessException(UserErrorCode.PASSWORD_CONFIRM_MISMATCH);
+            }
+            user.updatePassword(passwordPort.encode(command.password()));
+        }
+
+        if (command.hasPhoneNumber() && !Objects.requireNonNull(command.phoneNumber()).equals(user.getPhoneNumber())) {
+            if (!smsService.isVerified(command.phoneNumber())) {
+                throw new BusinessException(SmsErrorCode.AUTH_CODE_EXPIRED);
+            }
+            if (userRepository.existsPhoneNumberExcludingSelf(command.phoneNumber(), userId, UserStatus.WITHDRAWN)) {
+                throw new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER);
+            }
+            user.updatePhoneNumber(command.phoneNumber());
+            smsService.deleteVerification(command.phoneNumber());
+        }
+
+        if (command.hasEmail() && !Objects.requireNonNull(command.email()).equals(user.getEmail())) {
+            user.updateEmail(command.email());
+        }
     }
 
     @Override

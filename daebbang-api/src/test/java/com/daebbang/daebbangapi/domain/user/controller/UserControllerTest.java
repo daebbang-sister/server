@@ -14,6 +14,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -23,12 +24,15 @@ import com.daebbang.daebbangapi.config.PasswordConfig;
 import com.daebbang.daebbangapi.config.TestSecurityConfig;
 import com.daebbang.daebbangapi.domain.oauth.service.oauth2.Oauth2UserDetailsService;
 import com.daebbang.daebbangapi.domain.user.dto.request.JoinRequest;
+import com.daebbang.daebbangapi.domain.user.dto.request.MyInfoUpdateRequest;
 import com.daebbang.daebbangapi.domain.user.dto.vo.AddressVO;
 import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
+import com.daebbang.daebbangcommon.error.SmsErrorCode;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.domain.address.entity.Address;
 import com.daebbang.daebbangcore.domain.address.service.AddressService;
+import com.daebbang.daebbangcore.domain.user.command.MyInfoUpdateCommand;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
@@ -447,6 +451,290 @@ class UserControllerTest {
                     )
                     .build()
                 )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/users/me/edit - 마이페이지 회원정보 조회 성공 (LOCAL)")
+    void getMyInfoForEdit_success_local() throws Exception {
+        Users mockUser = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "010-1234-5678");
+
+        given(userService.getUserById(anyLong())).willReturn(mockUser);
+
+        mockMvc.perform(get("/v1/users/me/edit")
+                .with(authentication(AUTH))
+                .header("Authorization", "Bearer test-jwt-token")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.data.provider").value("LOCAL"))
+            .andExpect(jsonPath("$.data.loginId").value("testuser"))
+            .andExpect(jsonPath("$.data.userName").value("홍길동"))
+            .andExpect(jsonPath("$.data.userEmail").value("test@example.com"))
+            .andExpect(jsonPath("$.data.userPhoneNumber").value("010-1234-5678"))
+            .andDo(document("user/get-my-info-edit-local",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("마이페이지 회원정보 조회 (수정용)")
+                    .description("마이페이지 수정 화면에서 사용할 본인 정보를 조회합니다. 마스킹되지 않은 원본 전화번호와 provider를 함께 내려주어 프론트가 비밀번호 변경 가능 여부를 판단할 수 있습니다.")
+                    .responseSchema(Schema.schema("MyInfoEditResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.OBJECT).description("회원 수정용 정보"),
+                        fieldWithPath("data.id").type(JsonFieldType.VARIES).optional().description("회원 고유 ID"),
+                        fieldWithPath("data.provider").type(JsonFieldType.STRING).description("로그인 제공자 (LOCAL: 비밀번호 변경 가능, KAKAO: 비밀번호 변경 불가)"),
+                        fieldWithPath("data.loginId").type(JsonFieldType.STRING).description("로그인 ID (변경 불가)"),
+                        fieldWithPath("data.userName").type(JsonFieldType.STRING).description("회원 이름 (변경 불가)"),
+                        fieldWithPath("data.userEmail").type(JsonFieldType.STRING).description("이메일 주소"),
+                        fieldWithPath("data.userPhoneNumber").type(JsonFieldType.STRING).description("전화번호 (마스킹 없음, 형식: 010-XXXX-XXXX)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/users/me/edit - 인증 없이 접근 시 401 반환")
+    void getMyInfoForEdit_unauthorized() throws Exception {
+        mockMvc.perform(get("/v1/users/me/edit")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 비밀번호/전화번호/이메일 동시 수정 성공")
+    void updateMyInfo_success_all() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest(
+            "NewPassword1!",
+            "NewPassword1!",
+            "010-9999-8888",
+            "new@example.com"
+        );
+
+        willDoNothing().given(userService).updateMyInfo(anyLong(), any(MyInfoUpdateCommand.class));
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("회원 정보 수정에 성공하였습니다."))
+            .andDo(document("user/update-my-info",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("마이페이지 회원정보 수정")
+                    .description("""
+                        마이페이지에서 비밀번호/전화번호/이메일을 한 번에 수정합니다.
+                        모든 필드는 선택적이며 변경하려는 항목만 채워서 보내면 됩니다.
+                        - 비밀번호: LOCAL 회원만 가능. 비밀번호와 비밀번호 확인이 일치해야 합니다.
+                        - 전화번호: 기존 번호와 다른 경우에만 처리되며, /v1/sms/send/change → /v1/sms/verify 로 사전 인증 필요.
+                        - 이메일: 형식 검증 후 그대로 갱신.
+                        """)
+                    .requestSchema(Schema.schema("MyInfoUpdateRequest"))
+                    .responseSchema(Schema.schema("SuccessResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰")
+                    )
+                    .requestFields(
+                        fieldWithPath("password").type(JsonFieldType.STRING).optional().description("새 비밀번호 (8~16자, 영문/숫자/특수문자 중 2가지 이상 조합). 변경 안 하면 null"),
+                        fieldWithPath("passwordConfirm").type(JsonFieldType.STRING).optional().description("새 비밀번호 확인. password와 동일해야 합니다."),
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).optional().description("새 전화번호 (010-XXXX-XXXX). 사전에 SMS 인증 필요. 기존 번호와 같으면 무시됩니다."),
+                        fieldWithPath("email").type(JsonFieldType.STRING).optional().description("새 이메일")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 이메일만 수정 성공")
+    void updateMyInfo_success_emailOnly() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest(null, null, null, "new@example.com");
+
+        willDoNothing().given(userService).updateMyInfo(anyLong(), any(MyInfoUpdateCommand.class));
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 비밀번호 정규식 위반 시 400 반환")
+    void updateMyInfo_invalidPasswordPattern() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("short", "short", null, null);
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andDo(document("user/update-my-info-invalid-password",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("마이페이지 회원정보 수정 - 비밀번호 형식 오류")
+                    .description("비밀번호가 정규식(8~16자, 2가지 이상 조합)을 만족하지 못하는 경우 400을 반환합니다.")
+                    .requestSchema(Schema.schema("MyInfoUpdateRequest"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰")
+                    )
+                    .requestFields(
+                        fieldWithPath("password").type(JsonFieldType.STRING).optional().description("새 비밀번호"),
+                        fieldWithPath("passwordConfirm").type(JsonFieldType.STRING).optional().description("새 비밀번호 확인"),
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).optional().description("새 전화번호"),
+                        fieldWithPath("email").type(JsonFieldType.STRING).optional().description("새 이메일")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)"),
+                        fieldWithPath("errors").type(JsonFieldType.ARRAY).optional().description("필드 유효성 검증 오류 목록"),
+                        fieldWithPath("errors[].field").type(JsonFieldType.STRING).optional().description("오류 필드명"),
+                        fieldWithPath("errors[].message").type(JsonFieldType.STRING).optional().description("오류 메시지")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 비밀번호와 비밀번호 확인 불일치 시 400 반환")
+    void updateMyInfo_passwordConfirmMismatch() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("Password1!", "Different1!", null, null);
+
+        willThrow(new BusinessException(UserErrorCode.PASSWORD_CONFIRM_MISMATCH))
+            .given(userService).updateMyInfo(anyLong(), any(MyInfoUpdateCommand.class));
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("비밀번호와 비밀번호 확인이 일치하지 않습니다."));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 소셜 회원이 비밀번호 변경 시 400 반환")
+    void updateMyInfo_socialPasswordNotAllowed() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("Password1!", "Password1!", null, null);
+
+        willThrow(new BusinessException(UserErrorCode.SOCIAL_PASSWORD_NOT_ALLOWED))
+            .given(userService).updateMyInfo(anyLong(), any(MyInfoUpdateCommand.class));
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("소셜 로그인 회원은 비밀번호를 변경할 수 없습니다."))
+            .andDo(document("user/update-my-info-social-password",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("User")
+                    .summary("마이페이지 회원정보 수정 - 소셜 비밀번호 변경 거부")
+                    .description("소셜 로그인 회원(KAKAO 등)이 비밀번호를 변경하려는 경우 400을 반환합니다.")
+                    .requestSchema(Schema.schema("MyInfoUpdateRequest"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .requestHeaders(
+                        headerWithName("Authorization").description("Bearer JWT 토큰")
+                    )
+                    .requestFields(
+                        fieldWithPath("password").type(JsonFieldType.STRING).optional().description("새 비밀번호"),
+                        fieldWithPath("passwordConfirm").type(JsonFieldType.STRING).optional().description("새 비밀번호 확인"),
+                        fieldWithPath("phoneNumber").type(JsonFieldType.STRING).optional().description("새 전화번호"),
+                        fieldWithPath("email").type(JsonFieldType.STRING).optional().description("새 이메일")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 전화번호 SMS 인증 미통과 시 401 반환")
+    void updateMyInfo_smsNotVerified() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest(null, null, "010-9999-8888", null);
+
+        willThrow(new BusinessException(SmsErrorCode.AUTH_CODE_EXPIRED))
+            .given(userService).updateMyInfo(anyLong(), any(MyInfoUpdateCommand.class));
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.message").value("인증번호가 만료되었거나 일치하지 않습니다."));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 다른 회원이 사용 중인 전화번호로 변경 시 409 반환")
+    void updateMyInfo_duplicatePhoneNumber() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest(null, null, "010-9999-8888", null);
+
+        willThrow(new BusinessException(UserErrorCode.DUPLICATE_PHONE_NUMBER))
+            .given(userService).updateMyInfo(anyLong(), any(MyInfoUpdateCommand.class));
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(authentication(AUTH))
+                .with(csrf())
+                .header("Authorization", "Bearer test-jwt-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message").value("이미 사용 중인 핸드폰 번호입니다."));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/users/me - 인증 없이 접근 시 401 반환")
+    void updateMyInfo_unauthorized() throws Exception {
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest(null, null, null, "new@example.com");
+
+        mockMvc.perform(patch("/v1/users/me")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
     }
 
     @Test

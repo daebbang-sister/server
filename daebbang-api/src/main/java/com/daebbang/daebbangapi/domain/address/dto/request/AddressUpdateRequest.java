@@ -1,5 +1,6 @@
 package com.daebbang.daebbangapi.domain.address.dto.request;
 
+import com.daebbang.daebbangcommon.util.PhoneNumberPolicy;
 import com.daebbang.daebbangcore.domain.address.command.AddressCommand;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
@@ -12,8 +13,8 @@ public record AddressUpdateRequest(
 
     @NotBlank(message = "수령인 전화번호는 필수 입력값입니다.")
     @Pattern(
-        regexp = "^010-\\d{3,4}-\\d{4}$",
-        message = "전화번호 형식(010-XXXX-XXXX)이 올바르지 않습니다."
+        regexp = PhoneNumberPolicy.PATTERN,
+        message = PhoneNumberPolicy.MESSAGE
     )
     String receiverPhoneNumber,
 

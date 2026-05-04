@@ -32,7 +32,8 @@ public class TestSecurityConfig {
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/v1/sms/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/sms/send").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/sms/verify").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/users/find/**").permitAll()

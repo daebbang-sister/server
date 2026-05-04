@@ -83,9 +83,9 @@ class AddressControllerTest {
         new UsernamePasswordAuthenticationToken(1L, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
     private Address mockAddress(boolean isDefault) {
-        Users user = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "01012345678");
+        Users user = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "010-1234-5678");
         AddressVO addressVO = AddressVO.of("12345", "서울시 강남구 테헤란로", "101호");
-        return Address.create(user, "홍길동", "01012345678", "집", addressVO, isDefault);
+        return Address.create(user, "홍길동", "010-1234-5678", "집", addressVO, isDefault);
     }
 
     // ===== GET /v1/addresses =====
@@ -183,7 +183,7 @@ class AddressControllerTest {
     @Test
     @DisplayName("POST /v1/addresses - 주소 등록 성공")
     void addAddress_success() throws Exception {
-        Users user = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "01012345678");
+        Users user = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "010-1234-5678");
         given(userService.getUserById(anyLong())).willReturn(user);
         willDoNothing().given(addressService).save(any(Users.class), any(AddressCommand.class));
 
@@ -257,7 +257,7 @@ class AddressControllerTest {
     @Test
     @DisplayName("POST /v1/addresses - 주소 5개 초과 시 409 반환")
     void addAddress_limitExceeded() throws Exception {
-        Users user = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "01012345678");
+        Users user = Users.createLocalUser("testuser", "encoded", "홍길동", "test@example.com", "010-1234-5678");
         given(userService.getUserById(anyLong())).willReturn(user);
         willThrow(new BusinessException(AddressErrorCode.ADDRESS_LIMIT_EXCEEDED))
             .given(addressService).save(any(Users.class), any(AddressCommand.class));

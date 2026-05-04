@@ -12,7 +12,8 @@ public abstract class SecurityConstants {
 
     public static final String[] PUBLIC_POST_URI = {
         "/v1/users",
-        "/v1/sms/**",
+        "/v1/sms/send",
+        "/v1/sms/verify",
         "/v1/auth/login",
         "/v1/tokens/reissues",
         "/v1/users/find/password"

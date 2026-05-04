@@ -28,6 +28,19 @@ public interface UsersRepository extends JpaRepository<@NonNull Users, @NonNull 
     @Query("""
     SELECT COUNT(u) > 0
     FROM Users u
+    WHERE u.phoneNumber = :phoneNumber
+      AND u.id <> :excludeUserId
+      AND u.status != :excludeStatus
+    """)
+    boolean existsPhoneNumberExcludingSelf(
+        @Param("phoneNumber") String phoneNumber,
+        @Param("excludeUserId") Long excludeUserId,
+        @Param("excludeStatus") UserStatus excludeStatus
+    );
+
+    @Query("""
+    SELECT COUNT(u) > 0
+    FROM Users u
     WHERE u.loginId = :loginId
       AND u.status != :excludeStatus
     """)

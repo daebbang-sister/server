@@ -1,5 +1,6 @@
 package com.daebbang.daebbangapi.domain.order.dto.request;
 
+import com.daebbang.daebbangcommon.util.PhoneNumberPolicy;
 import com.daebbang.daebbangcore.domain.order.command.OrderPrepareCommand;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
@@ -16,7 +17,7 @@ public record OrderPrepareRequest(
     @NotBlank(message = "수령인은 필수입니다.")
     @Size(max = 50, message = "수령인 이름은 50자 이내여야 합니다.") String receiver,
     @NotBlank(message = "수령인 연락처는 필수입니다.")
-    @Pattern(regexp = "^01[0-9]{8,9}$", message = "유효하지 않은 전화번호 형식입니다.") String receiverPhoneNumber,
+    @Pattern(regexp = PhoneNumberPolicy.PATTERN, message = PhoneNumberPolicy.MESSAGE) String receiverPhoneNumber,
     @NotBlank(message = "우편번호는 필수입니다.")
     @Pattern(regexp = "^\\d{5}$", message = "우편번호는 5자리 숫자여야 합니다.") String zipCode,
     @NotBlank(message = "주소는 필수입니다.")
