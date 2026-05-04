@@ -12,7 +12,9 @@ import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.event.UserJoinEvent;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
+import com.daebbang.daebbangcore.infra.service.EmailService;
 import com.daebbang.daebbangcore.infra.service.SmsService;
+import com.daebbang.daebbangcore.infra.util.EmailUtils;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class UserServiceImpl implements UserService {
     private final ApplicationEventPublisher eventPublisher;
     private final UsersRepository userRepository;
     private final SmsService smsService;
+    private final EmailService emailService;
     private final AddressService addressService;
 
     @Override
@@ -83,10 +86,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void verifyUserActiveToFindPassword(String username, String userId, String email) {
-        if (!userRepository.existsActiveUser(username, userId, email, UserStatus.WITHDRAWN)) {
-            throw new BusinessException(UserErrorCode.USER_NOT_FOUND);
-        }
+    @Transactional
+    public void issueTemporaryPassword(String username, String userId, String email) {
+        Users user = userRepository.findActiveUser(username, userId, email, UserStatus.WITHDRAWN)
+            .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
+
+        String temporaryPassword = EmailUtils.generateTemporaryPassword();
+        user.updatePassword(passwordPort.encode(temporaryPassword));
+
+        emailService.sendTemporaryPassword(email, temporaryPassword);
     }
 
     @Override

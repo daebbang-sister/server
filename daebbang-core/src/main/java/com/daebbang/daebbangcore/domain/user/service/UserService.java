@@ -10,7 +10,7 @@ public interface UserService {
     void joinOrUpdateSocial(Provider provider, String providerId, String name, String email, String phoneNumber);
     void existsByPhoneNumber(String phoneNumber);
     void existsActiveUsers(String loginId);
-    void verifyUserActiveToFindPassword(String username, String userId, String email);
+    void issueTemporaryPassword(String username, String userId, String email);
     Users getUser(String loginId);
     Users getUserById(Long userId);
     List<Users> getUsersByFindLoginId(String username, String email);

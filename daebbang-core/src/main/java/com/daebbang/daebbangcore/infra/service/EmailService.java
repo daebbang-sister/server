@@ -2,7 +2,6 @@ package com.daebbang.daebbangcore.infra.service;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.EmailErrorCode;
-import com.daebbang.daebbangcore.infra.util.EmailUtils;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.InputStreamReader;
@@ -15,7 +14,6 @@ import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
@@ -29,15 +27,16 @@ public class EmailService {
     private final JavaMailSender emailSender;
     private final ResourceLoader resourceLoader;
 
-    @Async
-    public void sendTemporaryPassword(String email) {
+    public void sendTemporaryPassword(String email, String temporaryPassword) {
         try {
             Resource resource = resourceLoader.getResource("classpath:static/mail/email_temporary_password.html");
             InputStreamReader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
             String content = FileCopyUtils.copyToString(reader);
 
-            content = content.replace("{temporary_password}", EmailUtils.generateTemporaryPassword());
+            content = content.replace("{temporary_password}", temporaryPassword);
             sendEmail(email, "[대빵언니] 임시 비밀번호 안내입니다.", content);
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
             log.error("[Email 템플릿 읽기 오류] : {}", e.getMessage());
             throw new BusinessException(EmailErrorCode.EMAIL_SEND_FAILED);
