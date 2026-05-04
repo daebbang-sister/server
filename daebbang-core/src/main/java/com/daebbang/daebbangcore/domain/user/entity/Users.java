@@ -98,22 +98,45 @@ public class Users extends CreatedBase {
         }
     }
 
+    /**
+     * Update the user's login password.
+     *
+     * @param newPwd the new login password to set
+     */
     public void updatePassword(String newPwd) {
         this.loginPwd = newPwd;
     }
 
+    /**
+     * Updates the user's email address.
+     *
+     * @param newEmail the new email address to assign to the user
+     */
     public void updateEmail(String newEmail) {
         this.email = newEmail;
     }
 
+    /**
+     * Updates the user's phone number to the provided value.
+     *
+     * @param newPhoneNumber the new phone number to set
+     */
     public void updatePhoneNumber(String newPhoneNumber) {
         this.phoneNumber = newPhoneNumber;
     }
 
+    /**
+     * Determines whether this user was created via the local authentication provider.
+     *
+     * @return {@code true} if the user's provider is {@code Provider.LOCAL}, {@code false} otherwise.
+     */
     public boolean isLocal() {
         return this.provider == Provider.LOCAL;
     }
 
+    /**
+     * Marks the user as withdrawn.
+     */
     public void withdraw() {
         this.status = UserStatus.WITHDRAWN;
     }

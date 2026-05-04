@@ -30,6 +30,11 @@ public record MyInfoUpdateRequest(
     @Email(message = "올바른 이메일 형식을 입력해야 합니다.")
     String email
 ) {
+    /**
+     * Convert this request into a MyInfoUpdateCommand.
+     *
+     * @return a MyInfoUpdateCommand populated with this request's `password`, `passwordConfirm`, `phoneNumber`, and `email`
+     */
     public MyInfoUpdateCommand toCommand() {
         return MyInfoUpdateCommand.builder()
             .password(password)

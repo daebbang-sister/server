@@ -9,6 +9,11 @@ public final class PhoneNumberPolicy {
 
     public static final String MESSAGE = "전화번호 형식(010-XXXX-XXXX)이 올바르지 않습니다.";
 
+    /**
+     * Prevents instantiation of this utility class by throwing a BusinessException.
+     *
+     * @throws BusinessException always thrown with CommonErrorCode.CANNOT_INSTANTIATE_UTIL_CLASS when construction is attempted
+     */
     private PhoneNumberPolicy() {
         throw new BusinessException(CommonErrorCode.CANNOT_INSTANTIATE_UTIL_CLASS);
     }

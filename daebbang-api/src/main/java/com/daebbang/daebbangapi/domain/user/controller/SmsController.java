@@ -27,6 +27,14 @@ public class SmsController {
     private final SmsService smsService;
     private final UserService userService;
 
+    /**
+     * Send an SMS authentication code to the specified phone number.
+     *
+     * Ensures the provided phone number exists, generates and sends an authentication code, and returns a response wrapping the created auth code DTO.
+     *
+     * @param request request payload containing the target phone number
+     * @return a ResponseEntity whose body is a CommonResponse containing the created SmsSendAuthCode DTO and a create success code
+     */
     @PostMapping("/send")
     public ResponseEntity<@NonNull CommonResponse<SmsSendAuthCode>> generateAuthCode(
         @Valid @RequestBody SmsSendRequest request
@@ -37,6 +45,13 @@ public class SmsController {
             .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS, SmsSendAuthCode.toDto(authCode)));
     }
 
+    /**
+     * Generates and sends an SMS authentication code for changing the authenticated user's phone number.
+     *
+     * @param userId the authenticated user's id
+     * @param request request containing the target phone number
+     * @return a CommonResponse wrapping an SmsSendAuthCode DTO for the generated code; response is returned with HTTP 201 (Created)
+     */
     @PostMapping("/send/change")
     public ResponseEntity<@NonNull CommonResponse<SmsSendAuthCode>> generateAuthCodeForChange(
         @AuthenticationPrincipal Long userId,
@@ -47,6 +62,12 @@ public class SmsController {
             .body(CommonResponse.success(CommonSuccessCode.CREATE_SUCCESS, SmsSendAuthCode.toDto(authCode)));
     }
 
+    /**
+     * Verifies an SMS authentication code submitted for a phone number.
+     *
+     * @param request the request containing the phone number and the submitted authentication code
+     * @return a CommonResponse with no payload indicating successful verification (`UserSuccessCode.VERIFY_AUTH_CODE`)
+     */
     @PostMapping("/verify")
     public ResponseEntity<@NonNull CommonResponse<Void>> verifyAuthCode(
         @Valid @RequestBody SmsVerifyRequest request
