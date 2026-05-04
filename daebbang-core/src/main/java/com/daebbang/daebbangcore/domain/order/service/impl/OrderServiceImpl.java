@@ -118,6 +118,9 @@ public class OrderServiceImpl implements OrderService {
         Map<Long, Integer> decreasedStocks = new LinkedHashMap<>();
 
         LocalDate today = LocalDate.now();
+        boolean reserved = false;
+        String orderNumber = null;
+        int paymentAmount;
         try {
             for (OrderItemCommand item : command.items()) {
                 boolean acquired = false;
@@ -152,51 +155,66 @@ public class OrderServiceImpl implements OrderService {
                     if (acquired) lock.unlock();
                 }
             }
-        } catch (RuntimeException e) {
-            decreasedStocks.forEach(stockCacheService::restoreStock);
-            throw e;
+
+            int totalOriginalAmount = sessionItems.stream()
+                .mapToInt(i -> i.getOriginalPrice() * i.getQuantity())
+                .sum();
+            int totalSellingAmount = sessionItems.stream()
+                .mapToInt(OrderSessionItem::getDiscountPrice)
+                .sum();
+
+            int expectedShippingFee = totalSellingAmount >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_FEE;
+            if (command.shippingFee() != expectedShippingFee) {
+                throw new BusinessException(OrderErrorCode.ORDER_SHIPPING_FEE_INVALID);
+            }
+            int shippingFee = expectedShippingFee;
+
+            if (command.usedPoint() > totalSellingAmount + shippingFee) {
+                throw new BusinessException(OrderErrorCode.POINT_EXCEEDS_PAYMENT);
+            }
+            paymentAmount = totalSellingAmount + shippingFee - command.usedPoint();
+
+            orderNumber = generateOrderNumber();
+
+            OrderSession session = OrderSession.builder()
+                .orderNumber(orderNumber)
+                .userId(user.getId())
+                .items(sessionItems)
+                .usedPoint(command.usedPoint())
+                .shippingFee(shippingFee)
+                .totalOriginalAmount(totalOriginalAmount)
+                .totalSellingAmount(totalSellingAmount)
+                .paymentAmount(paymentAmount)
+                .receiver(command.receiver())
+                .receiverPhoneNumber(command.receiverPhoneNumber())
+                .zipCode(command.zipCode())
+                .address(command.address())
+                .detailAddress(command.detailAddress())
+                .orderNote(command.orderNote())
+                .build();
+
+            orderSessionRedisRepository.save(orderNumber, session);
+            stockReserveRedisRepository.save(orderNumber, sessionItems);
+            reserved = true;
+        } finally {
+            if (!reserved) {
+                if (orderNumber != null) {
+                    try {
+                        orderSessionRedisRepository.delete(orderNumber);
+                    } catch (Exception e) {
+                        log.warn("[Order] prepare 보상 - orderSession 삭제 실패: orderNumber={}", orderNumber, e);
+                    }
+                    try {
+                        stockReserveRedisRepository.delete(orderNumber);
+                    } catch (Exception e) {
+                        log.warn("[Order] prepare 보상 - stockReserve 삭제 실패: orderNumber={}", orderNumber, e);
+                    }
+                }
+                decreasedStocks.forEach(stockCacheService::restoreStock);
+            }
         }
 
-        int totalOriginalAmount = sessionItems.stream()
-            .mapToInt(i -> i.getOriginalPrice() * i.getQuantity())
-            .sum();
-        int totalSellingAmount = sessionItems.stream()
-            .mapToInt(OrderSessionItem::getDiscountPrice)
-            .sum();
-
-        int shippingFee = command.shippingFee();
-        if (totalSellingAmount >= FREE_SHIPPING_THRESHOLD && shippingFee != 0) {
-            throw new BusinessException(OrderErrorCode.ORDER_SHIPPING_FEE_INVALID);
-        }
-
-        if (command.usedPoint() > totalSellingAmount + shippingFee) {
-            throw new BusinessException(OrderErrorCode.POINT_EXCEEDS_PAYMENT);
-        }
-        int paymentAmount = totalSellingAmount + shippingFee - command.usedPoint();
-
-        String orderNumber = generateOrderNumber();
-
-        OrderSession session = OrderSession.builder()
-            .orderNumber(orderNumber)
-            .userId(user.getId())
-            .items(sessionItems)
-            .usedPoint(command.usedPoint())
-            .shippingFee(shippingFee)
-            .totalOriginalAmount(totalOriginalAmount)
-            .totalSellingAmount(totalSellingAmount)
-            .paymentAmount(paymentAmount)
-            .receiver(command.receiver())
-            .receiverPhoneNumber(command.receiverPhoneNumber())
-            .zipCode(command.zipCode())
-            .address(command.address())
-            .detailAddress(command.detailAddress())
-            .orderNote(command.orderNote())
-            .build();
-
-        orderSessionRedisRepository.save(orderNumber, session);
-        stockReserveRedisRepository.save(orderNumber, sessionItems);
         log.info("[Order] prepare 완료 - orderNumber: {}, userId: {}", orderNumber, user.getId());
-
         return new OrderPrepareResponse(orderNumber, paymentAmount);
     }
 
