@@ -102,6 +102,18 @@ public class Users extends CreatedBase {
         this.loginPwd = newPwd;
     }
 
+    public void updateEmail(String newEmail) {
+        this.email = newEmail;
+    }
+
+    public void updatePhoneNumber(String newPhoneNumber) {
+        this.phoneNumber = newPhoneNumber;
+    }
+
+    public boolean isLocal() {
+        return this.provider == Provider.LOCAL;
+    }
+
     public void withdraw() {
         this.status = UserStatus.WITHDRAWN;
     }

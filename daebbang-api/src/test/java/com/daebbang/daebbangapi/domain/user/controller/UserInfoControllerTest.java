@@ -58,7 +58,7 @@ public class UserInfoControllerTest {
         // given
         String name = "홍길동";
         String email = "test@example.com";
-        Users mockUser = Users.createLocalUser("testuser123", "encoded_pw", name, email, "01012345678");
+        Users mockUser = Users.createLocalUser("testuser123", "encoded_pw", name, email, "010-1234-5678");
 
         given(userService.getUsersByFindLoginId(name, email)).willReturn(List.of(mockUser));
 

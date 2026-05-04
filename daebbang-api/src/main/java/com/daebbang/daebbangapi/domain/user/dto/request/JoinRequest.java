@@ -1,6 +1,8 @@
 package com.daebbang.daebbangapi.domain.user.dto.request;
 
 import com.daebbang.daebbangapi.domain.user.dto.vo.AddressVO;
+import com.daebbang.daebbangcommon.util.PasswordPolicy;
+import com.daebbang.daebbangcommon.util.PhoneNumberPolicy;
 import com.daebbang.daebbangcore.domain.address.command.AddressCommand;
 import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import jakarta.annotation.Nullable;
@@ -24,15 +26,15 @@ public record JoinRequest(
 
     @NotBlank(message = "비밀번호는 비어있어서는 안됩니다.")
     @Pattern(
-        regexp = "^(?=.*[a-zA-Z])(?=.*\\d|.*[^a-zA-Z0-9]).{8,16}$|^(?=.*\\d)(?=.*[^a-zA-Z0-9]).{8,16}$",
-        message = "비밀번호는 8~16자이며, 영문/숫자/특수문자 중 2가지 이상을 조합해야 합니다."
+        regexp = PasswordPolicy.PATTERN,
+        message = PasswordPolicy.MESSAGE
     )
     String password,
 
     @NotBlank(message = "전화번호는 필수 입력값입니다.")
     @Pattern(
-        regexp = "^010-\\d{3,4}-\\d{4}$",
-        message = "전화번호 형식(010-XXXX-XXXX)이 올바르지 않습니다."
+        regexp = PhoneNumberPolicy.PATTERN,
+        message = PhoneNumberPolicy.MESSAGE
     )
     String phoneNumber,
 

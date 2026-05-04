@@ -92,7 +92,7 @@ class OrderControllerTest {
     void prepare_success_withShippingFee() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
-            0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-ABC1234567", 33_000);
@@ -152,7 +152,7 @@ class OrderControllerTest {
     void prepare_success_freeShipping() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 2)),
-            0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             0, null, false, false, null
         );
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-DEF9876543", 60_000);
@@ -204,7 +204,7 @@ class OrderControllerTest {
     void prepare_success_withPoint() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
-            3_000, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            3_000, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
         OrderPrepareResponse response = new OrderPrepareResponse("20260416-GHI1357924", 30_000);
@@ -255,7 +255,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - items 빈 배열이면 400 반환")
     void prepare_emptyItems() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
-            List.of(), 0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            List.of(), 0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
 
@@ -305,7 +305,7 @@ class OrderControllerTest {
     void prepare_invalidQuantity() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 0)),
-            0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
 
@@ -357,7 +357,7 @@ class OrderControllerTest {
     void prepare_negativeUsedPoint() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
-            -1, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            -1, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
 
@@ -409,7 +409,7 @@ class OrderControllerTest {
     void prepare_outOfStock() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 999)),
-            0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
         willThrow(new BusinessException(OrderErrorCode.OUT_OF_STOCK))
@@ -461,7 +461,7 @@ class OrderControllerTest {
     void prepare_stockLockFailed() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
-            0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
         willThrow(new BusinessException(OrderErrorCode.STOCK_LOCK_FAILED))
@@ -513,7 +513,7 @@ class OrderControllerTest {
     void prepare_pointExceedsPayment() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
-            99_999, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            99_999, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
         willThrow(new BusinessException(OrderErrorCode.POINT_EXCEEDS_PAYMENT))
@@ -565,7 +565,7 @@ class OrderControllerTest {
     void prepare_unauthorized() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
             List.of(new OrderItemRequest(1L, 1)),
-            0, "홍길동", "01012345678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
 
