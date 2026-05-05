@@ -11,7 +11,7 @@ public enum ChangeType {
     EARN_REVIEW("리뷰 적립", true),
     EARN_PURCHASE("구매 확정 적립", true),
     USE_PAYMENT("결제 사용", false),
-    REFUND_CANCEL("주문 취소 환원", false),
+    REFUND_CANCEL("주문 취소 환불", true),
     REFUND_REVERSE("환불에 따른 적립 회수", false),
     EXPIRE("소멸", false);
 
