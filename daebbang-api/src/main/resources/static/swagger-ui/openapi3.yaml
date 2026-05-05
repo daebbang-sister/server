@@ -489,10 +489,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-addresses-addressId486549215'
+              $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=q1n7Exevu8dezsspnGygMq7efgzFYE8mToeSs0YsS3pNSoTAyGzOIyfO3aRz961LqEGUB5a_UzTyVSsLeuXwhCdPfEIpe7ym
+                value: _csrf=lP-VO84W7WphkUIuhd79VJzOmZPcbn4sQ9YkfCjY-D4hBui49cmtD_sl3wxMoiYZt_PJZK72tKu4XUsBdOYdHkrsmQ8UNdnb
       responses:
         "200":
           description: "200"
@@ -689,12 +689,12 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-addresses-addressId486549215'
+              $ref: '#/components/schemas/v1-users486549215'
             examples:
               address/delete-address:
-                value: _csrf=Wfm93pgNjGUaV3vFIQ9DWvTCFT3HndZO8YhjWzNjngQykow1PMiE7K1sugc3YUj9RCJ3bJDyOAX1_OJjkrxQbgdX-j0A8bhQ
+                value: _csrf=nEW5WuuVweGa_zG8u6Yil3SwvFEEcpRt9QMmeDIp94YWHDlOrHCJONz0p4O3ngTa34sWpRKAkTM1Q_JAlGVASAsRw-cjLl96
               address/delete-address-not-found:
-                value: _csrf=kQlfKRF9nG15N2U1E3b54pGujsmWPhOZ7KTe5Olosnh2mo2gqG9tGiAc-ltUUlxTK1vN0qCXo_GkByG02JLp1o0J0xpH-7WS
+                value: _csrf=8zrf12OF4v0p3CAZQ95d1j4uA2T32qHsorkVpu7bgouAabAQx1_tsgWy1soE6xh7IvNpsw5MLl2VvpnBwY8gn4i54Lq4DdEm
       responses:
         "200":
           description: "200"
@@ -1103,6 +1103,37 @@ paths:
                     ,\"color\":\"골드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"\
                     quantity\":2,\"originalPrice\":15000,\"discountRate\":10,\"discountPrice\"\
                     :13500,\"status\":\"NORMAL\"}]}}"
+  /v1/points/me:
+    get:
+      tags:
+      - Point
+      summary: 내 적립금 잔액 조회
+      description: "로그인한 회원의 사용 가능한 적립금, 누적 적립금, 누적 사용 적립금을 조회합니다."
+      operationId: point/get-balance
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointBalanceResponse'
+              examples:
+                point/get-balance:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"적립금 잔액 조회\
+                    에 성공하였습니다.\",\"data\":{\"currentAmount\":3500,\"totalEarned\"\
+                    :12000,\"totalUsed\":8500}}"
+                point/get-balance-zero:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"적립금 잔액 조회\
+                    에 성공하였습니다.\",\"data\":{\"currentAmount\":0,\"totalEarned\":0,\"\
+                    totalUsed\":0}}"
   /v1/products/new:
     get:
       tags:
@@ -1679,6 +1710,72 @@ paths:
                 order/cancel-success:
                   value: "{\"success\":true,\"status\":200,\"message\":\"주문이 취소되었습\
                     니다.\",\"data\":null}"
+  /v1/points/me/history:
+    get:
+      tags:
+      - Point
+      summary: 내 적립금 내역 조회
+      description: "로그인한 회원의 적립금 변동 내역을 페이징하여 반환합니다.\n최신 순(생성일 내림차순)으로 정렬됩니다.\n- 적\
+        립 건(EARN_*)에는 policyName과 expiredAt이 포함됩니다.\n- 사용·환불·만료 건에서는 policyName, expiredAt이\
+        \ null입니다.\n- referenceId는 주문 ID, 리뷰 ID 등을 가리키며 회원가입 적립 등에서는 null입니다.\n"
+      operationId: point/get-history
+      parameters:
+      - name: page
+        in: query
+        description: "페이지 번호 (0부터, 기본 0)"
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: 페이지 크기 (기본 10)
+        required: false
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: "정렬 (기본: createdAt,desc)"
+        required: false
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer JWT 토큰
+        required: true
+        schema:
+          type: string
+        example: Bearer test-jwt-token
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointHistoryListResponse'
+              examples:
+                point/get-history:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"적립금 내역 조회\
+                    에 성공하였습니다.\",\"data\":{\"content\":[{\"id\":101,\"createdAt\"\
+                    :\"2026-05-02T11:00:00\",\"changeType\":\"USE_PAYMENT\",\"changeTypeDescription\"\
+                    :\"결제 사용\",\"earn\":false,\"policyName\":null,\"referenceId\"\
+                    :5001,\"changeAmount\":500,\"pointAmount\":500,\"description\"\
+                    :\"결제 시 적립금 사용\",\"expiredAt\":null},{\"id\":100,\"createdAt\"\
+                    :\"2026-05-01T10:00:00\",\"changeType\":\"EARN_SIGNUP\",\"changeTypeDescription\"\
+                    :\"회원가입 적립\",\"earn\":true,\"policyName\":\"신규 회원 가입 적립\",\"referenceId\"\
+                    :null,\"changeAmount\":1000,\"pointAmount\":1000,\"description\"\
+                    :\"회원가입 적립\",\"expiredAt\":\"2027-05-01T10:00:00\"}],\"empty\"\
+                    :false,\"first\":true,\"last\":true,\"number\":0,\"numberOfElements\"\
+                    :2,\"pageable\":{\"offset\":0,\"pageNumber\":0,\"pageSize\":10,\"\
+                    paged\":true,\"sort\":{\"empty\":true,\"sorted\":false,\"unsorted\"\
+                    :true},\"unpaged\":false},\"size\":10,\"sort\":{\"empty\":true,\"\
+                    sorted\":false,\"unsorted\":true},\"totalElements\":2,\"totalPages\"\
+                    :1}}"
+                point/get-history-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"적립금 내역 조회\
+                    에 성공하였습니다.\",\"data\":{\"content\":[],\"empty\":true,\"first\"\
+                    :true,\"last\":true,\"number\":0,\"numberOfElements\":0,\"pageable\"\
+                    :\"INSTANCE\",\"size\":0,\"sort\":{\"empty\":true,\"sorted\":false,\"\
+                    unsorted\":true},\"totalElements\":0,\"totalPages\":1}}"
   /v1/products/category/{categoryId}:
     get:
       tags:
@@ -2301,6 +2398,31 @@ components:
       title: CommonVoidResponse
       type: object
       properties:
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    PointBalanceResponse:
+      title: PointBalanceResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            totalEarned:
+              type: number
+              description: 총 적립금 (0)
+            totalUsed:
+              type: number
+              description: 사용된 적립금 (0)
+            currentAmount:
+              type: number
+              description: 사용 가능한 적립금 (0)
         success:
           type: boolean
           description: 성공 여부
@@ -3124,6 +3246,16 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    SmsVerifyRequest:
+      title: SmsVerifyRequest
+      type: object
+      properties:
+        authCode:
+          type: string
+          description: 수신한 6자리 인증번호
+        phoneNumber:
+          type: string
+          description: 인증번호를 받은 전화번호
     OrderPrepareResponse:
       title: OrderPrepareResponse
       type: object
@@ -3146,16 +3278,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    SmsVerifyRequest:
-      title: SmsVerifyRequest
-      type: object
-      properties:
-        authCode:
-          type: string
-          description: 수신한 6자리 인증번호
-        phoneNumber:
-          type: string
-          description: 인증번호를 받은 전화번호
     CommonResponse:
       title: CommonResponse
       type: object
@@ -3353,7 +3475,7 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-addresses-addressId486549215:
+    v1-users486549215:
       type: object
     MyInfoEditResponse:
       title: MyInfoEditResponse
@@ -3381,6 +3503,131 @@ components:
               type: string
               description: 회원 이름 (변경 불가)
           description: 회원 수정용 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    PointHistoryListResponse:
+      title: PointHistoryListResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            number:
+              type: number
+              description: 현재 페이지 번호
+            numberOfElements:
+              type: number
+              description: 현재 페이지 항목 수
+            size:
+              type: number
+              description: 페이지 크기
+            last:
+              type: boolean
+              description: 마지막 페이지 여부
+            totalPages:
+              type: number
+              description: 전체 페이지 수
+            pageable:
+              type: object
+              properties:
+                paged:
+                  type: boolean
+                  description: 페이징 적용 여부
+                pageNumber:
+                  type: number
+                  description: 현재 페이지 번호
+                offset:
+                  type: number
+                  description: 오프셋
+                pageSize:
+                  type: number
+                  description: 페이지 크기
+                unpaged:
+                  type: boolean
+                  description: 페이징 미적용 여부
+                sort:
+                  type: object
+                  properties:
+                    unsorted:
+                      type: boolean
+                      description: 정렬 미적용 여부
+                    sorted:
+                      type: boolean
+                      description: 정렬 적용 여부
+                    empty:
+                      type: boolean
+                      description: 정렬 조건 없음 여부
+                  description: 정렬 정보
+              description: 페이지 정보
+            sort:
+              type: object
+              properties:
+                unsorted:
+                  type: boolean
+                  description: 정렬 미적용 여부
+                sorted:
+                  type: boolean
+                  description: 정렬 적용 여부
+                empty:
+                  type: boolean
+                  description: 정렬 조건 없음 여부
+              description: 정렬 정보
+            first:
+              type: boolean
+              description: 첫 번째 페이지 여부
+            content:
+              type: array
+              description: 적립금 내역 목록 (빈 배열)
+              items:
+                type: object
+                properties:
+                  expiredAt:
+                    type: string
+                    description: "적립금 소멸 예정 일시 (적립 건만, 무기한이면 null)"
+                  createdAt:
+                    type: string
+                    description: 발생 일시
+                  pointAmount:
+                    type: number
+                    description: 변동 후 잔액 스냅샷
+                  policyName:
+                    type: string
+                    description: 적립금 정책명 (적립 건만)
+                  changeTypeDescription:
+                    type: string
+                    description: 변동 타입 한글 설명
+                  earn:
+                    type: boolean
+                    description: "적립 여부 (true=적립, false=사용/회수/만료)"
+                  changeType:
+                    type: string
+                    description: 변동 타입 (EARN_SIGNUP / EARN_REVIEW / EARN_PURCHASE
+                      / USE_PAYMENT / REFUND_CANCEL / REFUND_REVERSE / EXPIRE)
+                  description:
+                    type: string
+                    description: 내역 설명
+                  id:
+                    type: number
+                    description: 내역 ID
+                  changeAmount:
+                    type: number
+                    description: 변동 금액 (양수)
+                  referenceId:
+                    type: number
+                    description: "연결된 외부 ID (주문 ID, 리뷰 ID 등). 없으면 null"
+            empty:
+              type: boolean
+              description: 결과 없음 여부
+            totalElements:
+              type: number
+              description: 전체 내역 수
         success:
           type: boolean
           description: 성공 여부

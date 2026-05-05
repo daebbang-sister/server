@@ -23,7 +23,6 @@ public class UserJoinEventListener {
         try {
             smsService.deleteVerification(event.phoneNumber());
         } catch (Exception e) {
-            // 이벤트 처리는 실패해도 메인 로직엔 지장이 없어야 하므로 로그만 남김
             log.error("[Event] 인증 데이터 삭제 중 오류 발생: {}", e.getMessage());
         }
     }

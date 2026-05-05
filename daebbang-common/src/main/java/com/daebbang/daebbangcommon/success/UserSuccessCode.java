@@ -44,7 +44,10 @@ public enum UserSuccessCode implements SuccessCode {
     REVIEW_UPDATED(200, "리뷰가 수정되었습니다."),
     REVIEW_DELETED(200, "리뷰가 삭제되었습니다."),
     REVIEW_LIST_RETRIEVED(200, "리뷰 목록 조회에 성공하였습니다."),
-    REVIEW_STATS_RETRIEVED(200, "리뷰 통계 조회에 성공하였습니다.");
+    REVIEW_STATS_RETRIEVED(200, "리뷰 통계 조회에 성공하였습니다."),
+
+    POINT_BALANCE_RETRIEVED(200, "적립금 잔액 조회에 성공하였습니다."),
+    POINT_HISTORY_RETRIEVED(200, "적립금 내역 조회에 성공하였습니다.");
 
     private final int status;
     private final String message;
