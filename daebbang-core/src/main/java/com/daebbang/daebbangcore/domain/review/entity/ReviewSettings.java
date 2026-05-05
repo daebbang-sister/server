@@ -12,20 +12,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "review_point_configs")
+@Table(name = "review_settings")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ReviewPointConfig {
+public class ReviewSettings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private Integer normalReviewPoint;
-
-    @Column(nullable = false)
-    private Integer photoReviewPoint;
 
     @Column(nullable = false)
     private Integer autoApproveDays;
@@ -33,9 +27,7 @@ public class ReviewPointConfig {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public void update(int normalReviewPoint, int photoReviewPoint, int autoApproveDays) {
-        this.normalReviewPoint = normalReviewPoint;
-        this.photoReviewPoint = photoReviewPoint;
+    public void update(int autoApproveDays) {
         this.autoApproveDays = autoApproveDays;
         this.updatedAt = LocalDateTime.now();
     }

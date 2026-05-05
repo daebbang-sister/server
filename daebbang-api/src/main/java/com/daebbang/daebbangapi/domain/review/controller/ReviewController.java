@@ -7,7 +7,7 @@ import com.daebbang.daebbangapi.domain.review.support.UploadFileMapper;
 import com.daebbang.daebbangcommon.dto.response.CommonResponse;
 import com.daebbang.daebbangcommon.success.UserSuccessCode;
 import com.daebbang.daebbangcore.domain.page.PageResponse;
-import com.daebbang.daebbangcore.domain.review.entity.ReviewPointConfig;
+import com.daebbang.daebbangcore.domain.review.dto.ReviewExpectedAmounts;
 import com.daebbang.daebbangcore.domain.review.service.ReviewService;
 import com.daebbang.daebbangcore.infra.storage.UploadFile;
 import jakarta.validation.Valid;
@@ -76,10 +76,10 @@ public class ReviewController {
         @AuthenticationPrincipal Long userId,
         @PageableDefault(size = 10) Pageable pageable
     ) {
-        ReviewPointConfig config = reviewService.getPointConfig();
+        ReviewExpectedAmounts amounts = reviewService.getReviewExpectedAmounts();
         PageResponse<MyReviewItemResponse> response = PageResponse.from(
             reviewService.getMyReviews(userId, pageable)
-                .map(review -> MyReviewItemResponse.from(review, config))
+                .map(review -> MyReviewItemResponse.from(review, amounts))
         );
         return ResponseEntity.ok(CommonResponse.success(UserSuccessCode.REVIEW_LIST_RETRIEVED, response));
     }

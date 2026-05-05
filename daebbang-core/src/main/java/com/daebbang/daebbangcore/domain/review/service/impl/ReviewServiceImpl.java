@@ -5,44 +5,55 @@ import com.daebbang.daebbangcommon.error.ImageErrorCode;
 import com.daebbang.daebbangcommon.error.ReviewErrorCode;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetails;
 import com.daebbang.daebbangcore.domain.order.service.OrderDetailService;
+import com.daebbang.daebbangcore.domain.point.entity.PointPolicy;
+import com.daebbang.daebbangcore.domain.point.entity.PolicyType;
+import com.daebbang.daebbangcore.domain.point.service.PointService;
 import com.daebbang.daebbangcore.domain.review.command.CreateReviewCommand;
 import com.daebbang.daebbangcore.domain.review.command.UpdateReviewCommand;
+import com.daebbang.daebbangcore.domain.review.dto.ReviewExpectedAmounts;
 import com.daebbang.daebbangcore.domain.review.dto.ReviewStatsResult;
 import com.daebbang.daebbangcore.domain.review.entity.Review;
 import com.daebbang.daebbangcore.domain.review.entity.ReviewImage;
-import com.daebbang.daebbangcore.domain.review.entity.ReviewPointConfig;
-import com.daebbang.daebbangcore.domain.review.repository.ReviewPointConfigRepository;
+import com.daebbang.daebbangcore.domain.review.entity.ReviewPointStatus;
+import com.daebbang.daebbangcore.domain.review.entity.ReviewSettings;
 import com.daebbang.daebbangcore.domain.review.repository.ReviewRepository;
+import com.daebbang.daebbangcore.domain.review.repository.ReviewSettingsRepository;
 import com.daebbang.daebbangcore.domain.review.service.ReviewService;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
 import com.daebbang.daebbangcore.infra.service.S3Service;
 import com.daebbang.daebbangcore.infra.storage.UploadFile;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReviewServiceImpl implements ReviewService {
 
     private static final int MAX_REVIEW_IMAGES = 4;
+    private static final int DEFAULT_AUTO_APPROVE_DAYS = 7;
     private static final String S3_REVIEW_DIRECTORY = "review";
 
     private final ReviewRepository reviewRepository;
-    private final ReviewPointConfigRepository reviewPointConfigRepository;
+    private final ReviewSettingsRepository reviewSettingsRepository;
     private final OrderDetailService orderDetailService;
     private final UserService userService;
+    private final PointService pointService;
     private final S3Service s3Service;
 
     @Override
@@ -142,9 +153,43 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewPointConfig getPointConfig() {
-        return reviewPointConfigRepository.findTopByOrderByIdAsc()
-            .orElseThrow(() -> new BusinessException(ReviewErrorCode.REVIEW_POINT_CONFIG_NOT_FOUND));
+    public ReviewExpectedAmounts getReviewExpectedAmounts() {
+        int normal = pointService.findActiveByType(PolicyType.REVIEW_TEXT)
+            .map(p -> p.calculateEarnAmount(0))
+            .orElse(0);
+        int photo = pointService.findActiveByType(PolicyType.REVIEW_PHOTO)
+            .map(p -> p.calculateEarnAmount(0))
+            .orElse(0);
+        return new ReviewExpectedAmounts(normal, photo);
+    }
+
+    @Override
+    public List<Long> findPendingReviewIdsToApprove() {
+        int autoApproveDays = reviewSettingsRepository.findTopByOrderByIdAsc()
+            .map(ReviewSettings::getAutoApproveDays)
+            .orElse(DEFAULT_AUTO_APPROVE_DAYS);
+        LocalDateTime threshold = LocalDateTime.now().minusDays(autoApproveDays);
+
+        return reviewRepository
+            .findPendingReviewsBefore(ReviewPointStatus.PENDING, threshold)
+            .stream()
+            .map(Review::getId)
+            .toList();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void approveReviewPoint(Long reviewId) {
+        Review review = reviewRepository.findActiveById(reviewId)
+            .orElseThrow(() -> new BusinessException(ReviewErrorCode.REVIEW_NOT_FOUND));
+
+        if (review.isApproved()) {
+            return;
+        }
+
+        review.approvePoint();
+        pointService.awardReviewPoint(
+            review.getUser().getId(), review.getId(), review.isPhotoReview());
     }
 
     private List<String> uploadAll(List<UploadFile> files) {

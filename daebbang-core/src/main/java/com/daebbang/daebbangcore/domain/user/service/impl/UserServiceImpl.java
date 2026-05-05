@@ -10,6 +10,7 @@ import com.daebbang.daebbangcore.domain.user.command.UserJoinCommand;
 import com.daebbang.daebbangcore.domain.user.entity.Provider;
 import com.daebbang.daebbangcore.domain.user.entity.UserStatus;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
+import com.daebbang.daebbangcore.domain.point.service.PointService;
 import com.daebbang.daebbangcore.domain.user.event.UserJoinEvent;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import com.daebbang.daebbangcore.domain.user.service.UserService;
@@ -37,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final SmsService smsService;
     private final EmailService emailService;
     private final AddressService addressService;
+    private final PointService pointService;
 
     @Override
     @Transactional
@@ -56,6 +58,8 @@ public class UserServiceImpl implements UserService {
             addressService.save(joinUser, joinCommand.address());
         }
 
+        pointService.awardSignupPoint(joinUser.getId());
+
         eventPublisher.publishEvent(UserJoinEvent.toEvent(joinCommand.phoneNumber()));
     }
 
@@ -69,6 +73,7 @@ public class UserServiceImpl implements UserService {
                 () -> {
                     Users socialUser = Users.createSocialUser(provider, providerId, name, email, phoneNumber);
                     userRepository.save(socialUser);
+                    pointService.awardSignupPoint(socialUser.getId());
                 }
             );
     }
