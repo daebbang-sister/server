@@ -9,7 +9,6 @@ import com.daebbang.daebbangcore.domain.point.entity.PointPolicy;
 import com.daebbang.daebbangcore.domain.point.entity.Points;
 import com.daebbang.daebbangcore.domain.point.entity.PolicyType;
 import com.daebbang.daebbangcore.domain.point.entity.UserPointHistory;
-import java.util.Optional;
 import com.daebbang.daebbangcore.domain.point.repository.PointPolicyRepository;
 import com.daebbang.daebbangcore.domain.point.repository.PointsRepository;
 import com.daebbang.daebbangcore.domain.point.repository.UserPointHistoryRepository;
@@ -17,6 +16,7 @@ import com.daebbang.daebbangcore.domain.point.service.PointService;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,14 +58,16 @@ public class PointServiceImpl implements PointService {
     @Override
     @Transactional
     public void awardSignupPoint(Long userId) {
-        award(userId, PolicyType.SIGNUP, ChangeType.EARN_SIGNUP, null, 0);
+        Points points = createIfMissing(userId);
+        award(points, PolicyType.SIGNUP, ChangeType.EARN_SIGNUP, null, 0);
     }
 
     @Override
     @Transactional
     public void awardReviewPoint(Long userId, Long reviewId, boolean isPhotoReview) {
+        Points points = loadForUpdate(userId);
         PolicyType type = isPhotoReview ? PolicyType.REVIEW_PHOTO : PolicyType.REVIEW_TEXT;
-        award(userId, type, ChangeType.EARN_REVIEW, reviewId, 0);
+        award(points, type, ChangeType.EARN_REVIEW, reviewId, 0);
     }
 
     @Override
@@ -92,8 +94,7 @@ public class PointServiceImpl implements PointService {
         if (amount <= 0) {
             return;
         }
-        Points points = pointsRepository.findByUserIdForUpdate(userId)
-            .orElseThrow(() -> new BusinessException(PointErrorCode.POINT_NOT_FOUND));
+        Points points = loadForUpdate(userId);
         points.refund(amount);
 
         userPointHistoryRepository.save(UserPointHistory.ofChange(
@@ -103,26 +104,25 @@ public class PointServiceImpl implements PointService {
     }
 
     /**
-     * 정책 기반 적립의 단일 진입점. 정책 미설정/비활성 시 조용히 종료.
+     * 정책 기반 적립의 단일 처리 로직. 정책 미설정/비활성/계산값 0이면 조용히 종료.
      */
-    private void award(Long userId, PolicyType policyType, ChangeType changeType,
+    private void award(Points points, PolicyType policyType, ChangeType changeType,
         Long referenceId, int rateBaseAmount) {
 
-        PointPolicy policy = pointPolicyRepository
-            .findFirstByPolicyTypeAndIsActiveTrueAndDeletedAtIsNull(policyType)
-            .orElse(null);
+        PointPolicy policy = findActiveByType(policyType).orElse(null);
         if (policy == null) {
-            log.info("[Point] 활성 정책 없음 - skip. userId={}, policyType={}", userId, policyType);
+            log.info("[Point] 활성 정책 없음 - skip. userId={}, policyType={}",
+                points.getUser().getId(), policyType);
             return;
         }
 
         int amount = policy.calculateEarnAmount(rateBaseAmount);
         if (amount <= 0) {
-            log.info("[Point] 계산된 적립액 0 - skip. userId={}, policyType={}", userId, policyType);
+            log.info("[Point] 계산된 적립액 0 - skip. userId={}, policyType={}",
+                points.getUser().getId(), policyType);
             return;
         }
 
-        Points points = loadForUpdate(userId);
         points.earn(amount);
 
         LocalDateTime expiredAt = policy.resolveExpiredAt(LocalDateTime.now());
@@ -132,13 +132,24 @@ public class PointServiceImpl implements PointService {
         ));
     }
 
-    private Points loadForUpdate(Long userId) {
+    /**
+     * 회원가입 진입점 전용. 동일 userId 동시 진입 불가가 보장되는 경로에서만 호출되어야 race-free.
+     */
+    private Points createIfMissing(Long userId) {
         return pointsRepository.findByUserIdForUpdate(userId)
             .orElseGet(() -> {
                 Users user = usersRepository.findById(userId)
                     .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
                 return pointsRepository.save(Points.create(user));
             });
+    }
+
+    /**
+     * 회원가입 외 모든 변동 진입점에서 사용. row 부재는 회원가입 단계가 누락됐다는 의미이므로 예외.
+     */
+    private Points loadForUpdate(Long userId) {
+        return pointsRepository.findByUserIdForUpdate(userId)
+            .orElseThrow(() -> new BusinessException(PointErrorCode.POINT_NOT_FOUND));
     }
 
     private PointBalanceResult toBalance(Points points) {
