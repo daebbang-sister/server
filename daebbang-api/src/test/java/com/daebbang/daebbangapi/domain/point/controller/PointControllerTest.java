@@ -30,6 +30,7 @@ import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
+import com.epages.restdocs.apispec.SimpleType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -230,9 +231,9 @@ class PointControllerTest {
                         """)
                     .responseSchema(Schema.schema("PointHistoryListResponse"))
                     .queryParameters(
-                        parameterWithName("page").optional().description("페이지 번호 (0부터, 기본 0)"),
-                        parameterWithName("size").optional().description("페이지 크기 (기본 10)"),
-                        parameterWithName("sort").optional().description("정렬 (기본: createdAt,desc)")
+                        parameterWithName("page").optional().description("페이지 번호 (0부터, 기본 0)").type(SimpleType.INTEGER),
+                        parameterWithName("size").optional().description("페이지 크기 (기본 10)").type(SimpleType.INTEGER),
+                        parameterWithName("sort").optional().description("정렬 (기본: createdAt,desc)").type(SimpleType.STRING)
                     )
                     .requestHeaders(
                         headerWithName("Authorization").description("Bearer JWT 토큰")
@@ -283,7 +284,8 @@ class PointControllerTest {
     @Test
     @DisplayName("GET /v1/points/me/history - 내역이 없을 때 빈 결과 반환")
     void getMyHistory_empty() throws Exception {
-        given(pointService.getHistory(anyLong(), any(Pageable.class))).willReturn(Page.empty());
+        given(pointService.getHistory(anyLong(), any(Pageable.class)))
+            .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
         mockMvc.perform(get("/v1/points/me/history")
                 .with(authentication(AUTH))
@@ -308,7 +310,16 @@ class PointControllerTest {
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
                         fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                         fieldWithPath("data.content[]").type(JsonFieldType.ARRAY).description("적립금 내역 목록 (빈 배열)"),
-                        fieldWithPath("data.pageable").type(JsonFieldType.STRING).description("페이지 정보"),
+                        fieldWithPath("data.pageable").type(JsonFieldType.OBJECT).description("페이지 정보"),
+                        fieldWithPath("data.pageable.pageNumber").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
+                        fieldWithPath("data.pageable.pageSize").type(JsonFieldType.NUMBER).description("페이지 크기"),
+                        fieldWithPath("data.pageable.sort").type(JsonFieldType.OBJECT).description("정렬 정보"),
+                        fieldWithPath("data.pageable.sort.sorted").type(JsonFieldType.BOOLEAN).description("정렬 적용 여부"),
+                        fieldWithPath("data.pageable.sort.unsorted").type(JsonFieldType.BOOLEAN).description("정렬 미적용 여부"),
+                        fieldWithPath("data.pageable.sort.empty").type(JsonFieldType.BOOLEAN).description("정렬 조건 없음 여부"),
+                        fieldWithPath("data.pageable.offset").type(JsonFieldType.NUMBER).description("오프셋"),
+                        fieldWithPath("data.pageable.paged").type(JsonFieldType.BOOLEAN).description("페이징 적용 여부"),
+                        fieldWithPath("data.pageable.unpaged").type(JsonFieldType.BOOLEAN).description("페이징 미적용 여부"),
                         fieldWithPath("data.totalElements").type(JsonFieldType.NUMBER).description("전체 내역 수"),
                         fieldWithPath("data.totalPages").type(JsonFieldType.NUMBER).description("전체 페이지 수"),
                         fieldWithPath("data.last").type(JsonFieldType.BOOLEAN).description("마지막 페이지 여부"),

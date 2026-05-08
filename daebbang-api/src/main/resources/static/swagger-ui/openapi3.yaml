@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"receiver\":\"\
-                  홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  isDefault\":true,\"alias\":\"집\",\"zipCode\":\"12345\"}"
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"zipCode\":\"\
+                  12345\",\"alias\":\"집\",\"isDefault\":true,\"address\":\"서울시 강남구\
+                  \ 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\"}"
               address/add-address-limit-exceeded:
-                value: "{\"zipCode\":\"12345\",\"isDefault\":false,\"receiverPhoneNumber\"\
-                  :\"010-1234-5678\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
-                  :\"101호\",\"receiver\":\"홍길동\"}"
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
+                  ,\"detailAddress\":\"101호\"}"
       responses:
         "201":
           description: "201"
@@ -492,7 +492,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=1gc-wdErMW8qlqGOKnVsJRlE-70NNP8H4kmmGkcPALz3IllYsmILpeIbBl4Hp5e6SVhYQCAm1oQ_BMYq0n_EeX49Nd-TRzth
+                value: _csrf=oit0i3iGzVWLPgV10kfGC_dbVHOnboC1fMqw3DZEP_IUvAHXw01CvU6__WemWzBCt2ryP8I6eRHGDeWYGPPTvgJ9DMtx2Tfi
       responses:
         "200":
           description: "200"
@@ -637,13 +637,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"receiver\":\"\
-                  김철수\",\"detailAddress\":\"202호\",\"address\":\"서울시 서초구 반포대로\",\"\
-                  isDefault\":false,\"alias\":\"회사\",\"zipCode\":\"54321\"}"
+                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"zipCode\":\"\
+                  54321\",\"alias\":\"회사\",\"isDefault\":false,\"address\":\"서울시 서\
+                  초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\":\"김철수\"}"
               address/update-address-not-found:
-                value: "{\"zipCode\":\"12345\",\"isDefault\":false,\"receiverPhoneNumber\"\
-                  :\"010-1234-5678\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
-                  :\"101호\",\"receiver\":\"홍길동\"}"
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
+                  ,\"detailAddress\":\"101호\"}"
       responses:
         "200":
           description: "200"
@@ -692,9 +692,9 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               address/delete-address:
-                value: _csrf=-Hk-wOeuHXmVizFua3EN3eWg9K7DLI9D06e9BZ1waSOGhmLjmkkP9dOYLhq4ugVZDlw5uNeT2Zb1Gr1utsXeMK9GDUbgtAeH
+                value: _csrf=rLSaDlmEk0kOPICsxjr6evbQZUkOTBbvpbFjbdK_9PxDnvw_ytepaDjm8S8jCuOU9hfOT5DkSCg9fyTCnNcACbOKxJkg_8QM
               address/delete-address-not-found:
-                value: _csrf=Mu5IHGK2PWK6EQ7Xe4zcXBq-0BA-u7Ydo93VOyMjQ8TDc0VLBNkrfQGODgGXcD-zQ6Hoby3c_SgGiY8wkOjhX0FHe_WlRCF-
+                value: _csrf=QSkUZUHCbPL-McwZH48u1HSKDpFs3_SCvaAL8PF1JNC_cGb8eEgkAHH0X5DTU68tK6IatxW8I6ha5sKviJQykcRCR-GIEV7K
       responses:
         "200":
           description: "200"
@@ -1743,13 +1743,15 @@ paths:
         description: "페이지 번호 (0부터, 기본 0)"
         required: false
         schema:
-          type: string
+          type: integer
+          format: int32
       - name: size
         in: query
         description: 페이지 크기 (기본 10)
         required: false
         schema:
-          type: string
+          type: integer
+          format: int32
       - name: sort
         in: query
         description: "정렬 (기본: createdAt,desc)"
@@ -1792,8 +1794,10 @@ paths:
                   value: "{\"success\":true,\"status\":200,\"message\":\"적립금 내역 조회\
                     에 성공하였습니다.\",\"data\":{\"content\":[],\"empty\":true,\"first\"\
                     :true,\"last\":true,\"number\":0,\"numberOfElements\":0,\"pageable\"\
-                    :\"INSTANCE\",\"size\":0,\"sort\":{\"empty\":true,\"sorted\":false,\"\
-                    unsorted\":true},\"totalElements\":0,\"totalPages\":1}}"
+                    :{\"offset\":0,\"pageNumber\":0,\"pageSize\":10,\"paged\":true,\"\
+                    sort\":{\"empty\":true,\"sorted\":false,\"unsorted\":true},\"\
+                    unpaged\":false},\"size\":10,\"sort\":{\"empty\":true,\"sorted\"\
+                    :false,\"unsorted\":true},\"totalElements\":0,\"totalPages\":0}}"
   /v1/products/category/{categoryId}:
     get:
       tags:
@@ -2060,8 +2064,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -2343,7 +2347,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
+                    ratingCounts\":{\"5\":7,\"4\":5,\"3\":2,\"2\":1,\"1\":0}}}"
 components:
   schemas:
     ErrorResponse:
@@ -3530,6 +3534,49 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    AddressListResponse:
+      title: AddressListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 주소 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              zipCode:
+                type: string
+                description: 우편번호
+              isDefault:
+                type: boolean
+                description: 기본 배송지 여부
+              address:
+                type: string
+                description: 도로명 주소
+              receiver:
+                type: string
+                description: 수령인 이름
+              receiverPhoneNumber:
+                type: string
+                description: 수령인 전화번호
+              detailAddress:
+                type: string
+                description: 상세 주소
+              alias:
+                type: object
+                description: 주소 별칭 (null 가능)
+              addressId:
+                type: object
+                description: 주소 ID
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     PointHistoryListResponse:
       title: PointHistoryListResponse
       type: object
@@ -3646,49 +3693,6 @@ components:
             totalElements:
               type: number
               description: 전체 내역 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    AddressListResponse:
-      title: AddressListResponse
-      type: object
-      properties:
-        data:
-          type: array
-          description: 주소 목록 (빈 배열)
-          items:
-            type: object
-            properties:
-              zipCode:
-                type: string
-                description: 우편번호
-              isDefault:
-                type: boolean
-                description: 기본 배송지 여부
-              address:
-                type: string
-                description: 도로명 주소
-              receiver:
-                type: string
-                description: 수령인 이름
-              receiverPhoneNumber:
-                type: string
-                description: 수령인 전화번호
-              detailAddress:
-                type: string
-                description: 상세 주소
-              alias:
-                type: object
-                description: 주소 별칭 (null 가능)
-              addressId:
-                type: object
-                description: 주소 ID
         success:
           type: boolean
           description: 성공 여부

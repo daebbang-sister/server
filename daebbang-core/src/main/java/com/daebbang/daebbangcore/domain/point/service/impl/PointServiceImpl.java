@@ -77,7 +77,7 @@ public class PointServiceImpl implements PointService {
         if (paymentEligibleAmount < MIN_PAYMENT_AMOUNT_FOR_POINT_USE) {
             throw new BusinessException(PointErrorCode.POINT_USE_BELOW_MIN_ORDER);
         }
-        Points points = getOrCreatePoints(userId);
+        Points points = loadForUpdate(userId);
         points.use(useAmount);
 
         userPointHistoryRepository.save(UserPointHistory.ofChange(
@@ -92,7 +92,7 @@ public class PointServiceImpl implements PointService {
         if (amount <= 0) {
             return;
         }
-        Points points = pointsRepository.findByUserIdAndDeletedAtIsNull(userId)
+        Points points = pointsRepository.findByUserIdForUpdate(userId)
             .orElseThrow(() -> new BusinessException(PointErrorCode.POINT_NOT_FOUND));
         points.refund(amount);
 
@@ -122,7 +122,7 @@ public class PointServiceImpl implements PointService {
             return;
         }
 
-        Points points = getOrCreatePoints(userId);
+        Points points = loadForUpdate(userId);
         points.earn(amount);
 
         LocalDateTime expiredAt = policy.resolveExpiredAt(LocalDateTime.now());
@@ -132,8 +132,8 @@ public class PointServiceImpl implements PointService {
         ));
     }
 
-    private Points getOrCreatePoints(Long userId) {
-        return pointsRepository.findByUserIdAndDeletedAtIsNull(userId)
+    private Points loadForUpdate(Long userId) {
+        return pointsRepository.findByUserIdForUpdate(userId)
             .orElseGet(() -> {
                 Users user = usersRepository.findById(userId)
                     .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
