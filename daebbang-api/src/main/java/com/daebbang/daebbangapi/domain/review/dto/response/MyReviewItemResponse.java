@@ -1,8 +1,8 @@
 package com.daebbang.daebbangapi.domain.review.dto.response;
 
+import com.daebbang.daebbangcore.domain.review.dto.ReviewExpectedAmounts;
 import com.daebbang.daebbangcore.domain.review.entity.Review;
 import com.daebbang.daebbangcore.domain.review.entity.ReviewImage;
-import com.daebbang.daebbangcore.domain.review.entity.ReviewPointConfig;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,11 +19,7 @@ public record MyReviewItemResponse(
     String pointStatus,
     int expectedPoint
 ) {
-    public static MyReviewItemResponse from(Review review, ReviewPointConfig config) {
-        int expectedPoint = review.isPhotoReview()
-            ? config.getPhotoReviewPoint()
-            : config.getNormalReviewPoint();
-
+    public static MyReviewItemResponse from(Review review, ReviewExpectedAmounts amounts) {
         return new MyReviewItemResponse(
             review.getId(),
             review.getProduct().getId(),
@@ -35,7 +31,7 @@ public record MyReviewItemResponse(
             review.getReply(),
             review.getReplyUpdatedAt(),
             review.isApproved() ? "적립금 승인" : "적립금 대기",
-            expectedPoint
+            amounts.resolve(review.isPhotoReview())
         );
     }
 }

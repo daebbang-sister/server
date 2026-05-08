@@ -2,6 +2,9 @@ package com.daebbang.daebbangcore.domain.order.service.impl;
 
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.OrderErrorCode;
+import com.daebbang.daebbangcommon.error.PointErrorCode;
+import com.daebbang.daebbangcore.domain.point.dto.PointBalanceResult;
+import com.daebbang.daebbangcore.domain.point.service.PointService;
 import com.daebbang.daebbangcore.domain.order.command.OrderCancelCommand;
 import com.daebbang.daebbangcore.domain.order.command.OrderConfirmCommand;
 import com.daebbang.daebbangcore.domain.order.command.OrderItemCommand;
@@ -69,6 +72,7 @@ public class OrderServiceImpl implements OrderService {
 
     private static final int FREE_SHIPPING_THRESHOLD = 50_000;
     private static final int DEFAULT_SHIPPING_FEE = 3_000;
+    private static final int MIN_PAYMENT_AMOUNT_FOR_POINT_USE = 30_000;
     private static final String CANCEL_IDEMPOTENCY_PREFIX = "order:cancel:idempotency:";
     private static final Duration CANCEL_IDEMPOTENCY_TTL = Duration.ofHours(24);
 
@@ -77,6 +81,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductDetailsService productDetailsService;
     private final OrdersRepository ordersRepository;
     private final PaymentService paymentService;
+    private final PointService pointService;
     private final StockCacheService stockCacheService;
     private final OrderSessionRedisRepository orderSessionRedisRepository;
     private final TossPaymentClient tossPaymentClient;
@@ -171,6 +176,15 @@ public class OrderServiceImpl implements OrderService {
 
             if (command.usedPoint() > totalSellingAmount + shippingFee) {
                 throw new BusinessException(OrderErrorCode.POINT_EXCEEDS_PAYMENT);
+            }
+            if (command.usedPoint() > 0) {
+                if (totalSellingAmount + shippingFee < MIN_PAYMENT_AMOUNT_FOR_POINT_USE) {
+                    throw new BusinessException(PointErrorCode.POINT_USE_BELOW_MIN_ORDER);
+                }
+                PointBalanceResult balance = pointService.getBalance(command.userId());
+                if (balance.currentAmount() < command.usedPoint()) {
+                    throw new BusinessException(PointErrorCode.POINT_INSUFFICIENT_BALANCE);
+                }
             }
             paymentAmount = totalSellingAmount + shippingFee - command.usedPoint();
 
@@ -285,6 +299,15 @@ public class OrderServiceImpl implements OrderService {
                 order.update();
                 ordersRepository.save(order);
 
+                if (session.getUsedPoint() > 0) {
+                    pointService.usePointForPayment(
+                        session.getUserId(),
+                        order.getId(),
+                        session.getUsedPoint(),
+                        session.getTotalSellingAmount() + session.getShippingFee()
+                    );
+                }
+
                 LocalDateTime approvedAt = tossResponse.getApprovedAt() != null
                     ? OffsetDateTime.parse(tossResponse.getApprovedAt()).toLocalDateTime()
                     : LocalDateTime.now();
@@ -378,6 +401,10 @@ public class OrderServiceImpl implements OrderService {
                 paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelableAmount());
                 restoreStockAndPublishEvent(cancelTargets);
 
+                if (order.getUsedPoint() > 0) {
+                    pointService.refundUsedPoint(command.userId(), order.getId(), order.getUsedPoint());
+                }
+
                 log.info("[Order] 전체 취소 완료 - orderNumber: {}, userId: {}",
                     command.orderNumber(), command.userId());
                 return null;
@@ -463,6 +490,10 @@ public class OrderServiceImpl implements OrderService {
                 paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelAmount());
                 restoreStockAndPublishEvent(targetDetails);
 
+                if (allCancelled && order.getUsedPoint() > 0) {
+                    pointService.refundUsedPoint(command.userId(), order.getId(), order.getUsedPoint());
+                }
+
                 log.info("[Order] 부분 취소 완료 - orderNumber: {}, userId: {}, 취소금액: {}",
                     command.orderNumber(), command.userId(), precheck.cancelAmount());
                 return null;
@@ -470,6 +501,24 @@ public class OrderServiceImpl implements OrderService {
 
             deleteCancelIdempotencyKey(command.orderNumber());
         });
+    }
+
+    @Override
+    @Transactional
+    public void complete(Long userId, String orderNumber) {
+        Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(orderNumber, userId)
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getOrderStatus() != OrderStatus.DELIVERED) {
+            throw new BusinessException(OrderErrorCode.ORDER_NOT_DELIVERED);
+        }
+
+        order.complete();
+        order.update();
+
+        pointService.awardPurchasePoint(userId, order.getId(), order.getPaymentAmount());
+
+        log.info("[Order] 구매 확정 완료 - orderNumber: {}, userId: {}", orderNumber, userId);
     }
 
     @Override
@@ -534,6 +583,9 @@ public class OrderServiceImpl implements OrderService {
             ))
             .toList();
 
+        int expectedPoint = pointService.calculateExpectedPurchasePoint(order.getPaymentAmount());
+        int earnedPoint = pointService.findEarnedPointByOrder(order.getId());
+
         return new OrderFullDetailResult(
             order.getOrderNumber(),
             order.getOrderStatus(),
@@ -543,6 +595,8 @@ public class OrderServiceImpl implements OrderService {
             order.getShippingFee(),
             order.getUsedPoint(),
             order.getPaymentAmount(),
+            expectedPoint,
+            earnedPoint,
             items
         );
     }

@@ -15,6 +15,8 @@ public record OrderDetailResponse(
     int shippingFee,
     int usedPoint,
     int paymentAmount,
+    int expectedPoint,
+    int earnedPoint,
     List<OrderDetailItem> details
 ) {
     public static OrderDetailResponse from(OrderFullDetailResult result) {
@@ -27,6 +29,8 @@ public record OrderDetailResponse(
             result.shippingFee(),
             result.usedPoint(),
             result.paymentAmount(),
+            result.expectedPoint(),
+            result.earnedPoint(),
             result.details().stream().map(OrderDetailItem::from).toList()
         );
     }

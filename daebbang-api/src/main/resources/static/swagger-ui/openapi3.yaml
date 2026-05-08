@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"receiver\":\"\
-                  홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  isDefault\":true,\"alias\":\"집\",\"zipCode\":\"12345\"}"
+                value: "{\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\":true,\"\
+                  address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
+                  :\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
               address/add-address-limit-exceeded:
-                value: "{\"zipCode\":\"12345\",\"isDefault\":false,\"receiverPhoneNumber\"\
-                  :\"010-1234-5678\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
-                  :\"101호\",\"receiver\":\"홍길동\"}"
+                value: "{\"receiver\":\"홍길동\",\"detailAddress\":\"101호\",\"address\"\
+                  :\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\"\
+                  :false,\"zipCode\":\"12345\"}"
       responses:
         "201":
           description: "201"
@@ -489,10 +489,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-addresses-addressId486549215'
+              $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=He1SSYhkeoRD7DABBJqMzUmE7ALcXeHYqrdQ4ofvZsY9vj66KtRgLLhRHrdu2FYyYre4qXu2wTq4OYT1mINg17bfUqQE2giN
+                value: _csrf=ilE__2v5nMrcLzauaOaZx5JWAFi5vPyqulwqtUTzKsJ-LgnnvzcOyg6Y_f_xTlKXW8ut9_ZgLWGL2sWH2GpOhHzHH6McSj7R
       responses:
         "200":
           description: "200"
@@ -637,13 +637,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"receiver\":\"\
-                  김철수\",\"detailAddress\":\"202호\",\"address\":\"서울시 서초구 반포대로\",\"\
-                  isDefault\":false,\"alias\":\"회사\",\"zipCode\":\"54321\"}"
+                value: "{\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\":false,\"\
+                  address\":\"서울시 서초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\"\
+                  :\"김철수\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
               address/update-address-not-found:
-                value: "{\"zipCode\":\"12345\",\"isDefault\":false,\"receiverPhoneNumber\"\
-                  :\"010-1234-5678\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
-                  :\"101호\",\"receiver\":\"홍길동\"}"
+                value: "{\"receiver\":\"홍길동\",\"detailAddress\":\"101호\",\"address\"\
+                  :\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\"\
+                  :false,\"zipCode\":\"12345\"}"
       responses:
         "200":
           description: "200"
@@ -689,12 +689,12 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-addresses-addressId486549215'
+              $ref: '#/components/schemas/v1-users486549215'
             examples:
               address/delete-address:
-                value: _csrf=xhs0Zc-LBlTz-pCKbLOmPeJcNd_5Gsp7rLOOicRK7K4qSjyu_y0CXPrvPzHezaXoWJ6SW9ZqGL2aL_JWz4PtufB_3pwccgzI
+                value: _csrf=46RllSfABg5aQCUcjfKtIL9_6FUA73_bNX-sSQjBbnqcS8wk1cZVpUGkPzx3eBMkvd-ZRo5PxTRii072B0yee2ylWEP-eapB
               address/delete-address-not-found:
-                value: _csrf=WCv1Wm8CtdfV4V7jCipWP67SNoVx2NbPhY63hQDS40DIYxK4YR3BO14yjeX4gm3RaAdiXpexG-REvbTit73VvTGx03apBnaL
+                value: _csrf=d0-qrbYfh2ZGs2BxVZba-I9qChyDuNH1e_q9CQD02lZk63hpTymcyI9941ZriwYQZbvuyO5fJyTh3eLYGc6JbzCRv2VW20xb
       responses:
         "200":
           description: "200"
@@ -935,9 +935,21 @@ paths:
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+              order/prepare-point-below-min-order:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :500,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-point-exceeds:
                 value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
                   :99999,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+              order/prepare-point-insufficient-balance:
+                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
+                  :10000,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
                   ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
                   :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
                   :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
@@ -979,9 +991,15 @@ paths:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"usedPoint\",\"message\"\
                     :\"포인트는 0 이상이어야 합니다.\"}]}"
+                order/prepare-point-below-min-order:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"3만원 이상 결\
+                    제 시에만 적립금을 사용할 수 있습니다.\",\"data\":null}"
                 order/prepare-point-exceeds:
                   value: "{\"success\":false,\"status\":400,\"message\":\"포인트가 결제\
                     \ 금액을 초과합니다.\",\"data\":null}"
+                order/prepare-point-insufficient-balance:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"보유한 적립금이\
+                    \ 부족합니다.\",\"data\":null}"
         "503":
           description: "503"
           content:
@@ -1098,11 +1116,12 @@ paths:
                     ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
                     ,\"totalOriginalAmount\":30000,\"totalSellingAmount\":27000,\"\
                     shippingFee\":3000,\"usedPoint\":0,\"paymentAmount\":30000,\"\
-                    details\":[{\"orderDetailId\":10,\"productDetailId\":101,\"productName\"\
-                    :\"슬림핏 청바지\",\"imageUrl\":\"https://cdn.daebbang.com/img/slim-jeans.jpg\"\
-                    ,\"color\":\"골드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"\
-                    quantity\":2,\"originalPrice\":15000,\"discountRate\":10,\"discountPrice\"\
-                    :13500,\"status\":\"NORMAL\"}]}}"
+                    expectedPoint\":300,\"earnedPoint\":0,\"details\":[{\"orderDetailId\"\
+                    :10,\"productDetailId\":101,\"productName\":\"슬림핏 청바지\",\"imageUrl\"\
+                    :\"https://cdn.daebbang.com/img/slim-jeans.jpg\",\"color\":\"골\
+                    드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"quantity\":2,\"\
+                    originalPrice\":15000,\"discountRate\":10,\"discountPrice\":13500,\"\
+                    status\":\"NORMAL\"}]}}"
   /v1/points/me:
     get:
       tags:
@@ -1710,6 +1729,41 @@ paths:
                 order/cancel-success:
                   value: "{\"success\":true,\"status\":200,\"message\":\"주문이 취소되었습\
                     니다.\",\"data\":null}"
+  /v1/orders/{orderNumber}/complete:
+    post:
+      tags:
+      - Order
+      summary: 구매 확정 - 배송 미완료
+      description: 주문 상태가 DELIVERED가 아니면 구매 확정 불가.
+      operationId: order/complete-
+      parameters:
+      - name: orderNumber
+        in: path
+        description: 주문 번호
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                order/complete-not-delivered:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"배송 완료된 주\
+                    문만 구매 확정할 수 있습니다.\",\"data\":null}"
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+              examples:
+                order/complete-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"구매 확정이 완료\
+                    되었습니다.\",\"data\":null}"
   /v1/points/me/history:
     get:
       tags:
@@ -1725,13 +1779,15 @@ paths:
         description: "페이지 번호 (0부터, 기본 0)"
         required: false
         schema:
-          type: string
+          type: integer
+          format: int32
       - name: size
         in: query
         description: 페이지 크기 (기본 10)
         required: false
         schema:
-          type: string
+          type: integer
+          format: int32
       - name: sort
         in: query
         description: "정렬 (기본: createdAt,desc)"
@@ -1774,8 +1830,10 @@ paths:
                   value: "{\"success\":true,\"status\":200,\"message\":\"적립금 내역 조회\
                     에 성공하였습니다.\",\"data\":{\"content\":[],\"empty\":true,\"first\"\
                     :true,\"last\":true,\"number\":0,\"numberOfElements\":0,\"pageable\"\
-                    :\"INSTANCE\",\"size\":0,\"sort\":{\"empty\":true,\"sorted\":false,\"\
-                    unsorted\":true},\"totalElements\":0,\"totalPages\":1}}"
+                    :{\"offset\":0,\"pageNumber\":0,\"pageSize\":10,\"paged\":true,\"\
+                    sort\":{\"empty\":true,\"sorted\":false,\"unsorted\":true},\"\
+                    unpaged\":false},\"size\":10,\"sort\":{\"empty\":true,\"sorted\"\
+                    :false,\"unsorted\":true},\"totalElements\":0,\"totalPages\":0}}"
   /v1/products/category/{categoryId}:
     get:
       tags:
@@ -2325,7 +2383,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"2\":1,\"3\":2,\"4\":5,\"5\":7,\"1\":0}}}"
+                    ratingCounts\":{\"1\":0,\"5\":7,\"4\":5,\"3\":2,\"2\":1}}}"
 components:
   schemas:
     ErrorResponse:
@@ -3475,7 +3533,7 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-addresses-addressId486549215:
+    v1-users486549215:
       type: object
     MyInfoEditResponse:
       title: MyInfoEditResponse
@@ -3503,6 +3561,49 @@ components:
               type: string
               description: 회원 이름 (변경 불가)
           description: 회원 수정용 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    AddressListResponse:
+      title: AddressListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 주소 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              zipCode:
+                type: string
+                description: 우편번호
+              isDefault:
+                type: boolean
+                description: 기본 배송지 여부
+              address:
+                type: string
+                description: 도로명 주소
+              receiver:
+                type: string
+                description: 수령인 이름
+              receiverPhoneNumber:
+                type: string
+                description: 수령인 전화번호
+              detailAddress:
+                type: string
+                description: 상세 주소
+              alias:
+                type: object
+                description: 주소 별칭 (null 가능)
+              addressId:
+                type: object
+                description: 주소 ID
         success:
           type: boolean
           description: 성공 여부
@@ -3637,49 +3738,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    AddressListResponse:
-      title: AddressListResponse
-      type: object
-      properties:
-        data:
-          type: array
-          description: 주소 목록 (빈 배열)
-          items:
-            type: object
-            properties:
-              zipCode:
-                type: string
-                description: 우편번호
-              isDefault:
-                type: boolean
-                description: 기본 배송지 여부
-              address:
-                type: string
-                description: 도로명 주소
-              receiver:
-                type: string
-                description: 수령인 이름
-              receiverPhoneNumber:
-                type: string
-                description: 수령인 전화번호
-              detailAddress:
-                type: string
-                description: 상세 주소
-              alias:
-                type: object
-                description: 주소 별칭 (null 가능)
-              addressId:
-                type: object
-                description: 주소 ID
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     SuccessResponse:
       title: SuccessResponse
       type: object
@@ -3721,6 +3779,95 @@ components:
         alias:
           type: string
           description: "주소 별칭 (예: 집, 회사)"
+    OrderDetailResponse:
+      title: OrderDetailResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            usedPoint:
+              type: number
+              description: 사용한 포인트
+            orderedAt:
+              type: string
+              description: 주문 일시
+            orderNumber:
+              type: string
+              description: 주문 번호
+            shippingFee:
+              type: number
+              description: 배송비 (5만원 이상 무료)
+            totalOriginalAmount:
+              type: number
+              description: 상품 정가 합계
+            earnedPoint:
+              type: number
+              description: 이미 지급된 적립금 (구매 확정 전엔 0)
+            orderStatus:
+              type: string
+              description: 주문 상태
+            details:
+              type: array
+              description: 주문 항목 목록
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: number
+                    description: 할인율 (%)
+                  quantity:
+                    type: number
+                    description: 수량
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  size:
+                    type: string
+                    description: 사이즈
+                  color:
+                    type: string
+                    description: 색상명
+                  imageUrl:
+                    type: string
+                    description: 상품 이미지 URL
+                  discountPrice:
+                    type: number
+                    description: 할인 적용가
+                  colorCode:
+                    type: string
+                    description: 색상 코드 (HEX)
+                  productName:
+                    type: string
+                    description: 상품명
+                  productDetailId:
+                    type: number
+                    description: 상품 상세 ID (색상/사이즈 조합)
+                  orderDetailId:
+                    type: number
+                    description: 주문 항목 ID (부분 취소 시 사용)
+                  status:
+                    type: string
+                    description: "항목 상태 (NORMAL, CANCEL_REQUESTED, CANCELLED, REFUND_REQUESTED,\
+                      \ RETURNED)"
+            expectedPoint:
+              type: number
+              description: "예상 적립금 (PURCHASE 정책 기준, 정책 미설정/구매 확정 후엔 0일 수 있음)"
+            paymentAmount:
+              type: number
+              description: 최종 결제 금액
+            totalSellingAmount:
+              type: number
+              description: 할인 적용 판매가 합계
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     UserInfoResponse:
       title: UserInfoResponse
       type: object
@@ -3864,89 +4011,6 @@ components:
             totalElements:
               type: number
               description: 전체 검색 결과 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    OrderDetailResponse:
-      title: OrderDetailResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            usedPoint:
-              type: number
-              description: 사용한 포인트
-            orderedAt:
-              type: string
-              description: 주문 일시
-            orderNumber:
-              type: string
-              description: 주문 번호
-            shippingFee:
-              type: number
-              description: 배송비 (5만원 이상 무료)
-            totalOriginalAmount:
-              type: number
-              description: 상품 정가 합계
-            orderStatus:
-              type: string
-              description: 주문 상태
-            details:
-              type: array
-              description: 주문 항목 목록
-              items:
-                type: object
-                properties:
-                  discountRate:
-                    type: number
-                    description: 할인율 (%)
-                  quantity:
-                    type: number
-                    description: 수량
-                  originalPrice:
-                    type: number
-                    description: 정가
-                  size:
-                    type: string
-                    description: 사이즈
-                  color:
-                    type: string
-                    description: 색상명
-                  imageUrl:
-                    type: string
-                    description: 상품 이미지 URL
-                  discountPrice:
-                    type: number
-                    description: 할인 적용가
-                  colorCode:
-                    type: string
-                    description: 색상 코드 (HEX)
-                  productName:
-                    type: string
-                    description: 상품명
-                  productDetailId:
-                    type: number
-                    description: 상품 상세 ID (색상/사이즈 조합)
-                  orderDetailId:
-                    type: number
-                    description: 주문 항목 ID (부분 취소 시 사용)
-                  status:
-                    type: string
-                    description: "항목 상태 (NORMAL, CANCEL_REQUESTED, CANCELLED, REFUND_REQUESTED,\
-                      \ RETURNED)"
-            paymentAmount:
-              type: number
-              description: 최종 결제 금액
-            totalSellingAmount:
-              type: number
-              description: 할인 적용 판매가 합계
         success:
           type: boolean
           description: 성공 여부

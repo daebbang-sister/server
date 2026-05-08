@@ -76,6 +76,17 @@ public class OrderController {
             .body(CommonResponse.success(UserSuccessCode.ORDER_CANCELLED));
     }
 
+    @PostMapping("/{orderNumber}/complete")
+    public ResponseEntity<@NonNull CommonResponse<Void>> completeOrder(
+        @AuthenticationPrincipal Long userId,
+        @PathVariable String orderNumber
+    ) {
+        orderService.complete(userId, orderNumber);
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(CommonResponse.success(UserSuccessCode.ORDER_COMPLETED));
+    }
+
     @PostMapping("/{orderNumber}/cancel/partial")
     public ResponseEntity<@NonNull CommonResponse<Void>> cancelOrderPartial(
         @AuthenticationPrincipal Long userId,

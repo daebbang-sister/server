@@ -26,6 +26,7 @@ import com.daebbang.daebbangapi.domain.order.dto.request.OrderPrepareRequest;
 import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.OrderErrorCode;
+import com.daebbang.daebbangcommon.error.PointErrorCode;
 import com.daebbang.daebbangcore.domain.order.dto.OrderFullDetailResult;
 import com.daebbang.daebbangcore.domain.order.dto.OrderPrepareResponse;
 import com.daebbang.daebbangcore.domain.order.dto.OrderStatusCountResult;
@@ -548,6 +549,110 @@ class OrderControllerTest {
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
                         fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("POST /v1/orders/prepare - 3만원 미만 주문에 적립금 사용 시 400 반환")
+    void prepare_pointBelowMinOrder() throws Exception {
+        OrderPrepareRequest request = new OrderPrepareRequest(
+            List.of(new OrderItemRequest(1L, 1)),
+            500, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            3_000, null, false, false, null
+        );
+        willThrow(new BusinessException(PointErrorCode.POINT_USE_BELOW_MIN_ORDER))
+            .given(orderService).prepare(any());
+
+        mockMvc.perform(post("/v1/orders/prepare")
+                .with(authentication(authToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("3만원 이상 결제 시에만 적립금을 사용할 수 있습니다."))
+            .andDo(document("order/prepare-point-below-min-order",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("주문 준비 - 적립금 사용 최소 결제 금액 미달")
+                    .description("결제 자격 금액(상품 + 배송비)이 30,000원 미만일 때 적립금을 사용하면 400 Bad Request 반환.")
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .requestFields(
+                        fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
+                        fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
+                        fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
+                        fieldWithPath("usedPoint").type(JsonFieldType.NUMBER).description("사용 포인트 (양수)"),
+                        fieldWithPath("receiver").type(JsonFieldType.STRING).description("수령인 이름"),
+                        fieldWithPath("receiverPhoneNumber").type(JsonFieldType.STRING).description("수령인 연락처"),
+                        fieldWithPath("zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
+                        fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
+                        fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
+                        fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("POST /v1/orders/prepare - 보유 적립금 부족 시 400 반환")
+    void prepare_pointInsufficientBalance() throws Exception {
+        OrderPrepareRequest request = new OrderPrepareRequest(
+            List.of(new OrderItemRequest(1L, 1)),
+            10_000, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            3_000, null, false, false, null
+        );
+        willThrow(new BusinessException(PointErrorCode.POINT_INSUFFICIENT_BALANCE))
+            .given(orderService).prepare(any());
+
+        mockMvc.perform(post("/v1/orders/prepare")
+                .with(authentication(authToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("보유한 적립금이 부족합니다."))
+            .andDo(document("order/prepare-point-insufficient-balance",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("주문 준비 - 보유 적립금 부족")
+                    .description("사용하려는 적립금이 회원 보유 적립금을 초과할 때 400 Bad Request 반환.")
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .requestFields(
+                        fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
+                        fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
+                        fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
+                        fieldWithPath("usedPoint").type(JsonFieldType.NUMBER).description("사용 포인트 (보유 적립금 초과)"),
+                        fieldWithPath("receiver").type(JsonFieldType.STRING).description("수령인 이름"),
+                        fieldWithPath("receiverPhoneNumber").type(JsonFieldType.STRING).description("수령인 연락처"),
+                        fieldWithPath("zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
+                        fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
+                        fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
+                        fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -1133,6 +1238,73 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("POST /v1/orders/{orderNumber}/complete - 구매 확정 성공")
+    void complete_success() throws Exception {
+        willDoNothing().given(orderService).complete(any(), any());
+
+        mockMvc.perform(post("/v1/orders/{orderNumber}/complete", "20260416-ABC1234567")
+                .with(authentication(authToken())))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("구매 확정이 완료되었습니다."))
+            .andDo(document("order/complete-success",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("구매 확정")
+                    .description("""
+                        배송 완료(DELIVERED) 상태의 주문을 회원이 직접 구매 확정합니다.
+                        활성 PURCHASE 적립금 정책이 있으면 결제 금액 기준으로 적립금이 함께 지급됩니다.
+                        """)
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
+                    .responseSchema(Schema.schema("CommonResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("POST /v1/orders/{orderNumber}/complete - 배송 미완료 상태이면 400 반환")
+    void complete_notDelivered() throws Exception {
+        willThrow(new BusinessException(OrderErrorCode.ORDER_NOT_DELIVERED))
+            .given(orderService).complete(any(), any());
+
+        mockMvc.perform(post("/v1/orders/{orderNumber}/complete", "20260416-ABC1234567")
+                .with(authentication(authToken())))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("배송 완료된 주문만 구매 확정할 수 있습니다."))
+            .andDo(document("order/complete-not-delivered",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("구매 확정 - 배송 미완료")
+                    .description("주문 상태가 DELIVERED가 아니면 구매 확정 불가.")
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("POST /v1/orders/{orderNumber}/complete - 인증 없이 접근 시 401 반환")
+    void complete_unauthorized() throws Exception {
+        mockMvc.perform(post("/v1/orders/{orderNumber}/complete", "20260416-ABC1234567"))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("POST /v1/orders/{orderNumber}/cancel/partial - 부분 취소 성공")
     void cancelPartial_success() throws Exception {
         OrderPartialCancelRequest request = new OrderPartialCancelRequest(List.of(10L, 11L), "사이즈 오주문");
@@ -1399,6 +1571,7 @@ class OrderControllerTest {
             "20260416-ABC1234567", OrderStatus.PAID,
             LocalDateTime.of(2026, 4, 16, 10, 0, 0),
             30_000, 27_000, 3_000, 0, 30_000,
+            300, 0,
             List.of(item)
         );
         given(orderService.getOrderDetail(any(), any())).willReturn(result);
@@ -1443,6 +1616,8 @@ class OrderControllerTest {
                         fieldWithPath("data.shippingFee").type(JsonFieldType.NUMBER).description("배송비 (5만원 이상 무료)"),
                         fieldWithPath("data.usedPoint").type(JsonFieldType.NUMBER).description("사용한 포인트"),
                         fieldWithPath("data.paymentAmount").type(JsonFieldType.NUMBER).description("최종 결제 금액"),
+                        fieldWithPath("data.expectedPoint").type(JsonFieldType.NUMBER).description("예상 적립금 (PURCHASE 정책 기준, 정책 미설정/구매 확정 후엔 0일 수 있음)"),
+                        fieldWithPath("data.earnedPoint").type(JsonFieldType.NUMBER).description("이미 지급된 적립금 (구매 확정 전엔 0)"),
                         fieldWithPath("data.details[]").type(JsonFieldType.ARRAY).description("주문 항목 목록"),
                         fieldWithPath("data.details[].orderDetailId").type(JsonFieldType.NUMBER).description("주문 항목 ID (부분 취소 시 사용)"),
                         fieldWithPath("data.details[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (색상/사이즈 조합)"),

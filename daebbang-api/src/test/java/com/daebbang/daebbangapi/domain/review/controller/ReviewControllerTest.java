@@ -32,15 +32,14 @@ import com.daebbang.daebbangapi.domain.user.service.CustomUserDetailsService;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.ImageErrorCode;
 import com.daebbang.daebbangcore.domain.product.entity.Products;
+import com.daebbang.daebbangcore.domain.review.dto.ReviewExpectedAmounts;
 import com.daebbang.daebbangcore.domain.review.entity.Review;
-import com.daebbang.daebbangcore.domain.review.entity.ReviewPointConfig;
 import com.daebbang.daebbangcore.domain.review.entity.ReviewPointStatus;
 import com.daebbang.daebbangcore.domain.review.service.ReviewService;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
-import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,7 +59,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = ReviewController.class)
@@ -126,18 +124,8 @@ class ReviewControllerTest {
         return review;
     }
 
-    private ReviewPointConfig buildConfig() {
-        try {
-            Constructor<ReviewPointConfig> ctor = ReviewPointConfig.class.getDeclaredConstructor();
-            ctor.setAccessible(true);
-            ReviewPointConfig config = ctor.newInstance();
-            ReflectionTestUtils.setField(config, "normalReviewPoint", 500);
-            ReflectionTestUtils.setField(config, "photoReviewPoint", 1000);
-            ReflectionTestUtils.setField(config, "autoApproveDays", 7);
-            return config;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private ReviewExpectedAmounts buildExpectedAmounts() {
+        return new ReviewExpectedAmounts(500, 1000);
     }
 
     @Test
@@ -592,7 +580,7 @@ class ReviewControllerTest {
         Page<Review> page = new PageImpl<>(List.of(review), PageRequest.of(0, 10), 1);
 
         given(reviewService.getMyReviews(anyLong(), any())).willReturn(page);
-        given(reviewService.getPointConfig()).willReturn(buildConfig());
+        given(reviewService.getReviewExpectedAmounts()).willReturn(buildExpectedAmounts());
 
         mockMvc.perform(get("/v1/reviews/my")
                 .with(authentication(AUTH))
@@ -654,7 +642,7 @@ class ReviewControllerTest {
     void getMyReviews_empty() throws Exception {
         given(reviewService.getMyReviews(anyLong(), any()))
             .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
-        given(reviewService.getPointConfig()).willReturn(buildConfig());
+        given(reviewService.getReviewExpectedAmounts()).willReturn(buildExpectedAmounts());
 
         mockMvc.perform(get("/v1/reviews/my")
                 .with(authentication(AUTH))

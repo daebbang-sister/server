@@ -36,6 +36,7 @@ public enum UserSuccessCode implements SuccessCode {
     ORDER_PREPARED(200, "주문이 생성되었습니다."),
     ORDER_CONFIRMED(200, "결제가 완료되었습니다."),
     ORDER_CANCELLED(200, "주문이 취소되었습니다."),
+    ORDER_COMPLETED(200, "구매 확정이 완료되었습니다."),
     ORDER_LIST_RETRIEVED(200, "주문 목록 조회에 성공하였습니다."),
     ORDER_DETAIL_RETRIEVED(200, "주문 상세 조회에 성공하였습니다."),
     ORDER_STATUS_COUNT_RETRIEVED(200, "배송 현황 건수 조회에 성공하였습니다."),
