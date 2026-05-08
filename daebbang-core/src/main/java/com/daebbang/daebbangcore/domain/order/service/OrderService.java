@@ -23,6 +23,11 @@ public interface OrderService {
 
     void cancelPartial(OrderPartialCancelCommand command);
 
+    /**
+     * 사용자가 배송 완료된 주문을 구매 확정. 적립금 정책에 따라 PURCHASE 적립이 함께 일어난다.
+     */
+    void complete(Long userId, String orderNumber);
+
     Page<@NonNull OrderSummaryResult> getOrderList(Long userId, LocalDateTime start, LocalDateTime end,
                                           Pageable pageable);
 

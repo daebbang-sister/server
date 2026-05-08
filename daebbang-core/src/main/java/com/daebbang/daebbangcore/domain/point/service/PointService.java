@@ -4,6 +4,7 @@ import com.daebbang.daebbangcore.domain.point.dto.PointBalanceResult;
 import com.daebbang.daebbangcore.domain.point.entity.PointPolicy;
 import com.daebbang.daebbangcore.domain.point.entity.PolicyType;
 import com.daebbang.daebbangcore.domain.point.entity.UserPointHistory;
+import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
@@ -15,34 +16,38 @@ public interface PointService {
 
     Page<@NonNull UserPointHistory> getHistory(Long userId, Pageable pageable);
 
-    /**
-     * 활성 정책 조회. 관리자 화면이나 예상 적립금 표시 등에 사용.
-     */
     Optional<PointPolicy> findActiveByType(PolicyType policyType);
 
-    /**
-     * 회원가입 적립. 활성 SIGNUP 정책이 없으면 적립 없이 정상 종료.
-     */
     void awardSignupPoint(Long userId);
 
-    /**
-     * 리뷰 승인 시 적립. isPhotoReview에 따라 REVIEW_TEXT 또는 REVIEW_PHOTO 정책 적용.
-     * 정책 미설정 시 적립 없이 정상 종료.
-     */
     void awardReviewPoint(Long userId, Long reviewId, boolean isPhotoReview);
 
     /**
-     * 결제 시 적립금 사용. 30,000원 이상 결제에서만 사용 가능.
-     *
-     * @param userId               회원 아이디
-     * @param orderId              주문 아이디 (history reference_id)
-     * @param useAmount            사용할 적립금 (양수)
-     * @param paymentEligibleAmount 적립금 사용 자격 판단 기준 금액 (상품 + 배송비)
+     * 구매 확정 시점에 PURCHASE 정책 기반 적립. RATE 정책일 때 결제 금액 기준으로 계산.
      */
-    void usePointForPayment(Long userId, Long orderId, int useAmount, int paymentEligibleAmount);
+    void awardPurchasePoint(Long userId, Long orderId, int paymentAmount);
 
     /**
-     * 주문 취소·환불에 따라 사용한 적립금을 환원한다. 0 이하 amount는 무시.
+     * 결제 금액 기준 예상 적립금 (PURCHASE 정책). 정책 미설정이면 0.
      */
+    int calculateExpectedPurchasePoint(int paymentAmount);
+
+    /**
+     * 주문에 대해 이미 지급된 PURCHASE 적립금. 구매 확정 전이면 0.
+     */
+    int findEarnedPointByOrder(Long orderId);
+
+    void usePointForPayment(Long userId, Long orderId, int useAmount, int paymentEligibleAmount);
+
     void refundUsedPoint(Long userId, Long orderId, int amount);
+
+    /**
+     * 만료 후보 회원 ID 목록 조회. 스케줄러가 회원별로 트랜잭션을 분리해 처리하기 위한 진입점.
+     */
+    List<Long> findUserIdsWithExpirablePoints();
+
+    /**
+     * 단일 회원의 만료 lot을 처리 (REQUIRES_NEW). 한 회원 처리 실패가 다른 회원 처리에 영향 X.
+     */
+    void expirePointsOfUser(Long userId);
 }

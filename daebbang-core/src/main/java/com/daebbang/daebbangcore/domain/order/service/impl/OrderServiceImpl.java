@@ -504,6 +504,24 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
+    public void complete(Long userId, String orderNumber) {
+        Orders order = ordersRepository.findOrderDetailByOrderNumberAndUserId(orderNumber, userId)
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getOrderStatus() != OrderStatus.DELIVERED) {
+            throw new BusinessException(OrderErrorCode.ORDER_NOT_DELIVERED);
+        }
+
+        order.complete();
+        order.update();
+
+        pointService.awardPurchasePoint(userId, order.getId(), order.getPaymentAmount());
+
+        log.info("[Order] 구매 확정 완료 - orderNumber: {}, userId: {}", orderNumber, userId);
+    }
+
+    @Override
     public Page<@NonNull OrderSummaryResult> getOrderList(Long userId, LocalDateTime start,
                                                   LocalDateTime end, Pageable pageable) {
         return ordersRepository.findOrdersByUserIdAndDateRange(userId, start, end, pageable)
@@ -565,6 +583,9 @@ public class OrderServiceImpl implements OrderService {
             ))
             .toList();
 
+        int expectedPoint = pointService.calculateExpectedPurchasePoint(order.getPaymentAmount());
+        int earnedPoint = pointService.findEarnedPointByOrder(order.getId());
+
         return new OrderFullDetailResult(
             order.getOrderNumber(),
             order.getOrderStatus(),
@@ -574,6 +595,8 @@ public class OrderServiceImpl implements OrderService {
             order.getShippingFee(),
             order.getUsedPoint(),
             order.getPaymentAmount(),
+            expectedPoint,
+            earnedPoint,
             items
         );
     }

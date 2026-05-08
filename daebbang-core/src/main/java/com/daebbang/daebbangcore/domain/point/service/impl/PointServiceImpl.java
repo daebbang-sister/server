@@ -5,10 +5,12 @@ import com.daebbang.daebbangcommon.error.PointErrorCode;
 import com.daebbang.daebbangcommon.error.UserErrorCode;
 import com.daebbang.daebbangcore.domain.point.dto.PointBalanceResult;
 import com.daebbang.daebbangcore.domain.point.entity.ChangeType;
+import com.daebbang.daebbangcore.domain.point.entity.PointLot;
 import com.daebbang.daebbangcore.domain.point.entity.PointPolicy;
 import com.daebbang.daebbangcore.domain.point.entity.Points;
 import com.daebbang.daebbangcore.domain.point.entity.PolicyType;
 import com.daebbang.daebbangcore.domain.point.entity.UserPointHistory;
+import com.daebbang.daebbangcore.domain.point.repository.PointLotRepository;
 import com.daebbang.daebbangcore.domain.point.repository.PointPolicyRepository;
 import com.daebbang.daebbangcore.domain.point.repository.PointsRepository;
 import com.daebbang.daebbangcore.domain.point.repository.UserPointHistoryRepository;
@@ -16,6 +18,7 @@ import com.daebbang.daebbangcore.domain.point.service.PointService;
 import com.daebbang.daebbangcore.domain.user.entity.Users;
 import com.daebbang.daebbangcore.domain.user.repository.UsersRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -36,6 +40,7 @@ public class PointServiceImpl implements PointService {
     private final PointsRepository pointsRepository;
     private final PointPolicyRepository pointPolicyRepository;
     private final UserPointHistoryRepository userPointHistoryRepository;
+    private final PointLotRepository pointLotRepository;
     private final UsersRepository usersRepository;
 
     @Override
@@ -72,6 +77,13 @@ public class PointServiceImpl implements PointService {
 
     @Override
     @Transactional
+    public void awardPurchasePoint(Long userId, Long orderId, int paymentAmount) {
+        Points points = loadForUpdate(userId);
+        award(points, PolicyType.PURCHASE, ChangeType.EARN_PURCHASE, orderId, paymentAmount);
+    }
+
+    @Override
+    @Transactional
     public void usePointForPayment(Long userId, Long orderId, int useAmount, int paymentEligibleAmount) {
         if (useAmount <= 0) {
             return;
@@ -80,6 +92,10 @@ public class PointServiceImpl implements PointService {
             throw new BusinessException(PointErrorCode.POINT_USE_BELOW_MIN_ORDER);
         }
         Points points = loadForUpdate(userId);
+        if (points.getCurrentAmount() < useAmount) {
+            throw new BusinessException(PointErrorCode.POINT_INSUFFICIENT_BALANCE);
+        }
+        consumeFifo(points, useAmount);
         points.use(useAmount);
 
         userPointHistoryRepository.save(UserPointHistory.ofChange(
@@ -97,9 +113,58 @@ public class PointServiceImpl implements PointService {
         Points points = loadForUpdate(userId);
         points.refund(amount);
 
-        userPointHistoryRepository.save(UserPointHistory.ofChange(
+        // 환불은 새 무기한 lot으로 복원 (원본 lot 추적은 비용 대비 가치 낮아 단순화)
+        UserPointHistory history = userPointHistoryRepository.save(UserPointHistory.ofChange(
             points, ChangeType.REFUND_CANCEL, orderId,
             amount, points.getCurrentAmount(), "주문 취소에 따른 적립금 환원"
+        ));
+        pointLotRepository.save(PointLot.create(points, history, amount, null));
+    }
+
+    @Override
+    public int calculateExpectedPurchasePoint(int paymentAmount) {
+        return findActiveByType(PolicyType.PURCHASE)
+            .map(p -> p.calculateEarnAmount(paymentAmount))
+            .orElse(0);
+    }
+
+    @Override
+    public int findEarnedPointByOrder(Long orderId) {
+        Integer sum = userPointHistoryRepository.sumChangeAmountByChangeTypeAndReferenceId(
+            ChangeType.EARN_PURCHASE, orderId);
+        return sum != null ? sum : 0;
+    }
+
+    @Override
+    public List<Long> findUserIdsWithExpirablePoints() {
+        // pointsId → userId 변환은 만료 처리 메서드에서 처리. 여기선 pointsId 목록만 반환.
+        return pointLotRepository.findPointsIdsWithExpirableLots(LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void expirePointsOfUser(Long pointsId) {
+        Points points = pointsRepository.findById(pointsId)
+            .orElseThrow(() -> new BusinessException(PointErrorCode.POINT_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+        List<PointLot> expirable = pointLotRepository.findExpirableLotsForUpdate(pointsId, now);
+        if (expirable.isEmpty()) {
+            return;
+        }
+
+        int totalExpired = 0;
+        for (PointLot lot : expirable) {
+            totalExpired += lot.consume(lot.getRemainingAmount());
+        }
+        if (totalExpired <= 0) {
+            return;
+        }
+
+        int actuallyExpired = points.expire(totalExpired);
+        userPointHistoryRepository.save(UserPointHistory.ofChange(
+            points, ChangeType.EXPIRE, null,
+            actuallyExpired, points.getCurrentAmount(), "유효기간 만료에 따른 적립금 소멸"
         ));
     }
 
@@ -125,11 +190,29 @@ public class PointServiceImpl implements PointService {
 
         points.earn(amount);
 
-        LocalDateTime expiredAt = policy.resolveExpiredAt(LocalDateTime.now());
-        userPointHistoryRepository.save(UserPointHistory.ofEarn(
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiredAt = policy.resolveExpiredAt(now);
+        UserPointHistory history = userPointHistoryRepository.save(UserPointHistory.ofEarn(
             points, policy, changeType, referenceId,
             amount, points.getCurrentAmount(), policy.getName(), expiredAt
         ));
+        pointLotRepository.save(PointLot.create(points, history, amount, expiredAt));
+    }
+
+    /**
+     * FIFO로 활성 lot에서 amount만큼 차감. 호출자가 잔액 충분성을 미리 검증해야 한다.
+     */
+    private void consumeFifo(Points points, int amount) {
+        List<PointLot> activeLots = pointLotRepository.findActiveLotsForUpdate(points.getId());
+        int remaining = amount;
+        for (PointLot lot : activeLots) {
+            if (remaining <= 0) break;
+            remaining -= lot.consume(remaining);
+        }
+        if (remaining > 0) {
+            // points.currentAmount 와 lots 합이 일치하지 않는 데이터 부정합. 비즈니스 가드.
+            throw new BusinessException(PointErrorCode.POINT_INSUFFICIENT_BALANCE);
+        }
     }
 
     /**

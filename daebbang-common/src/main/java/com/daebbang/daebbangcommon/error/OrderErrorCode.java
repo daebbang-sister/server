@@ -17,6 +17,7 @@ public enum OrderErrorCode implements ErrorCode {
     ORDER_DATE_RANGE_INVALID(400, "조회 시작일이 종료일보다 늦을 수 없습니다."),
     ORDER_DETAIL_NOT_FOUND(404, "존재하지 않는 주문 상세입니다."),
     ORDER_NOT_COMPLETED(400, "주문 완료 상태에서만 리뷰를 작성할 수 있습니다."),
+    ORDER_NOT_DELIVERED(400, "배송 완료된 주문만 구매 확정할 수 있습니다."),
 
     OUT_OF_STOCK(409, "재고가 부족합니다."),
     STOCK_LOCK_FAILED(503, "재고 처리 중입니다. 잠시 후 다시 시도해주세요."),

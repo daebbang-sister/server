@@ -14,6 +14,8 @@ public record OrderFullDetailResult(
     int shippingFee,
     int usedPoint,
     int paymentAmount,
+    int expectedPoint,
+    int earnedPoint,
     List<OrderDetailItem> details
 ) {
     public record OrderDetailItem(

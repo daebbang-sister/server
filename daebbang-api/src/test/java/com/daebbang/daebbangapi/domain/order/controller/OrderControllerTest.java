@@ -1238,6 +1238,73 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("POST /v1/orders/{orderNumber}/complete - 구매 확정 성공")
+    void complete_success() throws Exception {
+        willDoNothing().given(orderService).complete(any(), any());
+
+        mockMvc.perform(post("/v1/orders/{orderNumber}/complete", "20260416-ABC1234567")
+                .with(authentication(authToken())))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.message").value("구매 확정이 완료되었습니다."))
+            .andDo(document("order/complete-success",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("구매 확정")
+                    .description("""
+                        배송 완료(DELIVERED) 상태의 주문을 회원이 직접 구매 확정합니다.
+                        활성 PURCHASE 적립금 정책이 있으면 결제 금액 기준으로 적립금이 함께 지급됩니다.
+                        """)
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
+                    .responseSchema(Schema.schema("CommonResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("POST /v1/orders/{orderNumber}/complete - 배송 미완료 상태이면 400 반환")
+    void complete_notDelivered() throws Exception {
+        willThrow(new BusinessException(OrderErrorCode.ORDER_NOT_DELIVERED))
+            .given(orderService).complete(any(), any());
+
+        mockMvc.perform(post("/v1/orders/{orderNumber}/complete", "20260416-ABC1234567")
+                .with(authentication(authToken())))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("배송 완료된 주문만 구매 확정할 수 있습니다."))
+            .andDo(document("order/complete-not-delivered",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("구매 확정 - 배송 미완료")
+                    .description("주문 상태가 DELIVERED가 아니면 구매 확정 불가.")
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
+                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("POST /v1/orders/{orderNumber}/complete - 인증 없이 접근 시 401 반환")
+    void complete_unauthorized() throws Exception {
+        mockMvc.perform(post("/v1/orders/{orderNumber}/complete", "20260416-ABC1234567"))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("POST /v1/orders/{orderNumber}/cancel/partial - 부분 취소 성공")
     void cancelPartial_success() throws Exception {
         OrderPartialCancelRequest request = new OrderPartialCancelRequest(List.of(10L, 11L), "사이즈 오주문");
@@ -1504,6 +1571,7 @@ class OrderControllerTest {
             "20260416-ABC1234567", OrderStatus.PAID,
             LocalDateTime.of(2026, 4, 16, 10, 0, 0),
             30_000, 27_000, 3_000, 0, 30_000,
+            300, 0,
             List.of(item)
         );
         given(orderService.getOrderDetail(any(), any())).willReturn(result);
@@ -1548,6 +1616,8 @@ class OrderControllerTest {
                         fieldWithPath("data.shippingFee").type(JsonFieldType.NUMBER).description("배송비 (5만원 이상 무료)"),
                         fieldWithPath("data.usedPoint").type(JsonFieldType.NUMBER).description("사용한 포인트"),
                         fieldWithPath("data.paymentAmount").type(JsonFieldType.NUMBER).description("최종 결제 금액"),
+                        fieldWithPath("data.expectedPoint").type(JsonFieldType.NUMBER).description("예상 적립금 (PURCHASE 정책 기준, 정책 미설정/구매 확정 후엔 0일 수 있음)"),
+                        fieldWithPath("data.earnedPoint").type(JsonFieldType.NUMBER).description("이미 지급된 적립금 (구매 확정 전엔 0)"),
                         fieldWithPath("data.details[]").type(JsonFieldType.ARRAY).description("주문 항목 목록"),
                         fieldWithPath("data.details[].orderDetailId").type(JsonFieldType.NUMBER).description("주문 항목 ID (부분 취소 시 사용)"),
                         fieldWithPath("data.details[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (색상/사이즈 조합)"),
