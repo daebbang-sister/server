@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\":true,\"\
-                  address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
-                  :\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\"\
+                  :true,\"address\":\"서울시 강남구 테헤란로\"}"
               address/add-address-limit-exceeded:
-                value: "{\"receiver\":\"홍길동\",\"detailAddress\":\"101호\",\"address\"\
-                  :\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\"\
-                  :false,\"zipCode\":\"12345\"}"
+                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
+                  :\"12345\",\"receiver\":\"홍길동\"}"
       responses:
         "201":
           description: "201"
@@ -489,10 +489,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-users486549215'
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=ilE__2v5nMrcLzauaOaZx5JWAFi5vPyqulwqtUTzKsJ-LgnnvzcOyg6Y_f_xTlKXW8ut9_ZgLWGL2sWH2GpOhHzHH6McSj7R
+                value: _csrf=bYkfU1N0FuV-8UhQLOrXQRhTs1E8V3OVmaqYdfHx1uug4d_kX-snZ2YQItdTwXoxTsfjdnsynjMOYke4rcygQcPG596ZgOaA
       responses:
         "200":
           description: "200"
@@ -637,13 +637,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\":false,\"\
-                  address\":\"서울시 서초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\"\
-                  :\"김철수\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
+                value: "{\"detailAddress\":\"202호\",\"receiver\":\"김철수\",\"receiverPhoneNumber\"\
+                  :\"010-9876-5432\",\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\"\
+                  :false,\"address\":\"서울시 서초구 반포대로\"}"
               address/update-address-not-found:
-                value: "{\"receiver\":\"홍길동\",\"detailAddress\":\"101호\",\"address\"\
-                  :\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\"\
-                  :false,\"zipCode\":\"12345\"}"
+                value: "{\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"zipCode\"\
+                  :\"12345\",\"receiver\":\"홍길동\"}"
       responses:
         "200":
           description: "200"
@@ -689,12 +689,12 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-users486549215'
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
-                value: _csrf=46RllSfABg5aQCUcjfKtIL9_6FUA73_bNX-sSQjBbnqcS8wk1cZVpUGkPzx3eBMkvd-ZRo5PxTRii072B0yee2ylWEP-eapB
+                value: _csrf=KBTVfpS05hR7oysIOfeRV5ccbYh8nW0W_faPYXVRXgamU7uhSnXiH_bS1nFWwRw-CtqlYPUkQLBLqVo7n5W_AhdnPWKeY43H
               address/delete-address-not-found:
-                value: _csrf=d0-qrbYfh2ZGs2BxVZba-I9qChyDuNH1e_q9CQD02lZk63hpTymcyI9941ZriwYQZbvuyO5fJyTh3eLYGc6JbzCRv2VW20xb
+                value: _csrf=wQJV9crOqADyQ_GWZIKnZ7pHE35TjBJLPS48BnNf7l_u4Jvk8jswzfn3njTfJ8D1Vq-TAY1_Pkdq6nNmWEoNNUdo127fgavW
       responses:
         "200":
           description: "200"
@@ -2383,7 +2383,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"1\":0,\"5\":7,\"4\":5,\"3\":2,\"2\":1}}}"
+                    ratingCounts\":{\"5\":7,\"4\":5,\"3\":2,\"2\":1,\"1\":0}}}"
 components:
   schemas:
     ErrorResponse:
@@ -3533,7 +3533,7 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-users486549215:
+    v1-addresses-addressId486549215:
       type: object
     MyInfoEditResponse:
       title: MyInfoEditResponse
