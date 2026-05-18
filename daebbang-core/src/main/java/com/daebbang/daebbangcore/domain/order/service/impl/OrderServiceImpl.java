@@ -3,6 +3,7 @@ package com.daebbang.daebbangcore.domain.order.service.impl;
 import com.daebbang.daebbangcommon.error.BusinessException;
 import com.daebbang.daebbangcommon.error.OrderErrorCode;
 import com.daebbang.daebbangcommon.error.PointErrorCode;
+import com.daebbang.daebbangcommon.util.PhoneNumberUtils;
 import com.daebbang.daebbangcore.domain.point.dto.PointBalanceResult;
 import com.daebbang.daebbangcore.domain.point.service.PointService;
 import com.daebbang.daebbangcore.domain.order.command.OrderCancelCommand;
@@ -281,7 +282,13 @@ public class OrderServiceImpl implements OrderService {
                     session.getUsedPoint(),
                     session.getShippingFee(),
                     session.getTotalOriginalAmount(),
-                    session.getTotalSellingAmount()
+                    session.getTotalSellingAmount(),
+                    session.getReceiver(),
+                    session.getReceiverPhoneNumber(),
+                    session.getZipCode(),
+                    session.getAddress(),
+                    session.getDetailAddress(),
+                    session.getOrderNote()
                 );
 
                 for (OrderSessionItem item : session.getItems()) {
@@ -586,6 +593,21 @@ public class OrderServiceImpl implements OrderService {
         int expectedPoint = pointService.calculateExpectedPurchasePoint(order.getPaymentAmount());
         int earnedPoint = pointService.findEarnedPointByOrder(order.getId());
 
+        Users user = order.getUser();
+        OrderFullDetailResult.OrdererInfo ordererInfo = new OrderFullDetailResult.OrdererInfo(
+            user.getName(),
+            PhoneNumberUtils.maskPhoneNumber(user.getPhoneNumber())
+        );
+
+        OrderFullDetailResult.ShippingInfo shippingInfo = new OrderFullDetailResult.ShippingInfo(
+            order.getReceiver(),
+            order.getZipCode(),
+            order.getAddress(),
+            order.getDetailAddress(),
+            PhoneNumberUtils.maskPhoneNumber(order.getReceiverPhone()),
+            order.getOrderNote()
+        );
+
         return new OrderFullDetailResult(
             order.getOrderNumber(),
             order.getOrderStatus(),
@@ -597,6 +619,8 @@ public class OrderServiceImpl implements OrderService {
             order.getPaymentAmount(),
             expectedPoint,
             earnedPoint,
+            ordererInfo,
+            shippingInfo,
             items
         );
     }

@@ -16,8 +16,24 @@ public record OrderFullDetailResult(
     int paymentAmount,
     int expectedPoint,
     int earnedPoint,
+    OrdererInfo ordererInfo,
+    ShippingInfo shippingInfo,
     List<OrderDetailItem> details
 ) {
+    public record OrdererInfo(
+        String name,
+        String maskedPhone
+    ) {}
+
+    public record ShippingInfo(
+        String receiver,
+        String zipCode,
+        String address,
+        String detailAddress,
+        String maskedPhone,
+        String orderNote
+    ) {}
+
     public record OrderDetailItem(
         Long orderDetailId,
         Long productDetailId,

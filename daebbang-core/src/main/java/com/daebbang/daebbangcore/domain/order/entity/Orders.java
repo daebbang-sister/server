@@ -57,13 +57,33 @@ public class Orders extends DefaultBase {
     @Column(nullable = false)
     private Integer paymentAmount;
 
+    @Column(length = 50, nullable = false)
+    private String receiver;
+
+    @Column(length = 20, nullable = false)
+    private String receiverPhone;
+
+    @Column(length = 10, nullable = false)
+    private String zipCode;
+
+    @Column(length = 255, nullable = false)
+    private String address;
+
+    @Column(length = 255, nullable = false)
+    private String detailAddress;
+
+    @Column(length = 100)
+    private String orderNote;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @jakarta.persistence.OrderBy("id ASC")
     private final List<OrderDetails> orderList = new ArrayList<>();
 
     @Builder
     private Orders(Users user, String orderNumber, int usedPoint, int shippingFee,
-        int totalOriginalAmount, int totalSellingAmount) {
+        int totalOriginalAmount, int totalSellingAmount,
+        String receiver, String receiverPhone, String zipCode, String address,
+        String detailAddress, String orderNote) {
         this.user = user;
         this.orderNumber = orderNumber;
         this.orderStatus = OrderStatus.PENDING;
@@ -72,10 +92,18 @@ public class Orders extends DefaultBase {
         this.totalOriginalAmount = totalOriginalAmount;
         this.totalSellingAmount = totalSellingAmount;
         this.paymentAmount = totalSellingAmount + shippingFee - usedPoint;
+        this.receiver = receiver;
+        this.receiverPhone = receiverPhone;
+        this.zipCode = zipCode;
+        this.address = address;
+        this.detailAddress = detailAddress;
+        this.orderNote = orderNote;
     }
 
     public static Orders create(Users user, String orderNumber, int usedPoint, int shippingFee,
-        int totalOriginalAmount, int totalSellingAmount) {
+        int totalOriginalAmount, int totalSellingAmount,
+        String receiver, String receiverPhone, String zipCode, String address,
+        String detailAddress, String orderNote) {
         return Orders.builder()
             .user(user)
             .orderNumber(orderNumber)
@@ -83,6 +111,12 @@ public class Orders extends DefaultBase {
             .shippingFee(shippingFee)
             .totalOriginalAmount(totalOriginalAmount)
             .totalSellingAmount(totalSellingAmount)
+            .receiver(receiver)
+            .receiverPhone(receiverPhone)
+            .zipCode(zipCode)
+            .address(address)
+            .detailAddress(detailAddress)
+            .orderNote(orderNote)
             .build();
     }
 
