@@ -17,6 +17,8 @@ public record OrderDetailResponse(
     int paymentAmount,
     int expectedPoint,
     int earnedPoint,
+    OrdererInfo ordererInfo,
+    ShippingInfo shippingInfo,
     List<OrderDetailItem> details
 ) {
     public static OrderDetailResponse from(OrderFullDetailResult result) {
@@ -31,8 +33,39 @@ public record OrderDetailResponse(
             result.paymentAmount(),
             result.expectedPoint(),
             result.earnedPoint(),
+            OrdererInfo.from(result.ordererInfo()),
+            ShippingInfo.from(result.shippingInfo()),
             result.details().stream().map(OrderDetailItem::from).toList()
         );
+    }
+
+    public record OrdererInfo(
+        String name,
+        String maskedPhone
+    ) {
+        public static OrdererInfo from(OrderFullDetailResult.OrdererInfo info) {
+            return new OrdererInfo(info.name(), info.maskedPhone());
+        }
+    }
+
+    public record ShippingInfo(
+        String receiver,
+        String zipCode,
+        String address,
+        String detailAddress,
+        String maskedPhone,
+        String orderNote
+    ) {
+        public static ShippingInfo from(OrderFullDetailResult.ShippingInfo info) {
+            return new ShippingInfo(
+                info.receiver(),
+                info.zipCode(),
+                info.address(),
+                info.detailAddress(),
+                info.maskedPhone(),
+                info.orderNote()
+            );
+        }
     }
 
     public record OrderDetailItem(

@@ -391,13 +391,13 @@ paths:
     get:
       tags:
       - User
-      summary: 회원 정보 조회 (기본 주소 없음)
-      description: JWT 토큰으로 인증된 회원의 정보를 조회합니다. 기본 배송지가 없을 경우 defaultAddress는 null입니다.
-      operationId: user/get-user-
+      summary: 회원 정보 조회
+      description: JWT 토큰으로 인증된 회원의 정보를 조회합니다.
+      operationId: user/get-user
       parameters:
       - name: Authorization
         in: header
-        description: Bearer JWT 토큰
+        description: Bearer JWT 토큰 (로그인 후 발급된 액세스 토큰)
         required: true
         schema:
           type: string
@@ -410,6 +410,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserInfoResponse'
               examples:
+                user/get-user:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
+                    하였습니다.\",\"data\":{\"id\":1,\"provider\":\"LOCAL\",\"loginId\"\
+                    :\"testuser\",\"userName\":\"홍길동\",\"userEmail\":\"test@example.com\"\
+                    ,\"userPhoneNumber\":\"010-****-5678\",\"createdAt\":\"2025-01-01T00:00:00\"\
+                    ,\"lastLoginAt\":null}}"
                 user/get-user-no-address:
                   value: "{\"success\":true,\"status\":200,\"message\":\"회원 조회에 성공\
                     하였습니다.\",\"data\":{\"id\":null,\"provider\":\"LOCAL\",\"loginId\"\
@@ -1082,8 +1088,9 @@ paths:
     get:
       tags:
       - Order
-      summary: 주문 상세 조회 - 주문 없음
-      description: 존재하지 않거나 본인 주문이 아닌 경우 404를 반환합니다.
+      summary: 주문 상세 조회 - 주문자/수령인 상이
+      description: "주문자와 수령인이 다를 경우에도 각 정보가 올바르게 반환되며, 배송 메모가 없으면 orderNote는 null입\
+        니다."
       operationId: order/detail-
       parameters:
       - name: orderNumber
@@ -1093,6 +1100,44 @@ paths:
         schema:
           type: string
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailResponse'
+              examples:
+                order/detail-different-orderer-receiver:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 상세 조회에\
+                    \ 성공하였습니다.\",\"data\":{\"orderNumber\":\"20260416-XYZ9999999\"\
+                    ,\"orderStatus\":\"PREPARING_DELIVERY\",\"orderedAt\":\"2026-04-16T14:30:00\"\
+                    ,\"totalOriginalAmount\":50000,\"totalSellingAmount\":40000,\"\
+                    shippingFee\":0,\"usedPoint\":0,\"paymentAmount\":40000,\"expectedPoint\"\
+                    :400,\"earnedPoint\":0,\"ordererInfo\":{\"name\":\"김주문\",\"maskedPhone\"\
+                    :\"010-****-1111\"},\"shippingInfo\":{\"receiver\":\"이수령\",\"\
+                    zipCode\":\"12345\",\"address\":\"경기도 성남시 분당구 판교로 1\",\"detailAddress\"\
+                    :\"A동 101호\",\"maskedPhone\":\"010-****-2222\",\"orderNote\":null},\"\
+                    details\":[{\"orderDetailId\":20,\"productDetailId\":202,\"productName\"\
+                    :\"오버핏 후드티\",\"imageUrl\":\"https://cdn.daebbang.com/img/hoodie.jpg\"\
+                    ,\"color\":\"블랙\",\"colorCode\":\"#000000\",\"size\":\"L\",\"\
+                    quantity\":1,\"originalPrice\":50000,\"discountRate\":20,\"discountPrice\"\
+                    :40000,\"status\":\"NORMAL\"}]}}"
+                order/detail-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 상세 조회에\
+                    \ 성공하였습니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\"\
+                    ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
+                    ,\"totalOriginalAmount\":30000,\"totalSellingAmount\":27000,\"\
+                    shippingFee\":3000,\"usedPoint\":0,\"paymentAmount\":30000,\"\
+                    expectedPoint\":300,\"earnedPoint\":0,\"ordererInfo\":{\"name\"\
+                    :\"홍길동\",\"maskedPhone\":\"010-****-5678\"},\"shippingInfo\":{\"\
+                    receiver\":\"홍길순\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구\
+                    \ 테헤란로 1\",\"detailAddress\":\"101동 202호\",\"maskedPhone\":\"\
+                    010-****-9012\",\"orderNote\":\"문 앞에 놓아주세요\"},\"details\":[{\"\
+                    orderDetailId\":10,\"productDetailId\":101,\"productName\":\"슬\
+                    림핏 청바지\",\"imageUrl\":\"https://cdn.daebbang.com/img/slim-jeans.jpg\"\
+                    ,\"color\":\"골드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"\
+                    quantity\":2,\"originalPrice\":15000,\"discountRate\":10,\"discountPrice\"\
+                    :13500,\"status\":\"NORMAL\"}]}}"
         "404":
           description: "404"
           content:
@@ -1103,25 +1148,6 @@ paths:
                 order/detail-not-found:
                   value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
                     \ 주문입니다.\",\"data\":null}"
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderDetailResponse'
-              examples:
-                order/detail-success:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문 상세 조회에\
-                    \ 성공하였습니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\"\
-                    ,\"orderStatus\":\"PAID\",\"orderedAt\":\"2026-04-16T10:00:00\"\
-                    ,\"totalOriginalAmount\":30000,\"totalSellingAmount\":27000,\"\
-                    shippingFee\":3000,\"usedPoint\":0,\"paymentAmount\":30000,\"\
-                    expectedPoint\":300,\"earnedPoint\":0,\"details\":[{\"orderDetailId\"\
-                    :10,\"productDetailId\":101,\"productName\":\"슬림핏 청바지\",\"imageUrl\"\
-                    :\"https://cdn.daebbang.com/img/slim-jeans.jpg\",\"color\":\"골\
-                    드\",\"colorCode\":\"#FFD700\",\"size\":\"M\",\"quantity\":2,\"\
-                    originalPrice\":15000,\"discountRate\":10,\"discountPrice\":13500,\"\
-                    status\":\"NORMAL\"}]}}"
   /v1/points/me:
     get:
       tags:
@@ -1273,9 +1299,9 @@ paths:
     get:
       tags:
       - Product
-      summary: 상품 상세 조회 - 상품 없음
-      description: 존재하지 않는 상품 ID로 조회 시 404를 반환합니다.
-      operationId: products/detail-
+      summary: 상품 상세 조회
+      description: "상품 ID로 상세 정보를 조회합니다. 갤러리 이미지, 색상/사이즈 옵션, 할인 정보가 포함됩니다."
+      operationId: products/detail
       parameters:
       - name: productId
         in: path
@@ -1285,16 +1311,6 @@ paths:
           type: integer
           format: int32
       responses:
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                products/detail-not-found:
-                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
-                    \ 상품입니다.\",\"data\":null}"
         "200":
           description: "200"
           content:
@@ -1302,6 +1318,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProductDetailResponse'
               examples:
+                products/detail:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"simpleDescription\":\"편안한 루즈핏 티셔츠\",\"mainImageUrl\"\
+                    :\"http://example.com/main1.jpg\",\"originalPrice\":50000,\"sellingPrice\"\
+                    :40000,\"discountRate\":20,\"gallery\":[{\"imageUrl\":\"http://example.com/detail1.jpg\"\
+                    ,\"imageOrder\":1},{\"imageUrl\":\"http://example.com/detail2.jpg\"\
+                    ,\"imageOrder\":2}],\"descriptionHtml\":\"<p>상품 상세 설명</p>\",\"\
+                    options\":[{\"color\":\"블랙\",\"colorCode\":\"#000000\",\"sizes\"\
+                    :[{\"size\":\"S\",\"stock\":10,\"soldOut\":false},{\"size\":\"\
+                    M\",\"stock\":0,\"soldOut\":true}]},{\"color\":\"화이트\",\"colorCode\"\
+                    :\"#FFFFFF\",\"sizes\":[{\"size\":\"S\",\"stock\":5,\"soldOut\"\
+                    :false}]}]}}"
                 products/detail-success:
                   value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
                     니다.\",\"data\":{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
@@ -1316,6 +1345,16 @@ paths:
                     :true}]},{\"color\":\"화이트\",\"colorCode\":\"#FFFFFF\",\"sizes\"\
                     :[{\"productDetailId\":3,\"size\":\"S\",\"stock\":5,\"soldOut\"\
                     :false}]}]}}"
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                products/detail-not-found:
+                  value: "{\"success\":false,\"status\":404,\"message\":\"존재하지 않는\
+                    \ 상품입니다.\",\"data\":null}"
   /v1/reviews/my:
     get:
       tags:
@@ -2452,6 +2491,129 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    OrderDetailResponse:
+      title: OrderDetailResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            orderNumber:
+              type: string
+              description: 주문 번호
+            totalOriginalAmount:
+              type: number
+              description: 상품 정가 합계
+            shippingInfo:
+              type: object
+              properties:
+                zipCode:
+                  type: string
+                  description: 우편번호
+                maskedPhone:
+                  type: string
+                  description: "수령인 연락처 (가운데 4자리 마스킹, 예: 010-****-9012)"
+                address:
+                  type: string
+                  description: 기본 주소
+                receiver:
+                  type: string
+                  description: 수령인 이름
+                orderNote:
+                  description: 배송 메모 (없으면 null)
+                  oneOf:
+                  - type: string
+                  - type: object
+                detailAddress:
+                  type: string
+                  description: 상세 주소
+              description: 배송지 정보
+            earnedPoint:
+              type: number
+              description: 이미 지급된 적립금 (구매 확정 전엔 0)
+            orderStatus:
+              type: string
+              description: 주문 상태
+            expectedPoint:
+              type: number
+              description: "예상 적립금 (PURCHASE 정책 기준, 정책 미설정/구매 확정 후엔 0일 수 있음)"
+            paymentAmount:
+              type: number
+              description: 최종 결제 금액
+            totalSellingAmount:
+              type: number
+              description: 할인 적용 판매가 합계
+            ordererInfo:
+              type: object
+              properties:
+                maskedPhone:
+                  type: string
+                  description: "주문자 연락처 (가운데 4자리 마스킹, 예: 010-****-5678)"
+                name:
+                  type: string
+                  description: 주문자 이름
+              description: 주문자 정보
+            usedPoint:
+              type: number
+              description: 사용한 포인트
+            orderedAt:
+              type: string
+              description: 주문 일시
+            shippingFee:
+              type: number
+              description: 배송비 (5만원 이상 무료)
+            details:
+              type: array
+              description: 주문 항목 목록
+              items:
+                type: object
+                properties:
+                  discountRate:
+                    type: number
+                    description: 할인율 (%)
+                  quantity:
+                    type: number
+                    description: 수량
+                  originalPrice:
+                    type: number
+                    description: 정가
+                  size:
+                    type: string
+                    description: 사이즈
+                  color:
+                    type: string
+                    description: 색상명
+                  imageUrl:
+                    type: string
+                    description: 상품 이미지 URL
+                  discountPrice:
+                    type: number
+                    description: 할인 적용가
+                  colorCode:
+                    type: string
+                    description: 색상 코드 (HEX)
+                  productName:
+                    type: string
+                    description: 상품명
+                  productDetailId:
+                    type: number
+                    description: 상품 상세 ID (색상/사이즈 조합)
+                  orderDetailId:
+                    type: number
+                    description: 주문 항목 ID (부분 취소 시 사용)
+                  status:
+                    type: string
+                    description: "항목 상태 (NORMAL, CANCEL_REQUESTED, CANCELLED, REFUND_REQUESTED,\
+                      \ RETURNED)"
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     CommonVoidResponse:
       title: CommonVoidResponse
       type: object
@@ -2481,6 +2643,76 @@ components:
             currentAmount:
               type: number
               description: 사용 가능한 적립금 (0)
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    UserInfoResponse:
+      title: UserInfoResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            createdAt:
+              description: 가입 일시
+              oneOf:
+              - type: object
+              - type: string
+            lastLoginAt:
+              type: object
+              description: 마지막 로그인 일시
+            loginId:
+              type: string
+              description: 로그인 ID
+            provider:
+              type: string
+              description: "로그인 제공자 (LOCAL, KAKAO)"
+            userPhoneNumber:
+              type: string
+              description: "전화번호 (마스킹 처리, 예: 010-****-5678)"
+            userEmail:
+              type: string
+              description: 이메일 주소
+            id:
+              description: 회원 고유 ID
+              oneOf:
+              - type: object
+              - type: number
+            userName:
+              type: string
+              description: 회원 이름
+            defaultAddress:
+              type: object
+              properties:
+                zipCode:
+                  type: string
+                  description: 우편번호
+                address:
+                  type: string
+                  description: 도로명 주소
+                receiver:
+                  type: string
+                  description: 수령인
+                receiverPhoneNumber:
+                  type: string
+                  description: 수령인 전화번호
+                detailAddress:
+                  type: string
+                  description: 상세 주소
+                alias:
+                  type: object
+                  description: 주소 별칭
+                addressId:
+                  type: object
+                  description: 주소 ID
+              description: 기본 배송지
+          description: 회원 정보
         success:
           type: boolean
           description: 성공 여부
@@ -3779,161 +4011,6 @@ components:
         alias:
           type: string
           description: "주소 별칭 (예: 집, 회사)"
-    OrderDetailResponse:
-      title: OrderDetailResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            usedPoint:
-              type: number
-              description: 사용한 포인트
-            orderedAt:
-              type: string
-              description: 주문 일시
-            orderNumber:
-              type: string
-              description: 주문 번호
-            shippingFee:
-              type: number
-              description: 배송비 (5만원 이상 무료)
-            totalOriginalAmount:
-              type: number
-              description: 상품 정가 합계
-            earnedPoint:
-              type: number
-              description: 이미 지급된 적립금 (구매 확정 전엔 0)
-            orderStatus:
-              type: string
-              description: 주문 상태
-            details:
-              type: array
-              description: 주문 항목 목록
-              items:
-                type: object
-                properties:
-                  discountRate:
-                    type: number
-                    description: 할인율 (%)
-                  quantity:
-                    type: number
-                    description: 수량
-                  originalPrice:
-                    type: number
-                    description: 정가
-                  size:
-                    type: string
-                    description: 사이즈
-                  color:
-                    type: string
-                    description: 색상명
-                  imageUrl:
-                    type: string
-                    description: 상품 이미지 URL
-                  discountPrice:
-                    type: number
-                    description: 할인 적용가
-                  colorCode:
-                    type: string
-                    description: 색상 코드 (HEX)
-                  productName:
-                    type: string
-                    description: 상품명
-                  productDetailId:
-                    type: number
-                    description: 상품 상세 ID (색상/사이즈 조합)
-                  orderDetailId:
-                    type: number
-                    description: 주문 항목 ID (부분 취소 시 사용)
-                  status:
-                    type: string
-                    description: "항목 상태 (NORMAL, CANCEL_REQUESTED, CANCELLED, REFUND_REQUESTED,\
-                      \ RETURNED)"
-            expectedPoint:
-              type: number
-              description: "예상 적립금 (PURCHASE 정책 기준, 정책 미설정/구매 확정 후엔 0일 수 있음)"
-            paymentAmount:
-              type: number
-              description: 최종 결제 금액
-            totalSellingAmount:
-              type: number
-              description: 할인 적용 판매가 합계
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    UserInfoResponse:
-      title: UserInfoResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            createdAt:
-              type: object
-              description: 가입 일시
-            lastLoginAt:
-              type: object
-              description: 마지막 로그인 일시
-            loginId:
-              type: string
-              description: 로그인 ID
-            provider:
-              type: string
-              description: "로그인 제공자 (LOCAL, KAKAO)"
-            userPhoneNumber:
-              type: string
-              description: "전화번호 (마스킹 처리, 예: 010-****-5678)"
-            userEmail:
-              type: string
-              description: 이메일 주소
-            id:
-              type: object
-              description: 회원 고유 ID
-            userName:
-              type: string
-              description: 회원 이름
-            defaultAddress:
-              type: object
-              properties:
-                zipCode:
-                  type: string
-                  description: 우편번호
-                address:
-                  type: string
-                  description: 도로명 주소
-                receiver:
-                  type: string
-                  description: 수령인
-                receiverPhoneNumber:
-                  type: string
-                  description: 수령인 전화번호
-                detailAddress:
-                  type: string
-                  description: 상세 주소
-                alias:
-                  type: object
-                  description: 주소 별칭
-                addressId:
-                  type: object
-                  description: 주소 ID
-              description: 기본 배송지
-          description: 회원 정보
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
     v1-orders-orderNumber-cancel-partial-1086755764:
       type: object
       properties:
