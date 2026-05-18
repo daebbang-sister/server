@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"address\":\"서울시 강남구 테헤란로\",\"isDefault\":true,\"alias\"\
-                  :\"집\",\"zipCode\":\"12345\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"receiver\":\"홍길동\",\"detailAddress\":\"101호\"}"
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"receiver\":\"\
+                  홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
+                  isDefault\":true,\"alias\":\"집\",\"zipCode\":\"12345\"}"
               address/add-address-limit-exceeded:
-                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
-                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
-                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"\
+                  zipCode\":\"12345\",\"isDefault\":false}"
       responses:
         "201":
           description: "201"
@@ -498,7 +498,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=3jx6R9lhswc969KIEbIl5-HCxrb3UKt_PQNvu8nK6WqbuoH6v1hKcLtYgWEQ2Oq_cp8RhITw69TPZ8hSCDALgv6o3Vyog7LM
+                value: _csrf=n5-Kum_2Jgqa0lLtKA3K0Hvnep7XvtQkOr1e_JlRInvrRKrT-6vojlyUQm634mqJHyD-skiFV6fij-UJCY1umPo0FkOOJs-w
       responses:
         "200":
           description: "200"
@@ -643,13 +643,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"address\":\"서울시 서초구 반포대로\",\"isDefault\":false,\"alias\"\
-                  :\"회사\",\"zipCode\":\"54321\",\"receiverPhoneNumber\":\"010-9876-5432\"\
-                  ,\"receiver\":\"김철수\",\"detailAddress\":\"202호\"}"
+                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"receiver\":\"\
+                  김철수\",\"detailAddress\":\"202호\",\"address\":\"서울시 서초구 반포대로\",\"\
+                  isDefault\":false,\"alias\":\"회사\",\"zipCode\":\"54321\"}"
               address/update-address-not-found:
-                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
-                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
-                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"\
+                  zipCode\":\"12345\",\"isDefault\":false}"
       responses:
         "200":
           description: "200"
@@ -698,9 +698,9 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               address/delete-address:
-                value: _csrf=Ncgt7UX7dqfk7PgkB8rPuCtSez7rqFRYOYxk73NKjRNLt7irBf9L2nTDR5_J2J4cZOf72x5kVgaKnzB1X7ldihYo73d-0Y7O
+                value: _csrf=SBzngD55eJ_gPVhaHVH7aqkZIx7ljHVwK9BX_WZ4Z1qFCHgSf3jWsQ8dGajNDzloLHzPWpB4DnzQ70xdSLFuzAQaA2y8aUhw
               address/delete-address-not-found:
-                value: _csrf=LyaZGU2PXvmwubefdVeCZkHirGGkb-Nyaz3z6JTFC4OL_w-UGxb9Li6-O8udgIarEHq2X3aBgQDGXoZfXwTH0fL1P7u-yGqi
+                value: _csrf=eUO4NrJMVZf5aozXUH1jFHpLVrprBdL7iEBZ0qFndiRq6iinSiaOAdZ1M6DUWO-0YlBXck1-e4MPZrbW7HA9tJVSExNYjxjB
       responses:
         "200":
           description: "200"
@@ -2422,7 +2422,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
+                    ratingCounts\":{\"4\":5,\"5\":7,\"1\":0,\"2\":1,\"3\":2}}}"
 components:
   schemas:
     ErrorResponse:

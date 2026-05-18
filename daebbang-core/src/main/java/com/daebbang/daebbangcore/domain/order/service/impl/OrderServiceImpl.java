@@ -18,9 +18,11 @@ import com.daebbang.daebbangcore.domain.order.dto.OrderSummaryResult;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetailStatus;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetails;
 import com.daebbang.daebbangcore.domain.order.entity.OrderStatus;
+import com.daebbang.daebbangcore.domain.order.entity.OrderSettings;
 import com.daebbang.daebbangcore.domain.order.entity.Orders;
 import com.daebbang.daebbangcore.domain.order.entity.Payment;
 import com.daebbang.daebbangcore.domain.order.event.StockInvalidateEvent;
+import com.daebbang.daebbangcore.domain.order.repository.OrderSettingsRepository;
 import com.daebbang.daebbangcore.domain.order.repository.OrdersRepository;
 import com.daebbang.daebbangcore.domain.address.command.AddressCommand;
 import com.daebbang.daebbangcore.domain.address.service.AddressService;
@@ -62,6 +64,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -74,6 +77,7 @@ public class OrderServiceImpl implements OrderService {
     private static final int FREE_SHIPPING_THRESHOLD = 50_000;
     private static final int DEFAULT_SHIPPING_FEE = 3_000;
     private static final int MIN_PAYMENT_AMOUNT_FOR_POINT_USE = 30_000;
+    private static final int DEFAULT_AUTO_COMPLETE_DAYS = 7;
     private static final String CANCEL_IDEMPOTENCY_PREFIX = "order:cancel:idempotency:";
     private static final Duration CANCEL_IDEMPOTENCY_TTL = Duration.ofHours(24);
 
@@ -81,6 +85,7 @@ public class OrderServiceImpl implements OrderService {
     private final AddressService addressService;
     private final ProductDetailsService productDetailsService;
     private final OrdersRepository ordersRepository;
+    private final OrderSettingsRepository orderSettingsRepository;
     private final PaymentService paymentService;
     private final PointService pointService;
     private final StockCacheService stockCacheService;
@@ -526,6 +531,40 @@ public class OrderServiceImpl implements OrderService {
         pointService.awardPurchasePoint(userId, order.getId(), order.getPaymentAmount());
 
         log.info("[Order] 구매 확정 완료 - orderNumber: {}, userId: {}", orderNumber, userId);
+    }
+
+    @Override
+    public List<Long> findAutoCompletableOrderIds() {
+        int autoCompleteDays = orderSettingsRepository.findTopByOrderByIdAsc()
+            .map(OrderSettings::getAutoCompleteDays)
+            .orElse(DEFAULT_AUTO_COMPLETE_DAYS);
+        LocalDateTime threshold = LocalDateTime.now().minusDays(autoCompleteDays);
+        return ordersRepository.findOrderIdsByStatusAndUpdatedBefore(OrderStatus.DELIVERED, threshold);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void autoComplete(Long orderId) {
+        Orders order = ordersRepository.findById(orderId)
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        // race로 이미 상태 전환됐으면 조용히 skip (cancel 등이 먼저 일어났을 수 있음)
+        if (order.getOrderStatus() != OrderStatus.DELIVERED) {
+            return;
+        }
+        Users user = order.getUser();
+        if (user == null) {
+            // 비회원 주문은 적립 대상이 아니므로 status만 전환
+            order.complete();
+            order.update();
+            return;
+        }
+
+        order.complete();
+        order.update();
+        pointService.awardPurchasePoint(user.getId(), order.getId(), order.getPaymentAmount());
+
+        log.info("[Order] 자동 구매 확정 완료 - orderNumber: {}", order.getOrderNumber());
     }
 
     @Override
