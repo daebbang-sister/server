@@ -1559,7 +1559,7 @@ class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("GET /v1/orders/{orderNumber} - 주문 상세 조회 성공")
+    @DisplayName("GET /v1/orders/{orderNumber} - 주문 상세 조회 성공 (주문자 정보, 배송지 정보 포함)")
     void getOrderDetail_success() throws Exception {
         OrderFullDetailResult.OrderDetailItem item = new OrderFullDetailResult.OrderDetailItem(
             10L, 101L, "슬림핏 청바지",
@@ -1567,11 +1567,19 @@ class OrderControllerTest {
             "골드", "#FFD700", "M",
             2, 15_000, 10, 13_500, OrderDetailStatus.NORMAL
         );
+        OrderFullDetailResult.OrdererInfo ordererInfo = new OrderFullDetailResult.OrdererInfo(
+            "홍길동", "010-****-5678"
+        );
+        OrderFullDetailResult.ShippingInfo shippingInfo = new OrderFullDetailResult.ShippingInfo(
+            "홍길순", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            "010-****-9012", "문 앞에 놓아주세요"
+        );
         OrderFullDetailResult result = new OrderFullDetailResult(
             "20260416-ABC1234567", OrderStatus.PAID,
             LocalDateTime.of(2026, 4, 16, 10, 0, 0),
             30_000, 27_000, 3_000, 0, 30_000,
             300, 0,
+            ordererInfo, shippingInfo,
             List.of(item)
         );
         given(orderService.getOrderDetail(any(), any())).willReturn(result);
@@ -1589,6 +1597,14 @@ class OrderControllerTest {
             .andExpect(jsonPath("$.data.shippingFee").value(3_000))
             .andExpect(jsonPath("$.data.usedPoint").value(0))
             .andExpect(jsonPath("$.data.paymentAmount").value(30_000))
+            .andExpect(jsonPath("$.data.ordererInfo.name").value("홍길동"))
+            .andExpect(jsonPath("$.data.ordererInfo.maskedPhone").value("010-****-5678"))
+            .andExpect(jsonPath("$.data.shippingInfo.receiver").value("홍길순"))
+            .andExpect(jsonPath("$.data.shippingInfo.zipCode").value("06123"))
+            .andExpect(jsonPath("$.data.shippingInfo.address").value("서울시 강남구 테헤란로 1"))
+            .andExpect(jsonPath("$.data.shippingInfo.detailAddress").value("101동 202호"))
+            .andExpect(jsonPath("$.data.shippingInfo.maskedPhone").value("010-****-9012"))
+            .andExpect(jsonPath("$.data.shippingInfo.orderNote").value("문 앞에 놓아주세요"))
             .andExpect(jsonPath("$.data.details[0].orderDetailId").value(10))
             .andExpect(jsonPath("$.data.details[0].productDetailId").value(101))
             .andExpect(jsonPath("$.data.details[0].productName").value("슬림핏 청바지"))
@@ -1600,6 +1616,7 @@ class OrderControllerTest {
                     .description("""
                         주문 번호로 해당 주문의 상세 정보를 조회합니다.
                         본인 주문만 조회 가능하며 타인의 주문 번호를 전달하면 404를 반환합니다.
+                        주문자 정보(ordererInfo)와 배송지 정보(shippingInfo)가 포함되며, 전화번호는 가운데 4자리가 마스킹됩니다.
                         orderDetailId를 통해 부분 취소 API에서 항목을 지정할 수 있습니다.
                         """)
                     .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
@@ -1618,6 +1635,16 @@ class OrderControllerTest {
                         fieldWithPath("data.paymentAmount").type(JsonFieldType.NUMBER).description("최종 결제 금액"),
                         fieldWithPath("data.expectedPoint").type(JsonFieldType.NUMBER).description("예상 적립금 (PURCHASE 정책 기준, 정책 미설정/구매 확정 후엔 0일 수 있음)"),
                         fieldWithPath("data.earnedPoint").type(JsonFieldType.NUMBER).description("이미 지급된 적립금 (구매 확정 전엔 0)"),
+                        fieldWithPath("data.ordererInfo").type(JsonFieldType.OBJECT).description("주문자 정보"),
+                        fieldWithPath("data.ordererInfo.name").type(JsonFieldType.STRING).description("주문자 이름"),
+                        fieldWithPath("data.ordererInfo.maskedPhone").type(JsonFieldType.STRING).description("주문자 연락처 (가운데 4자리 마스킹, 예: 010-****-5678)"),
+                        fieldWithPath("data.shippingInfo").type(JsonFieldType.OBJECT).description("배송지 정보"),
+                        fieldWithPath("data.shippingInfo.receiver").type(JsonFieldType.STRING).description("수령인 이름"),
+                        fieldWithPath("data.shippingInfo.zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("data.shippingInfo.address").type(JsonFieldType.STRING).description("기본 주소"),
+                        fieldWithPath("data.shippingInfo.detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
+                        fieldWithPath("data.shippingInfo.maskedPhone").type(JsonFieldType.STRING).description("수령인 연락처 (가운데 4자리 마스킹, 예: 010-****-9012)"),
+                        fieldWithPath("data.shippingInfo.orderNote").type(JsonFieldType.STRING).optional().description("배송 메모 (없으면 null)"),
                         fieldWithPath("data.details[]").type(JsonFieldType.ARRAY).description("주문 항목 목록"),
                         fieldWithPath("data.details[].orderDetailId").type(JsonFieldType.NUMBER).description("주문 항목 ID (부분 취소 시 사용)"),
                         fieldWithPath("data.details[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (색상/사이즈 조합)"),
@@ -1634,6 +1661,121 @@ class OrderControllerTest {
                     )
                     .build()
                 )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/orders/{orderNumber} - 주문자와 수령인이 다른 경우에도 각각 올바르게 반환")
+    void getOrderDetail_differentOrdererAndReceiver() throws Exception {
+        OrderFullDetailResult.OrderDetailItem item = new OrderFullDetailResult.OrderDetailItem(
+            20L, 202L, "오버핏 후드티",
+            "https://cdn.daebbang.com/img/hoodie.jpg",
+            "블랙", "#000000", "L",
+            1, 50_000, 20, 40_000, OrderDetailStatus.NORMAL
+        );
+        OrderFullDetailResult.OrdererInfo ordererInfo = new OrderFullDetailResult.OrdererInfo(
+            "김주문", "010-****-1111"
+        );
+        OrderFullDetailResult.ShippingInfo shippingInfo = new OrderFullDetailResult.ShippingInfo(
+            "이수령", "12345", "경기도 성남시 분당구 판교로 1", "A동 101호",
+            "010-****-2222", null
+        );
+        OrderFullDetailResult result = new OrderFullDetailResult(
+            "20260416-XYZ9999999", OrderStatus.PREPARING_DELIVERY,
+            LocalDateTime.of(2026, 4, 16, 14, 30, 0),
+            50_000, 40_000, 0, 0, 40_000,
+            400, 0,
+            ordererInfo, shippingInfo,
+            List.of(item)
+        );
+        given(orderService.getOrderDetail(any(), any())).willReturn(result);
+
+        mockMvc.perform(get("/v1/orders/{orderNumber}", "20260416-XYZ9999999")
+                .with(authentication(authToken())))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.ordererInfo.name").value("김주문"))
+            .andExpect(jsonPath("$.data.ordererInfo.maskedPhone").value("010-****-1111"))
+            .andExpect(jsonPath("$.data.shippingInfo.receiver").value("이수령"))
+            .andExpect(jsonPath("$.data.shippingInfo.zipCode").value("12345"))
+            .andExpect(jsonPath("$.data.shippingInfo.address").value("경기도 성남시 분당구 판교로 1"))
+            .andExpect(jsonPath("$.data.shippingInfo.detailAddress").value("A동 101호"))
+            .andExpect(jsonPath("$.data.shippingInfo.maskedPhone").value("010-****-2222"))
+            .andExpect(jsonPath("$.data.shippingInfo.orderNote").doesNotExist())
+            .andDo(document("order/detail-different-orderer-receiver",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("주문 상세 조회 - 주문자/수령인 상이")
+                    .description("주문자와 수령인이 다를 경우에도 각 정보가 올바르게 반환되며, 배송 메모가 없으면 orderNote는 null입니다.")
+                    .pathParameters(parameterWithName("orderNumber").description("주문 번호"))
+                    .responseSchema(Schema.schema("OrderDetailResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.orderNumber").type(JsonFieldType.STRING).description("주문 번호"),
+                        fieldWithPath("data.orderStatus").type(JsonFieldType.STRING).description("주문 상태"),
+                        fieldWithPath("data.orderedAt").type(JsonFieldType.STRING).description("주문 일시"),
+                        fieldWithPath("data.totalOriginalAmount").type(JsonFieldType.NUMBER).description("상품 정가 합계"),
+                        fieldWithPath("data.totalSellingAmount").type(JsonFieldType.NUMBER).description("할인 적용 판매가 합계"),
+                        fieldWithPath("data.shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("data.usedPoint").type(JsonFieldType.NUMBER).description("사용 포인트"),
+                        fieldWithPath("data.paymentAmount").type(JsonFieldType.NUMBER).description("최종 결제 금액"),
+                        fieldWithPath("data.expectedPoint").type(JsonFieldType.NUMBER).description("예상 적립금"),
+                        fieldWithPath("data.earnedPoint").type(JsonFieldType.NUMBER).description("지급된 적립금"),
+                        fieldWithPath("data.ordererInfo").type(JsonFieldType.OBJECT).description("주문자 정보"),
+                        fieldWithPath("data.ordererInfo.name").type(JsonFieldType.STRING).description("주문자 이름"),
+                        fieldWithPath("data.ordererInfo.maskedPhone").type(JsonFieldType.STRING).description("주문자 연락처 (마스킹)"),
+                        fieldWithPath("data.shippingInfo").type(JsonFieldType.OBJECT).description("배송지 정보"),
+                        fieldWithPath("data.shippingInfo.receiver").type(JsonFieldType.STRING).description("수령인 이름"),
+                        fieldWithPath("data.shippingInfo.zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("data.shippingInfo.address").type(JsonFieldType.STRING).description("기본 주소"),
+                        fieldWithPath("data.shippingInfo.detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
+                        fieldWithPath("data.shippingInfo.maskedPhone").type(JsonFieldType.STRING).description("수령인 연락처 (마스킹)"),
+                        fieldWithPath("data.shippingInfo.orderNote").type(JsonFieldType.VARIES).optional().description("배송 메모 (없으면 null)"),
+                        fieldWithPath("data.details[]").type(JsonFieldType.ARRAY).description("주문 항목 목록"),
+                        fieldWithPath("data.details[].orderDetailId").type(JsonFieldType.NUMBER).description("주문 항목 ID"),
+                        fieldWithPath("data.details[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
+                        fieldWithPath("data.details[].productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data.details[].imageUrl").type(JsonFieldType.STRING).description("상품 이미지 URL"),
+                        fieldWithPath("data.details[].color").type(JsonFieldType.STRING).description("색상명"),
+                        fieldWithPath("data.details[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
+                        fieldWithPath("data.details[].size").type(JsonFieldType.STRING).description("사이즈"),
+                        fieldWithPath("data.details[].quantity").type(JsonFieldType.NUMBER).description("수량"),
+                        fieldWithPath("data.details[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data.details[].discountRate").type(JsonFieldType.NUMBER).description("할인율 (%)"),
+                        fieldWithPath("data.details[].discountPrice").type(JsonFieldType.NUMBER).description("할인 적용가"),
+                        fieldWithPath("data.details[].status").type(JsonFieldType.STRING).description("항목 상태")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/orders/{orderNumber} - 전화번호 마스킹 형식 검증 (010-****-XXXX)")
+    void getOrderDetail_phoneNumberMasking() throws Exception {
+        OrderFullDetailResult.OrdererInfo ordererInfo = new OrderFullDetailResult.OrdererInfo(
+            "테스트유저", "010-****-7777"
+        );
+        OrderFullDetailResult.ShippingInfo shippingInfo = new OrderFullDetailResult.ShippingInfo(
+            "테스트수령", "00000", "서울시 종로구 종로 1", "1층",
+            "010-****-8888", null
+        );
+        OrderFullDetailResult result = new OrderFullDetailResult(
+            "20260416-MASK123456", OrderStatus.PAID,
+            LocalDateTime.of(2026, 4, 16, 12, 0, 0),
+            30_000, 30_000, 3_000, 0, 33_000,
+            330, 0,
+            ordererInfo, shippingInfo,
+            List.of()
+        );
+        given(orderService.getOrderDetail(any(), any())).willReturn(result);
+
+        mockMvc.perform(get("/v1/orders/{orderNumber}", "20260416-MASK123456")
+                .with(authentication(authToken())))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.ordererInfo.maskedPhone").value("010-****-7777"))
+            .andExpect(jsonPath("$.data.shippingInfo.maskedPhone").value("010-****-8888"));
     }
 
     @Test

@@ -28,6 +28,7 @@ import static com.daebbang.daebbangcore.domain.order.entity.QOrderDetails.orderD
 import static com.daebbang.daebbangcore.domain.order.entity.QOrders.orders;
 import static com.daebbang.daebbangcore.domain.product.entity.QProductDetails.productDetails;
 import static com.daebbang.daebbangcore.domain.product.entity.QProducts.products;
+import static com.daebbang.daebbangcore.domain.user.entity.QUsers.users;
 
 @Repository
 @RequiredArgsConstructor
@@ -109,6 +110,7 @@ public class OrderCustomRepositoryImpl implements OrderCustomRepository {
     public Optional<Orders> findOrderDetailByOrderNumberAndUserId(String orderNumber, Long userId) {
         Orders result = queryFactory
             .selectFrom(orders)
+            .join(orders.user, users).fetchJoin()
             .leftJoin(orders.orderList, orderDetails).fetchJoin()
             .leftJoin(orderDetails.productDetail, productDetails).fetchJoin()
             .leftJoin(productDetails.product, products).fetchJoin()
