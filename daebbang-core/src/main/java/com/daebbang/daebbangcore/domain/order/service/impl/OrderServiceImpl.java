@@ -199,7 +199,11 @@ public class OrderServiceImpl implements OrderService {
                 saveBankTransferOrder(user, orderNumber, sessionItems, shippingFee, paymentAmount,
                     totalOriginalAmount, totalSellingAmount, command);
                 reserved = true;
-                sessionItems.forEach(i -> stockCacheService.invalidateStock(i.getProductDetailId()));
+                try {
+                    sessionItems.forEach(i -> stockCacheService.invalidateStock(i.getProductDetailId()));
+                } catch (Exception e) {
+                    log.warn("[Order] 무통장입금 주문 후 재고 캐시 무효화 실패 - orderNumber: {}", orderNumber, e);
+                }
             } else {
                 OrderSession session = OrderSession.builder()
                     .orderNumber(orderNumber)

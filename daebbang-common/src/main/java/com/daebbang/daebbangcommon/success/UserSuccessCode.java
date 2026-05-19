@@ -33,7 +33,8 @@ public enum UserSuccessCode implements SuccessCode {
     ADD_WISH_LIST(201, "위시리스트 추가에 성공하였습니다."),
     DELETE_WISH_LIST(200, "위시리스트 삭제에 성공하였습니다."),
 
-    ORDER_PREPARED(200, "주문이 생성되었습니다."),
+    ORDER_PREPARED(201, "주문이 생성되었습니다."),
+    ORDER_PREPARED_BANK_TRANSFER(201, "무통장입금 주문이 신청되었습니다."),
     ORDER_CONFIRMED(200, "결제가 완료되었습니다."),
     ORDER_CANCELLED(200, "주문이 취소되었습니다."),
     ORDER_COMPLETED(200, "구매 확정이 완료되었습니다."),

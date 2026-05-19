@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"address\":\"서울시 강남구 테헤란로\",\"isDefault\":true,\"alias\"\
-                  :\"집\",\"zipCode\":\"12345\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"receiver\":\"홍길동\",\"detailAddress\":\"101호\"}"
+                value: "{\"alias\":\"집\",\"zipCode\":\"12345\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
+                  \",\"address\":\"서울시 강남구 테헤란로\",\"isDefault\":true}"
               address/add-address-limit-exceeded:
-                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
-                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
-                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
+                value: "{\"zipCode\":\"12345\",\"isDefault\":false,\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
+                  :\"101호\",\"receiver\":\"홍길동\"}"
       responses:
         "201":
           description: "201"
@@ -498,7 +498,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=KLnUoH5Vub4OgaNTc84vh2vQu1WzPJSU75I-LRUsNmiLFTbBEIiwkB1gjosj4JoxFeMbsF-0ljeBWqC516sMFSIbBg6zdlT4
+                value: _csrf=1Fjssi7ApCdQ_REJzjwXaMI1vuAa-dJzSdCSi0PYHNYJO6jksTrY0Br3kRB9xCU4rREjXfIAk9kqzLReerXzuiK6f7NqC5mF
       responses:
         "200":
           description: "200"
@@ -643,13 +643,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"address\":\"서울시 서초구 반포대로\",\"isDefault\":false,\"alias\"\
-                  :\"회사\",\"zipCode\":\"54321\",\"receiverPhoneNumber\":\"010-9876-5432\"\
-                  ,\"receiver\":\"김철수\",\"detailAddress\":\"202호\"}"
+                value: "{\"alias\":\"회사\",\"zipCode\":\"54321\",\"receiverPhoneNumber\"\
+                  :\"010-9876-5432\",\"receiver\":\"김철수\",\"detailAddress\":\"202호\
+                  \",\"address\":\"서울시 서초구 반포대로\",\"isDefault\":false}"
               address/update-address-not-found:
-                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
-                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
-                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
+                value: "{\"zipCode\":\"12345\",\"isDefault\":false,\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"address\":\"서울시 강남구 테헤란로\",\"detailAddress\"\
+                  :\"101호\",\"receiver\":\"홍길동\"}"
       responses:
         "200":
           description: "200"
@@ -698,9 +698,9 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               address/delete-address:
-                value: _csrf=f3lWgFy1M4UsBhMNy4hRCPq9PjsdvU_nKhIYSStR2NdFmfhOG0xu4W-BCrQBZCQ6_KVlP8uNEwMk2XrKEnYhfE1m7ON3oJ59
+                value: _csrf=hT-UhoYLy1SOeAatdWzpNaYQ_xEmLmQ4oLrJGHUbLN0gnBiBvFunvrVu-WSjTGCcQkHdApRz0ikVGAIVl9n4LhMiTeRBpXqx
               address/delete-address-not-found:
-                value: _csrf=JcCZXMzLjouETwI2vwU75sfc8749GprumObT7_bJ-DWfioEFFKH9Pa-uv-2pKjYGjygP0PW_3odbfvzDq9W2js6rylH9sudg
+                value: _csrf=YL8Pnp5XsvI47_Xond8F37vrlJcOxl8-VL5wxP3RYjdAjloKAY85-qxgh8YVjZbc-fIx6Yjaua47om8TZt1D_cvlA1Nwtjw9
       responses:
         "200":
           description: "200"
@@ -1009,19 +1009,19 @@ paths:
                 $ref: '#/components/schemas/OrderPrepareResponse'
               examples:
                 order/prepare-bank-transfer-success:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
-                    니다.\",\"data\":{\"orderNumber\":\"20260416-BANK123456\",\"paymentAmount\"\
-                    :33000}}"
+                  value: "{\"success\":true,\"status\":201,\"message\":\"무통장입금 주문이\
+                    \ 신청되었습니다.\",\"data\":{\"orderNumber\":\"20260416-BANK123456\"\
+                    ,\"paymentAmount\":33000}}"
                 order/prepare-success:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                  value: "{\"success\":true,\"status\":201,\"message\":\"주문이 생성되었습\
                     니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\",\"paymentAmount\"\
                     :33000}}"
                 order/prepare-success-free-shipping:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                  value: "{\"success\":true,\"status\":201,\"message\":\"주문이 생성되었습\
                     니다.\",\"data\":{\"orderNumber\":\"20260416-DEF9876543\",\"paymentAmount\"\
                     :60000}}"
                 order/prepare-success-with-point:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                  value: "{\"success\":true,\"status\":201,\"message\":\"주문이 생성되었습\
                     니다.\",\"data\":{\"orderNumber\":\"20260416-GHI1357924\",\"paymentAmount\"\
                     :30000}}"
         "400":
@@ -2166,8 +2166,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
+                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
+                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -2935,6 +2935,58 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    OrderPrepareRequest:
+      title: OrderPrepareRequest
+      type: object
+      properties:
+        zipCode:
+          type: string
+          description: 우편번호
+        address:
+          type: string
+          description: 기본 주소
+        receiver:
+          type: string
+          description: 수령인 이름
+        orderNote:
+          type: string
+          description: "배송 요청사항 (100자 이내, 선택)"
+        receiverPhoneNumber:
+          type: string
+          description: 수령인 연락처
+        addressAlias:
+          type: string
+          description: "주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)"
+        isDefaultAddress:
+          type: boolean
+          description: 기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)
+        usedPoint:
+          type: number
+          description: 사용 포인트 (결제 금액에서 차감)
+        shippingFee:
+          type: number
+          description: 배송비
+        detailAddress:
+          type: string
+          description: 상세 주소
+        paymentMethod:
+          type: string
+          description: "결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"
+        items:
+          type: array
+          description: 주문 상품 목록
+          items:
+            type: object
+            properties:
+              quantity:
+                type: number
+                description: 주문 수량
+              productDetailId:
+                type: number
+                description: 상품 상세 ID
+        isAddToAddressBook:
+          type: boolean
+          description: 주소록 추가 여부
     ProductPageResponse:
       title: ProductPageResponse
       type: object
@@ -3563,6 +3615,16 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    SmsVerifyRequest:
+      title: SmsVerifyRequest
+      type: object
+      properties:
+        authCode:
+          type: string
+          description: 수신한 6자리 인증번호
+        phoneNumber:
+          type: string
+          description: 인증번호를 받은 전화번호
     OrderPrepareResponse:
       title: OrderPrepareResponse
       type: object
@@ -3585,16 +3647,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    SmsVerifyRequest:
-      title: SmsVerifyRequest
-      type: object
-      properties:
-        authCode:
-          type: string
-          description: 수신한 6자리 인증번호
-        phoneNumber:
-          type: string
-          description: 인증번호를 받은 전화번호
     CommonResponse:
       title: CommonResponse
       type: object
@@ -4076,58 +4128,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    OrderPrepareRequest:
-      title: OrderPrepareRequest
-      type: object
-      properties:
-        zipCode:
-          type: string
-          description: 우편번호
-        address:
-          type: string
-          description: 기본 주소
-        receiver:
-          type: string
-          description: 수령인 이름
-        orderNote:
-          type: string
-          description: "배송 요청사항 (100자 이내, 선택)"
-        receiverPhoneNumber:
-          type: string
-          description: 수령인 연락처
-        addressAlias:
-          type: string
-          description: "주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)"
-        isDefaultAddress:
-          type: boolean
-          description: 기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)
-        usedPoint:
-          type: number
-          description: 사용 포인트 (결제 금액에서 차감)
-        shippingFee:
-          type: number
-          description: 배송비
-        detailAddress:
-          type: string
-          description: 상세 주소
-        paymentMethod:
-          type: string
-          description: "결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"
-        items:
-          type: array
-          description: 주문 상품 목록
-          items:
-            type: object
-            properties:
-              quantity:
-                type: number
-                description: 주문 수량
-              productDetailId:
-                type: number
-                description: 상품 상세 ID
-        isAddToAddressBook:
-          type: boolean
-          description: 주소록 추가 여부
     ProductOptionsResponse:
       title: ProductOptionsResponse
       type: object

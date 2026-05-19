@@ -95,7 +95,7 @@ public class Payment extends DefaultBase {
         return Payment.builder()
             .order(order)
             .currency("KRW")
-            .method("BANK_TRANSFER")
+            .method(PaymentMethod.BANK_TRANSFER.name())
             .totalAmount(totalAmount)
             .status(PaymentStatus.WAITING_DEPOSIT)
             .requestedAt(LocalDateTime.now())
@@ -118,7 +118,7 @@ public class Payment extends DefaultBase {
     }
 
     public boolean isBankTransfer() {
-        return "BANK_TRANSFER".equals(this.method);
+        return PaymentMethod.BANK_TRANSFER.name().equals(this.method);
     }
 
     public void addCancel(PaymentCancels cancel) {

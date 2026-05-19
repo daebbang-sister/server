@@ -108,7 +108,7 @@ class OrderControllerTest {
             .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.status").value(201))
             .andExpect(jsonPath("$.message").value("주문이 생성되었습니다."))
             .andExpect(jsonPath("$.data.orderNumber").value("20260416-ABC1234567"))
             .andExpect(jsonPath("$.data.paymentAmount").value(33_000))
@@ -170,6 +170,8 @@ class OrderControllerTest {
             .andDo(print())
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(201))
+            .andExpect(jsonPath("$.message").value("무통장입금 주문이 신청되었습니다."))
             .andExpect(jsonPath("$.data.orderNumber").value("20260416-BANK123456"))
             .andExpect(jsonPath("$.data.paymentAmount").value(33_000))
             .andDo(document("order/prepare-bank-transfer-success",
@@ -247,7 +249,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비 (5만원 이상 구매 시 0)"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -301,7 +303,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -350,7 +352,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -404,7 +406,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -458,7 +460,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -515,7 +517,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -569,7 +571,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -623,7 +625,7 @@ class OrderControllerTest {
                         fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
                         fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항 (100자 이내, 선택)"),
                         fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
-                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지로 설정 여부 (isAddToAddressBook=true일 때 적용)"),
                         fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)")
                     )
                     .responseFields(
@@ -836,48 +838,6 @@ class OrderControllerTest {
                         fieldWithPath("errors").type(JsonFieldType.ARRAY).optional().description("유효성 검증 오류 목록"),
                         fieldWithPath("errors[].field").type(JsonFieldType.STRING).optional().description("오류 필드명"),
                         fieldWithPath("errors[].message").type(JsonFieldType.STRING).optional().description("오류 메시지")
-                    )
-                    .build()
-                )));
-    }
-
-    @Test
-    @DisplayName("POST /v1/orders/confirm - 무통장입금 주문 신청 성공")
-    void confirm_bankTransfer_success() throws Exception {
-        OrderConfirmRequest request = new OrderConfirmRequest(
-            "20260416-BANK123456", null, 33_000
-        );
-        willDoNothing().given(orderService).confirm(any());
-
-        mockMvc.perform(post("/v1/orders/confirm")
-                .with(authentication(authToken()))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.status").value(200))
-            .andExpect(jsonPath("$.message").value("결제가 완료되었습니다."))
-            .andDo(document("order/confirm-bank-transfer-success",
-                resource(ResourceSnippetParameters.builder()
-                    .tag("Order")
-                    .summary("무통장입금 주문 신청")
-                    .description("""
-                        무통장입금 선택 시 paymentKey 없이 호출합니다.
-                        주문이 WAITING_DEPOSIT(입금대기) 상태로 저장되며, 관리자가 입금 확인 후 PAID로 변경합니다.
-                        """)
-                    .requestSchema(Schema.schema("OrderConfirmRequest"))
-                    .responseSchema(Schema.schema("SuccessResponse"))
-                    .requestFields(
-                        fieldWithPath("orderId").type(JsonFieldType.STRING).description("주문 번호 (prepare 응답의 orderNumber)"),
-                        fieldWithPath("paymentKey").type(JsonFieldType.STRING).optional().description("결제키 (무통장입금은 null)"),
-                        fieldWithPath("amount").type(JsonFieldType.NUMBER).description("결제 금액")
-                    )
-                    .responseFields(
-                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
-                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
-                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));
