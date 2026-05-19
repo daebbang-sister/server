@@ -1,5 +1,6 @@
 package com.daebbang.daebbangcore.domain.order.session;
 
+import com.daebbang.daebbangcore.domain.order.entity.PaymentMethod;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,7 @@ public class OrderSession {
 
     private String orderNumber;
     private Long userId;
+    private PaymentMethod paymentMethod;
     private List<OrderSessionItem> items;
     private int usedPoint;
     private int shippingFee;

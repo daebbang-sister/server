@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"receiver\":\"\
-                  홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  isDefault\":true,\"alias\":\"집\",\"zipCode\":\"12345\"}"
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"isDefault\":true,\"alias\"\
+                  :\"집\",\"zipCode\":\"12345\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"receiver\":\"홍길동\",\"detailAddress\":\"101호\"}"
               address/add-address-limit-exceeded:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
-                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"\
-                  zipCode\":\"12345\",\"isDefault\":false}"
+                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
+                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
       responses:
         "201":
           description: "201"
@@ -498,7 +498,7 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=n5-Kum_2Jgqa0lLtKA3K0Hvnep7XvtQkOr1e_JlRInvrRKrT-6vojlyUQm634mqJHyD-skiFV6fij-UJCY1umPo0FkOOJs-w
+                value: _csrf=KLnUoH5Vub4OgaNTc84vh2vQu1WzPJSU75I-LRUsNmiLFTbBEIiwkB1gjosj4JoxFeMbsF-0ljeBWqC516sMFSIbBg6zdlT4
       responses:
         "200":
           description: "200"
@@ -643,13 +643,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"receiver\":\"\
-                  김철수\",\"detailAddress\":\"202호\",\"address\":\"서울시 서초구 반포대로\",\"\
-                  isDefault\":false,\"alias\":\"회사\",\"zipCode\":\"54321\"}"
+                value: "{\"address\":\"서울시 서초구 반포대로\",\"isDefault\":false,\"alias\"\
+                  :\"회사\",\"zipCode\":\"54321\",\"receiverPhoneNumber\":\"010-9876-5432\"\
+                  ,\"receiver\":\"김철수\",\"detailAddress\":\"202호\"}"
               address/update-address-not-found:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
-                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\",\"\
-                  zipCode\":\"12345\",\"isDefault\":false}"
+                value: "{\"receiver\":\"홍길동\",\"zipCode\":\"12345\",\"isDefault\"\
+                  :false,\"receiverPhoneNumber\":\"010-1234-5678\",\"address\":\"서\
+                  울시 강남구 테헤란로\",\"detailAddress\":\"101호\"}"
       responses:
         "200":
           description: "200"
@@ -698,9 +698,9 @@ paths:
               $ref: '#/components/schemas/v1-users486549215'
             examples:
               address/delete-address:
-                value: _csrf=SBzngD55eJ_gPVhaHVH7aqkZIx7ljHVwK9BX_WZ4Z1qFCHgSf3jWsQ8dGajNDzloLHzPWpB4DnzQ70xdSLFuzAQaA2y8aUhw
+                value: _csrf=f3lWgFy1M4UsBhMNy4hRCPq9PjsdvU_nKhIYSStR2NdFmfhOG0xu4W-BCrQBZCQ6_KVlP8uNEwMk2XrKEnYhfE1m7ON3oJ59
               address/delete-address-not-found:
-                value: _csrf=eUO4NrJMVZf5aozXUH1jFHpLVrprBdL7iEBZ0qFndiRq6iinSiaOAdZ1M6DUWO-0YlBXck1-e4MPZrbW7HA9tJVSExNYjxjB
+                value: _csrf=JcCZXMzLjouETwI2vwU75sfc8749GprumObT7_bJ-DWfioEFFKH9Pa-uv-2pKjYGjygP0PW_3odbfvzDq9W2js6rylH9sudg
       responses:
         "200":
           description: "200"
@@ -804,6 +804,9 @@ paths:
               order/confirm-amount-mismatch:
                 value: "{\"orderId\":\"20260416-ABC1234567\",\"paymentKey\":\"toss_payment_key_abc\"\
                   ,\"amount\":99999}"
+              order/confirm-bank-transfer-success:
+                value: "{\"orderId\":\"20260416-BANK123456\",\"paymentKey\":null,\"\
+                  amount\":33000}"
               order/confirm-blank-order-id:
                 value: "{\"orderId\":\"\",\"paymentKey\":\"toss_payment_key_abc\"\
                   ,\"amount\":33000}"
@@ -858,6 +861,19 @@ paths:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"amount\",\"message\"\
                     :\"결제 금액은 0보다 커야 합니다.\"}]}"
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                order/confirm-bank-transfer-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"결제가 완료되었습\
+                    니다.\",\"data\":null}"
+                order/confirm-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"결제가 완료되었습\
+                    니다.\",\"data\":null}"
         "404":
           description: "404"
           content:
@@ -878,16 +894,6 @@ paths:
                 order/confirm-payment-failed:
                   value: "{\"success\":false,\"status\":502,\"message\":\"결제 승인에 실\
                     패했습니다. 관리자에게 문의하세요.\",\"data\":null}"
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-              examples:
-                order/confirm-success:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"결제가 완료되었습\
-                    니다.\",\"data\":null}"
         "403":
           description: "403"
           content:
@@ -902,82 +908,122 @@ paths:
     post:
       tags:
       - Order
-      summary: 주문 준비 - 상품 목록 없음
-      description: items가 비어있으면 400 Bad Request를 반환합니다.
+      summary: 주문 준비 - 무통장입금
+      description: paymentMethod를 BANK_TRANSFER로 전달하면 무통장입금 주문으로 처리됩니다.
       operationId: order/prepare-
       requestBody:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: '#/components/schemas/v1-orders-prepare-1990526072'
+              $ref: '#/components/schemas/OrderPrepareRequest'
             examples:
-              order/prepare-empty-items:
-                value: "{\"items\":[],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+              order/prepare-bank-transfer-success:
+                value: "{\"paymentMethod\":\"BANK_TRANSFER\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
                   :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
                   헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
                   orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
                   :false,\"addressAlias\":null}"
+              order/prepare-empty-items:
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[],\"usedPoint\":0,\"\
+                  receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\",\"\
+                  zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
+                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
+                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-invalid-quantity:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":0}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":0}],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
               order/prepare-lock-failed:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
               order/prepare-negative-point:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :-1,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":-1,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
               order/prepare-out-of-stock:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":999}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":999}],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
               order/prepare-point-below-min-order:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :500,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":500,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
               order/prepare-point-exceeds:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :99999,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":99999,\"receiver\":\"홍길동\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"zipCode\":\"06123\",\"\
+                  address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\":\"101동 202호\",\"\
+                  shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\":false,\"\
+                  isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-point-insufficient-balance:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :10000,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":10000,\"receiver\":\"홍길동\",\"\
+                  receiverPhoneNumber\":\"010-1234-5678\",\"zipCode\":\"06123\",\"\
+                  address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\":\"101동 202호\",\"\
+                  shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\":false,\"\
+                  isDefaultAddress\":false,\"addressAlias\":null}"
               order/prepare-success:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
               order/prepare-success-free-shipping:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":2}],\"usedPoint\"\
-                  :0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":0,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":2}],\"usedPoint\":0,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":0,\"orderNote\"\
+                  :null,\"isAddToAddressBook\":false,\"isDefaultAddress\":false,\"\
+                  addressAlias\":null}"
               order/prepare-success-with-point:
-                value: "{\"items\":[{\"productDetailId\":1,\"quantity\":1}],\"usedPoint\"\
-                  :3000,\"receiver\":\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"\
-                  ,\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테헤란로 1\",\"detailAddress\"\
-                  :\"101동 202호\",\"shippingFee\":3000,\"orderNote\":null,\"isAddToAddressBook\"\
-                  :false,\"isDefaultAddress\":false,\"addressAlias\":null}"
+                value: "{\"paymentMethod\":\"TOSS\",\"items\":[{\"productDetailId\"\
+                  :1,\"quantity\":1}],\"usedPoint\":3000,\"receiver\":\"홍길동\",\"receiverPhoneNumber\"\
+                  :\"010-1234-5678\",\"zipCode\":\"06123\",\"address\":\"서울시 강남구 테\
+                  헤란로 1\",\"detailAddress\":\"101동 202호\",\"shippingFee\":3000,\"\
+                  orderNote\":null,\"isAddToAddressBook\":false,\"isDefaultAddress\"\
+                  :false,\"addressAlias\":null}"
       responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPrepareResponse'
+              examples:
+                order/prepare-bank-transfer-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                    니다.\",\"data\":{\"orderNumber\":\"20260416-BANK123456\",\"paymentAmount\"\
+                    :33000}}"
+                order/prepare-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                    니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\",\"paymentAmount\"\
+                    :33000}}"
+                order/prepare-success-free-shipping:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                    니다.\",\"data\":{\"orderNumber\":\"20260416-DEF9876543\",\"paymentAmount\"\
+                    :60000}}"
+                order/prepare-success-with-point:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
+                    니다.\",\"data\":{\"orderNumber\":\"20260416-GHI1357924\",\"paymentAmount\"\
+                    :30000}}"
         "400":
           description: "400"
           content:
@@ -1026,25 +1072,6 @@ paths:
                 order/prepare-out-of-stock:
                   value: "{\"success\":false,\"status\":409,\"message\":\"재고가 부족합니\
                     다.\",\"data\":null}"
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderPrepareResponse'
-              examples:
-                order/prepare-success:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
-                    니다.\",\"data\":{\"orderNumber\":\"20260416-ABC1234567\",\"paymentAmount\"\
-                    :33000}}"
-                order/prepare-success-free-shipping:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
-                    니다.\",\"data\":{\"orderNumber\":\"20260416-DEF9876543\",\"paymentAmount\"\
-                    :60000}}"
-                order/prepare-success-with-point:
-                  value: "{\"success\":true,\"status\":200,\"message\":\"주문이 생성되었습\
-                    니다.\",\"data\":{\"orderNumber\":\"20260416-GHI1357924\",\"paymentAmount\"\
-                    :30000}}"
   /v1/orders/status-count:
     get:
       tags:
@@ -2422,7 +2449,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"4\":5,\"5\":7,\"1\":0,\"2\":1,\"3\":2}}}"
+                    ratingCounts\":{\"1\":0,\"2\":1,\"3\":2,\"4\":5,\"5\":7}}}"
 components:
   schemas:
     ErrorResponse:
@@ -3536,16 +3563,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    SmsVerifyRequest:
-      title: SmsVerifyRequest
-      type: object
-      properties:
-        authCode:
-          type: string
-          description: 수신한 6자리 인증번호
-        phoneNumber:
-          type: string
-          description: 인증번호를 받은 전화번호
     OrderPrepareResponse:
       title: OrderPrepareResponse
       type: object
@@ -3568,6 +3585,16 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    SmsVerifyRequest:
+      title: SmsVerifyRequest
+      type: object
+      properties:
+        authCode:
+          type: string
+          description: 수신한 6자리 인증번호
+        phoneNumber:
+          type: string
+          description: 인증번호를 받은 전화번호
     CommonResponse:
       title: CommonResponse
       type: object
@@ -3648,54 +3675,6 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-orders-prepare-1990526072:
-      type: object
-      properties:
-        usedPoint:
-          type: number
-          description: 사용 포인트 (결제 금액에서 차감)
-        zipCode:
-          type: string
-          description: 우편번호
-        address:
-          type: string
-          description: 기본 주소
-        shippingFee:
-          type: number
-          description: 배송비
-        receiver:
-          type: string
-          description: 수령인 이름
-        orderNote:
-          type: string
-          description: "배송 요청사항 (100자 이내, 선택)"
-        receiverPhoneNumber:
-          type: string
-          description: 수령인 연락처
-        detailAddress:
-          type: string
-          description: 상세 주소
-        addressAlias:
-          type: string
-          description: "주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)"
-        isDefaultAddress:
-          type: boolean
-          description: 기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)
-        items:
-          type: array
-          description: 주문 상품 목록
-          items:
-            type: object
-            properties:
-              quantity:
-                type: number
-                description: 주문 수량
-              productDetailId:
-                type: number
-                description: 상품 상세 ID
-        isAddToAddressBook:
-          type: boolean
-          description: 주소록 추가 여부
     v1-orders-orderNumber-cancel1320508390:
       type: object
       properties:
@@ -4097,6 +4076,58 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
+    OrderPrepareRequest:
+      title: OrderPrepareRequest
+      type: object
+      properties:
+        zipCode:
+          type: string
+          description: 우편번호
+        address:
+          type: string
+          description: 기본 주소
+        receiver:
+          type: string
+          description: 수령인 이름
+        orderNote:
+          type: string
+          description: "배송 요청사항 (100자 이내, 선택)"
+        receiverPhoneNumber:
+          type: string
+          description: 수령인 연락처
+        addressAlias:
+          type: string
+          description: "주소록 별칭 (isAddToAddressBook=true일 때 사용, 선택)"
+        isDefaultAddress:
+          type: boolean
+          description: 기본 배송지로 ���정 여부 (isAddToAddressBook=true일 때 적용)
+        usedPoint:
+          type: number
+          description: 사용 포인트 (결제 금액에서 차감)
+        shippingFee:
+          type: number
+          description: 배송비
+        detailAddress:
+          type: string
+          description: 상세 주소
+        paymentMethod:
+          type: string
+          description: "결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"
+        items:
+          type: array
+          description: 주문 상품 목록
+          items:
+            type: object
+            properties:
+              quantity:
+                type: number
+                description: 주문 수량
+              productDetailId:
+                type: number
+                description: 상품 상세 ID
+        isAddToAddressBook:
+          type: boolean
+          description: 주소록 추가 여부
     ProductOptionsResponse:
       title: ProductOptionsResponse
       type: object

@@ -1,9 +1,11 @@
 package com.daebbang.daebbangcore.domain.order.command;
 
+import com.daebbang.daebbangcore.domain.order.entity.PaymentMethod;
 import java.util.List;
 
 public record OrderPrepareCommand(
     Long userId,
+    PaymentMethod paymentMethod,
     List<OrderItemCommand> items,
     int usedPoint,
     String receiver,

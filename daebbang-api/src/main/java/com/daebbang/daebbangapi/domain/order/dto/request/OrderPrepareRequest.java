@@ -2,16 +2,19 @@ package com.daebbang.daebbangapi.domain.order.dto.request;
 
 import com.daebbang.daebbangcommon.util.PhoneNumberPolicy;
 import com.daebbang.daebbangcore.domain.order.command.OrderPrepareCommand;
+import com.daebbang.daebbangcore.domain.order.entity.PaymentMethod;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record OrderPrepareRequest(
+    @NotNull(message = "결제 수단은 필수입니다.") PaymentMethod paymentMethod,
     @NotEmpty(message = "주문 상품 목록은 필수입니다.") List<@Valid OrderItemRequest> items,
     @Min(value = 0, message = "포인트는 0 이상이어야 합니다.") int usedPoint,
     @NotBlank(message = "수령인은 필수입니다.")
@@ -33,6 +36,7 @@ public record OrderPrepareRequest(
     public OrderPrepareCommand toCommand(Long userId) {
         return new OrderPrepareCommand(
             userId,
+            paymentMethod,
             items.stream().map(OrderItemRequest::toCommand).toList(),
             usedPoint,
             receiver,

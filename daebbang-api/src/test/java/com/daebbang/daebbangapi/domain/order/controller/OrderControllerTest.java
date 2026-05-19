@@ -33,6 +33,7 @@ import com.daebbang.daebbangcore.domain.order.dto.OrderStatusCountResult;
 import com.daebbang.daebbangcore.domain.order.dto.OrderSummaryResult;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetailStatus;
 import com.daebbang.daebbangcore.domain.order.entity.OrderStatus;
+import com.daebbang.daebbangcore.domain.order.entity.PaymentMethod;
 import com.daebbang.daebbangcore.domain.order.service.OrderService;
 import com.daebbang.daebbangcore.infra.util.JwtUtils;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
@@ -92,6 +93,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 주문 준비 성공 (배송비 있음)")
     void prepare_success_withShippingFee() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -122,6 +124,7 @@ class OrderControllerTest {
                     .requestSchema(Schema.schema("OrderPrepareRequest"))
                     .responseSchema(Schema.schema("OrderPrepareResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록 (1개 이상)"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID (색상/사이즈 조합)"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("주문 수량 (최소 1)"),
@@ -149,9 +152,66 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("POST /v1/orders/prepare - 주문 준비 성공 (무통장입금)")
+    void prepare_success_bankTransfer() throws Exception {
+        OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.BANK_TRANSFER,
+            List.of(new OrderItemRequest(1L, 1)),
+            0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
+            3_000, null, false, false, null
+        );
+        OrderPrepareResponse response = new OrderPrepareResponse("20260416-BANK123456", 33_000);
+        given(orderService.prepare(any())).willReturn(response);
+
+        mockMvc.perform(post("/v1/orders/prepare")
+                .with(authentication(authToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andDo(print())
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.orderNumber").value("20260416-BANK123456"))
+            .andExpect(jsonPath("$.data.paymentAmount").value(33_000))
+            .andDo(document("order/prepare-bank-transfer-success",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Order")
+                    .summary("주문 준비 - 무통장입금")
+                    .description("paymentMethod를 BANK_TRANSFER로 전달하면 무통장입금 주문으로 처리됩니다.")
+                    .requestSchema(Schema.schema("OrderPrepareRequest"))
+                    .responseSchema(Schema.schema("OrderPrepareResponse"))
+                    .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (BANK_TRANSFER)"),
+                        fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
+                        fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
+                        fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("주문 수량"),
+                        fieldWithPath("usedPoint").type(JsonFieldType.NUMBER).description("사용 포인트"),
+                        fieldWithPath("receiver").type(JsonFieldType.STRING).description("수령인 이름"),
+                        fieldWithPath("receiverPhoneNumber").type(JsonFieldType.STRING).description("수령인 연락처"),
+                        fieldWithPath("zipCode").type(JsonFieldType.STRING).description("우편번호"),
+                        fieldWithPath("address").type(JsonFieldType.STRING).description("기본 주소"),
+                        fieldWithPath("detailAddress").type(JsonFieldType.STRING).description("상세 주소"),
+                        fieldWithPath("shippingFee").type(JsonFieldType.NUMBER).description("배송비"),
+                        fieldWithPath("orderNote").type(JsonFieldType.STRING).optional().description("배송 요청사항"),
+                        fieldWithPath("isAddToAddressBook").type(JsonFieldType.BOOLEAN).description("주소록 추가 여부"),
+                        fieldWithPath("isDefaultAddress").type(JsonFieldType.BOOLEAN).description("기본 배송지 설정 여부"),
+                        fieldWithPath("addressAlias").type(JsonFieldType.STRING).optional().description("주소록 별칭")
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data.orderNumber").type(JsonFieldType.STRING).description("주문 번호"),
+                        fieldWithPath("data.paymentAmount").type(JsonFieldType.NUMBER).description("입금해야 할 금액")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
     @DisplayName("POST /v1/orders/prepare - 주문 준비 성공 (5만원 이상 무료 배송)")
     void prepare_success_freeShipping() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 2)),
             0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             0, null, false, false, null
@@ -174,6 +234,7 @@ class OrderControllerTest {
                     .requestSchema(Schema.schema("OrderPrepareRequest"))
                     .responseSchema(Schema.schema("OrderPrepareResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("주문 수량"),
@@ -204,6 +265,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 주문 준비 성공 (포인트 사용)")
     void prepare_success_withPoint() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             3_000, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -226,6 +288,7 @@ class OrderControllerTest {
                     .requestSchema(Schema.schema("OrderPrepareRequest"))
                     .responseSchema(Schema.schema("OrderPrepareResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("주문 수량"),
@@ -256,6 +319,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - items 빈 배열이면 400 반환")
     void prepare_emptyItems() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(), 0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
         );
@@ -275,6 +339,7 @@ class OrderControllerTest {
                     .description("items가 비어있으면 400 Bad Request를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록 (비어있음 - 오류)"),
                         fieldWithPath("usedPoint").type(JsonFieldType.NUMBER).description("사용 포인트"),
                         fieldWithPath("receiver").type(JsonFieldType.STRING).description("수령인 이름"),
@@ -305,6 +370,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - quantity 0 이하면 400 반환")
     void prepare_invalidQuantity() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 0)),
             0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -325,6 +391,7 @@ class OrderControllerTest {
                     .description("수량이 1 미만이면 400 Bad Request를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량 (0 - 오류)"),
@@ -357,6 +424,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - usedPoint 음수이면 400 반환")
     void prepare_negativeUsedPoint() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             -1, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -377,6 +445,7 @@ class OrderControllerTest {
                     .description("사용 포인트가 음수이면 400 Bad Request를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
@@ -409,6 +478,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 재고 부족 시 409 반환")
     void prepare_outOfStock() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 999)),
             0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -432,6 +502,7 @@ class OrderControllerTest {
                     .description("요청 수량이 남은 재고보다 많으면 409 Conflict를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량 (재고 초과)"),
@@ -461,6 +532,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 재고 락 획득 실패 시 503 반환")
     void prepare_stockLockFailed() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -484,6 +556,7 @@ class OrderControllerTest {
                     .description("동시에 같은 상품에 주문이 몰려 락 획득에 실패한 경우 503을 반환합니다. 잠시 후 재시도하세요.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
@@ -513,6 +586,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 포인트가 결제 금액 초과 시 400 반환")
     void prepare_pointExceedsPayment() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             99_999, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -536,6 +610,7 @@ class OrderControllerTest {
                     .description("사용 포인트가 결제 금액(상품금액 + 배송비)보다 크면 400 Bad Request를 반환합니다.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
@@ -565,6 +640,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 3만원 미만 주문에 적립금 사용 시 400 반환")
     void prepare_pointBelowMinOrder() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             500, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -588,6 +664,7 @@ class OrderControllerTest {
                     .description("결제 자격 금액(상품 + 배송비)이 30,000원 미만일 때 적립금을 사용하면 400 Bad Request 반환.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
@@ -617,6 +694,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 보유 적립금 부족 시 400 반환")
     void prepare_pointInsufficientBalance() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             10_000, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -640,6 +718,7 @@ class OrderControllerTest {
                     .description("사용하려는 적립금이 회원 보유 적립금을 초과할 때 400 Bad Request 반환.")
                     .responseSchema(Schema.schema("ErrorResponse"))
                     .requestFields(
+                        fieldWithPath("paymentMethod").type(JsonFieldType.STRING).description("결제 수단 (TOSS: 카드·계좌이체, BANK_TRANSFER: 무통장입금)"),
                         fieldWithPath("items").type(JsonFieldType.ARRAY).description("주문 상품 목록"),
                         fieldWithPath("items[].productDetailId").type(JsonFieldType.NUMBER).description("상품 상세 ID"),
                         fieldWithPath("items[].quantity").type(JsonFieldType.NUMBER).description("수량"),
@@ -669,6 +748,7 @@ class OrderControllerTest {
     @DisplayName("POST /v1/orders/prepare - 인증 없이 접근 시 401 반환")
     void prepare_unauthorized() throws Exception {
         OrderPrepareRequest request = new OrderPrepareRequest(
+            PaymentMethod.TOSS,
             List.of(new OrderItemRequest(1L, 1)),
             0, "홍길동", "010-1234-5678", "06123", "서울시 강남구 테헤란로 1", "101동 202호",
             3_000, null, false, false, null
@@ -711,7 +791,7 @@ class OrderControllerTest {
                     .responseSchema(Schema.schema("SuccessResponse"))
                     .requestFields(
                         fieldWithPath("orderId").type(JsonFieldType.STRING).description("주문 번호 (prepare 응답의 orderNumber)"),
-                        fieldWithPath("paymentKey").type(JsonFieldType.STRING).description("토스 결제키 (토스 결제창 완료 후 반환)"),
+                        fieldWithPath("paymentKey").type(JsonFieldType.STRING).optional().description("토스 결제키 (토스 결제창 완료 후 반환; BANK_TRANSFER일 경우 null)"),
                         fieldWithPath("amount").type(JsonFieldType.NUMBER).description("결제 금액 (토스 결제창 완료 후 반환)")
                     )
                     .responseFields(
@@ -762,37 +842,42 @@ class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/orders/confirm - paymentKey 빈 문자열이면 400 반환")
-    void confirm_blankPaymentKey() throws Exception {
-        OrderConfirmRequest request = new OrderConfirmRequest("20260416-ABC1234567", "", 33_000);
+    @DisplayName("POST /v1/orders/confirm - 무통장입금 주문 신청 성공")
+    void confirm_bankTransfer_success() throws Exception {
+        OrderConfirmRequest request = new OrderConfirmRequest(
+            "20260416-BANK123456", null, 33_000
+        );
+        willDoNothing().given(orderService).confirm(any());
 
         mockMvc.perform(post("/v1/orders/confirm")
                 .with(authentication(authToken()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andDo(print())
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.status").value(400))
-            .andDo(document("order/confirm-blank-payment-key",
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("결제가 완료되었습니다."))
+            .andDo(document("order/confirm-bank-transfer-success",
                 resource(ResourceSnippetParameters.builder()
                     .tag("Order")
-                    .summary("결제 확정 - paymentKey 누락")
-                    .description("paymentKey가 빈 문자열이면 400 Bad Request를 반환합니다.")
-                    .responseSchema(Schema.schema("ErrorResponse"))
+                    .summary("무통장입금 주문 신청")
+                    .description("""
+                        무통장입금 선택 시 paymentKey 없이 호출합니다.
+                        주문이 WAITING_DEPOSIT(입금대기) 상태로 저장되며, 관리자가 입금 확인 후 PAID로 변경합니다.
+                        """)
+                    .requestSchema(Schema.schema("OrderConfirmRequest"))
+                    .responseSchema(Schema.schema("SuccessResponse"))
                     .requestFields(
-                        fieldWithPath("orderId").type(JsonFieldType.STRING).description("주문 번호"),
-                        fieldWithPath("paymentKey").type(JsonFieldType.STRING).description("토스 결제키 (빈 문자열 - 오류)"),
+                        fieldWithPath("orderId").type(JsonFieldType.STRING).description("주문 번호 (prepare 응답의 orderNumber)"),
+                        fieldWithPath("paymentKey").type(JsonFieldType.STRING).optional().description("결제키 (무통장입금은 null)"),
                         fieldWithPath("amount").type(JsonFieldType.NUMBER).description("결제 금액")
                     )
                     .responseFields(
                         fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                         fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
-                        fieldWithPath("message").type(JsonFieldType.STRING).description("오류 메시지"),
-                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)"),
-                        fieldWithPath("errors").type(JsonFieldType.ARRAY).optional().description("유효성 검증 오류 목록"),
-                        fieldWithPath("errors[].field").type(JsonFieldType.STRING).optional().description("오류 필드명"),
-                        fieldWithPath("errors[].message").type(JsonFieldType.STRING).optional().description("오류 메시지")
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.VARIES).optional().description("응답 데이터 (없음)")
                     )
                     .build()
                 )));

@@ -18,9 +18,9 @@ import com.daebbang.daebbangcore.domain.order.dto.OrderSummaryResult;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetailStatus;
 import com.daebbang.daebbangcore.domain.order.entity.OrderDetails;
 import com.daebbang.daebbangcore.domain.order.entity.OrderStatus;
-import com.daebbang.daebbangcore.domain.order.entity.OrderSettings;
 import com.daebbang.daebbangcore.domain.order.entity.Orders;
 import com.daebbang.daebbangcore.domain.order.entity.Payment;
+import com.daebbang.daebbangcore.domain.order.entity.PaymentMethod;
 import com.daebbang.daebbangcore.domain.order.event.StockInvalidateEvent;
 import com.daebbang.daebbangcore.domain.order.repository.OrderSettingsRepository;
 import com.daebbang.daebbangcore.domain.order.repository.OrdersRepository;
@@ -77,7 +77,6 @@ public class OrderServiceImpl implements OrderService {
     private static final int FREE_SHIPPING_THRESHOLD = 50_000;
     private static final int DEFAULT_SHIPPING_FEE = 3_000;
     private static final int MIN_PAYMENT_AMOUNT_FOR_POINT_USE = 30_000;
-    private static final int DEFAULT_AUTO_COMPLETE_DAYS = 7;
     private static final String CANCEL_IDEMPOTENCY_PREFIX = "order:cancel:idempotency:";
     private static final Duration CANCEL_IDEMPOTENCY_TTL = Duration.ofHours(24);
 
@@ -110,7 +109,7 @@ public class OrderServiceImpl implements OrderService {
         return tx;
     }
 
-    private record CancelPrecheck(String paymentKey, int cancelableAmount) {}
+    private record CancelPrecheck(String paymentKey, int cancelableAmount, boolean isBankTransfer) {}
     private record PartialCancelPrecheck(String paymentKey, int cancelAmount, List<Long> targetDetailIds) {}
 
     @Override
@@ -196,26 +195,33 @@ public class OrderServiceImpl implements OrderService {
 
             orderNumber = generateOrderNumber();
 
-            OrderSession session = OrderSession.builder()
-                .orderNumber(orderNumber)
-                .userId(user.getId())
-                .items(sessionItems)
-                .usedPoint(command.usedPoint())
-                .shippingFee(shippingFee)
-                .totalOriginalAmount(totalOriginalAmount)
-                .totalSellingAmount(totalSellingAmount)
-                .paymentAmount(paymentAmount)
-                .receiver(command.receiver())
-                .receiverPhoneNumber(command.receiverPhoneNumber())
-                .zipCode(command.zipCode())
-                .address(command.address())
-                .detailAddress(command.detailAddress())
-                .orderNote(command.orderNote())
-                .build();
-
-            orderSessionRedisRepository.save(orderNumber, session);
-            stockReserveRedisRepository.save(orderNumber, sessionItems);
-            reserved = true;
+            if (command.paymentMethod() == PaymentMethod.BANK_TRANSFER) {
+                saveBankTransferOrder(user, orderNumber, sessionItems, shippingFee, paymentAmount,
+                    totalOriginalAmount, totalSellingAmount, command);
+                reserved = true;
+                sessionItems.forEach(i -> stockCacheService.invalidateStock(i.getProductDetailId()));
+            } else {
+                OrderSession session = OrderSession.builder()
+                    .orderNumber(orderNumber)
+                    .userId(user.getId())
+                    .paymentMethod(command.paymentMethod())
+                    .items(sessionItems)
+                    .usedPoint(command.usedPoint())
+                    .shippingFee(shippingFee)
+                    .totalOriginalAmount(totalOriginalAmount)
+                    .totalSellingAmount(totalSellingAmount)
+                    .paymentAmount(paymentAmount)
+                    .receiver(command.receiver())
+                    .receiverPhoneNumber(command.receiverPhoneNumber())
+                    .zipCode(command.zipCode())
+                    .address(command.address())
+                    .detailAddress(command.detailAddress())
+                    .orderNote(command.orderNote())
+                    .build();
+                orderSessionRedisRepository.save(orderNumber, session);
+                stockReserveRedisRepository.save(orderNumber, sessionItems);
+                reserved = true;
+            }
         } finally {
             if (!reserved) {
                 if (orderNumber != null) {
@@ -252,6 +258,54 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(OrderErrorCode.ORDER_AMOUNT_MISMATCH);
         }
 
+        confirmToss(command, session);
+    }
+
+    private void saveBankTransferOrder(Users user, String orderNumber, List<OrderSessionItem> items,
+        int shippingFee, int paymentAmount, int totalOriginalAmount, int totalSellingAmount,
+        OrderPrepareCommand command) {
+        writeTx().execute(status -> {
+            for (OrderSessionItem item : items) {
+                int updated = productDetailsService.decreaseStock(item.getProductDetailId(), item.getQuantity());
+                if (updated == 0) {
+                    log.error("[Order] DB 재고 부족 - productDetailId: {}", item.getProductDetailId());
+                    throw new BusinessException(OrderErrorCode.OUT_OF_STOCK);
+                }
+            }
+
+            Orders order = Orders.create(
+                user, orderNumber, command.usedPoint(), shippingFee,
+                totalOriginalAmount, totalSellingAmount,
+                command.receiver(), command.receiverPhoneNumber(),
+                command.zipCode(), command.address(), command.detailAddress(), command.orderNote()
+            );
+
+            for (OrderSessionItem item : items) {
+                ProductDetails pd = productDetailsService.getProductDetailsById(item.getProductDetailId());
+                order.addDetail(OrderDetails.create(pd, item.getQuantity(), item.getOriginalPrice(), item.getDiscountRate()));
+            }
+
+            order.waitDeposit();
+            order.update();
+            ordersRepository.save(order);
+
+            if (command.usedPoint() > 0) {
+                pointService.usePointForPayment(
+                    command.userId(), order.getId(),
+                    command.usedPoint(), totalSellingAmount + shippingFee
+                );
+            }
+
+            Payment payment = Payment.createForBankTransfer(order, paymentAmount);
+            payment.update();
+            paymentService.save(payment);
+
+            log.info("[Order] 무통장입금 주문 신청 완료 - orderNumber: {}", orderNumber);
+            return null;
+        });
+    }
+
+    private void confirmToss(OrderConfirmCommand command, OrderSession session) {
         RLock confirmLock = redissonClient.getLock("order:confirm:lock:" + command.orderNumber());
         boolean acquired = false;
         try {
@@ -303,11 +357,7 @@ public class OrderServiceImpl implements OrderService {
                     ));
                 }
 
-                if (tossResponse.isVirtualAccount()) {
-                    order.waitDeposit();
-                } else {
-                    order.pay();
-                }
+                order.pay();
                 order.update();
                 ordersRepository.save(order);
 
@@ -336,7 +386,7 @@ public class OrderServiceImpl implements OrderService {
                 payment.update();
                 paymentService.save(payment);
 
-                log.info("[Order] confirm 완료 - orderNumber: {}, method: {}",
+                log.info("[Order] Toss confirm 완료 - orderNumber: {}, method: {}",
                     command.orderNumber(), tossResponse.getMethod());
 
             } catch (Exception e) {
@@ -360,7 +410,6 @@ public class OrderServiceImpl implements OrderService {
             if (acquired) confirmLock.unlock();
         }
 
-        // 11. Redis 세션 삭제 & 예약 키 삭제 & 재고 캐시 무효화
         orderSessionRedisRepository.delete(command.orderNumber());
         stockReserveRedisRepository.delete(command.orderNumber());
         session.getItems().forEach(i -> stockCacheService.invalidateStock(i.getProductDetailId()));
@@ -387,12 +436,14 @@ public class OrderServiceImpl implements OrderService {
                     throw new BusinessException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED);
                 }
 
-                return new CancelPrecheck(payment.getPaymentKey(), cancelableAmount);
+                return new CancelPrecheck(payment.getPaymentKey(), cancelableAmount, payment.isBankTransfer());
             }));
 
-            // [Phase 2] Toss API 호출 — DB 커넥션 미보유
-            String idempotencyKey = getOrCreateCancelIdempotencyKey(command.orderNumber());
-            tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason(), idempotencyKey);
+            // [Phase 2] Toss API 호출 — 무통장입금은 실제 결제가 없으므로 스킵
+            if (!precheck.isBankTransfer()) {
+                String idempotencyKey = getOrCreateCancelIdempotencyKey(command.orderNumber());
+                tossPaymentClient.cancel(precheck.paymentKey(), command.cancelReason(), idempotencyKey);
+            }
 
             // [Phase 3] write tx: DB 상태 반영
             writeTx().execute(status -> {
@@ -410,7 +461,14 @@ public class OrderServiceImpl implements OrderService {
                     detail.cancel();
                 }
                 order.cancel();
-                paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelableAmount());
+
+                if (precheck.isBankTransfer()) {
+                    payment.cancelBankTransfer();
+                    payment.update();
+                } else {
+                    paymentService.recordCancel(payment, command.cancelReason(), precheck.cancelableAmount());
+                }
+
                 restoreStockAndPublishEvent(cancelTargets);
 
                 if (order.getUsedPoint() > 0) {
@@ -422,7 +480,9 @@ public class OrderServiceImpl implements OrderService {
                 return null;
             });
 
-            deleteCancelIdempotencyKey(command.orderNumber());
+            if (!precheck.isBankTransfer()) {
+                deleteCancelIdempotencyKey(command.orderNumber());
+            }
         });
     }
 
@@ -535,36 +595,24 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Long> findAutoCompletableOrderIds() {
-        int autoCompleteDays = orderSettingsRepository.findTopByOrderByIdAsc()
-            .map(OrderSettings::getAutoCompleteDays)
-            .orElse(DEFAULT_AUTO_COMPLETE_DAYS);
-        LocalDateTime threshold = LocalDateTime.now().minusDays(autoCompleteDays);
+        int days = orderSettingsRepository.findTopByOrderByIdAsc()
+            .map(s -> s.getAutoCompleteDays())
+            .orElse(7);
+        LocalDateTime threshold = LocalDateTime.now().minusDays(days);
         return ordersRepository.findOrderIdsByStatusAndUpdatedBefore(OrderStatus.DELIVERED, threshold);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void autoComplete(Long orderId) {
-        Orders order = ordersRepository.findById(orderId)
-            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
-
-        // race로 이미 상태 전환됐으면 조용히 skip (cancel 등이 먼저 일어났을 수 있음)
-        if (order.getOrderStatus() != OrderStatus.DELIVERED) {
+        Orders order = ordersRepository.findById(orderId).orElse(null);
+        if (order == null || order.getOrderStatus() != OrderStatus.DELIVERED) {
             return;
         }
-        Users user = order.getUser();
-        if (user == null) {
-            // 비회원 주문은 적립 대상이 아니므로 status만 전환
-            order.complete();
-            order.update();
-            return;
-        }
-
         order.complete();
         order.update();
-        pointService.awardPurchasePoint(user.getId(), order.getId(), order.getPaymentAmount());
-
-        log.info("[Order] 자동 구매 확정 완료 - orderNumber: {}", order.getOrderNumber());
+        pointService.awardPurchasePoint(order.getUser().getId(), order.getId(), order.getPaymentAmount());
+        log.info("[Order] 자동 구매 확정 - orderId: {}", orderId);
     }
 
     @Override
