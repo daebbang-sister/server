@@ -44,7 +44,7 @@ subprojects {
     configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
         dependencies {
             dependency("org.springframework.security:spring-security-web:7.0.4")
-            dependency("org.apache.tomcat.embed:tomcat-embed-core:11.0.20")
+            dependency("org.apache.tomcat.embed:tomcat-embed-core:11.0.22")
             dependency("io.netty:netty-codec-http:4.2.11.Final")
             dependency("io.netty:netty-codec-http2:4.2.11.Final")
         }
