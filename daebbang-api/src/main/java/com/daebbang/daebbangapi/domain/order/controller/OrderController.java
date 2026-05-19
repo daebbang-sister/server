@@ -1,6 +1,7 @@
 package com.daebbang.daebbangapi.domain.order.controller;
 
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderCancelRequest;
+import com.daebbang.daebbangcore.domain.order.entity.PaymentMethod;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderConfirmRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderPartialCancelRequest;
 import com.daebbang.daebbangapi.domain.order.dto.request.OrderPrepareRequest;
@@ -48,9 +49,12 @@ public class OrderController {
         @Valid @RequestBody OrderPrepareRequest request
     ) {
         OrderPrepareResponse response = orderService.prepare(request.toCommand(userId));
+        UserSuccessCode code = request.paymentMethod() == PaymentMethod.BANK_TRANSFER
+            ? UserSuccessCode.ORDER_PREPARED_BANK_TRANSFER
+            : UserSuccessCode.ORDER_PREPARED;
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(CommonResponse.success(UserSuccessCode.ORDER_PREPARED, response));
+            .body(CommonResponse.success(code, response));
     }
 
     @PostMapping("/confirm")

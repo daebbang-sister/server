@@ -38,7 +38,7 @@ public class Payment extends DefaultBase {
     @Column(length = 20, nullable = false)
     private PaymentStatus status;
 
-    @Column(nullable = false)
+    @Column
     private String paymentKey;
 
     @Column(length = 20, nullable = false)
@@ -56,7 +56,7 @@ public class Payment extends DefaultBase {
     @Column(nullable = false)
     private LocalDateTime requestedAt;
 
-    @Column(nullable = false)
+    @Column
     private LocalDateTime approvedAt;
 
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -64,10 +64,10 @@ public class Payment extends DefaultBase {
 
     @Builder
     private Payment(Orders order, String paymentKey, String currency,
-        String method, Integer totalAmount,
+        String method, Integer totalAmount, PaymentStatus status,
         LocalDateTime requestedAt, LocalDateTime approvedAt) {
         this.order = order;
-        this.status = PaymentStatus.DONE;
+        this.status = status != null ? status : PaymentStatus.DONE;
         this.paymentKey = paymentKey;
         this.currency = currency;
         this.method = method;
@@ -89,6 +89,36 @@ public class Payment extends DefaultBase {
             .requestedAt(requestedAt)
             .approvedAt(approvedAt)
             .build();
+    }
+
+    public static Payment createForBankTransfer(Orders order, int totalAmount) {
+        return Payment.builder()
+            .order(order)
+            .currency("KRW")
+            .method(PaymentMethod.BANK_TRANSFER.name())
+            .totalAmount(totalAmount)
+            .status(PaymentStatus.WAITING_DEPOSIT)
+            .requestedAt(LocalDateTime.now())
+            .build();
+    }
+
+    public void confirmDeposit(LocalDateTime approvedAt) {
+        if (this.status != PaymentStatus.WAITING_DEPOSIT) {
+            throw new IllegalStateException("입금 대기 상태가 아닙니다. 현재: " + this.status);
+        }
+        this.status = PaymentStatus.DONE;
+        this.approvedAt = approvedAt;
+    }
+
+    public void cancelBankTransfer() {
+        if (this.status != PaymentStatus.WAITING_DEPOSIT) {
+            throw new IllegalStateException("입금 대기 상태가 아닙니다. 현재: " + this.status);
+        }
+        this.status = PaymentStatus.CANCELLED;
+    }
+
+    public boolean isBankTransfer() {
+        return PaymentMethod.BANK_TRANSFER.name().equals(this.method);
     }
 
     public void addCancel(PaymentCancels cancel) {
