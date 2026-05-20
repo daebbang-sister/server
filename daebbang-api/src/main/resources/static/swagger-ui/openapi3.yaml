@@ -71,9 +71,9 @@ paths:
                   address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
                   :\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
               address/add-address-limit-exceeded:
-                value: "{\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"\
-                  홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
+                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
+                  \",\"address\":\"서울시 강남구 테헤란로\"}"
       responses:
         "201":
           description: "201"
@@ -495,10 +495,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-users486549215'
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=oiWbk6JUGtthNips_UDfAIkii3oU_gu-OOxyrRutuH_JLTdJkhepoJBkf-1MARtaz23rYe9GpkJwnD2TANpAnHnL2xv4Hg9-
+                value: _csrf=PSiLvQjQOhkKOiNr3Olg6er9pQV7reVNob7Zi1xsTmdgVfB-BB-z3G3oD3snDxRfv8RU39rPiGRCn4RglIi8vmped1IGNJFO
       responses:
         "200":
           description: "200"
@@ -647,9 +647,9 @@ paths:
                   address\":\"서울시 서초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\"\
                   :\"김철수\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
               address/update-address-not-found:
-                value: "{\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"\
-                  홍길동\",\"detailAddress\":\"101호\",\"address\":\"서울시 강남구 테헤란로\",\"\
-                  receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
+                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
+                  \",\"address\":\"서울시 강남구 테헤란로\"}"
       responses:
         "200":
           description: "200"
@@ -695,12 +695,12 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/v1-users486549215'
+              $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
-                value: _csrf=Hh331D8po7rxg_En45JiDCcBKto6U8fCshNPTRXH5isk_iO_LSiSsAZKk4jctsMT1L9WNBBnB7gNZ_LvgCV4eXal0E9BzUCN
+                value: _csrf=ei86VtgH1SrOZPHd4WR3HY2YJyPnuvWKyKh93cM3d6ZhHQE6H0kMZ-A3tBvjBpfr1UlDK7WrChuCg8Sn-JFP7PRRFcBSfjkD
               address/delete-address-not-found:
-                value: _csrf=aG0bxuGbnSqRQyc8Ka8LigLr6NuzHply8lL3BkJsMX-IN2fqDgl4pdf6rBm8JR8NTYI_6zXTxeOALahfwmGWY3FVVEm8BlSL
+                value: _csrf=IQXyfMH5jQPyrvXrr_KchyP08NAc0lE-HTHK0yBVTRJ_nkKAGDCQHfDP7zTfysDczd-o4hPA3eklszITe1T7sBNjfHRHrXHh
       responses:
         "200":
           description: "200"
@@ -1748,10 +1748,8 @@ paths:
     post:
       tags:
       - Claim
-      summary: 환불/교환 신청
-      description: "주문 상세 항목에 대해 환불 또는 교환을 신청합니다. multipart/form-data 형식.\n- data\
-        \ (application/json): 신청 정보 JSON\n- images (binary[], 선택, 최대 5장): 첨부 이미지 (jpg/jpeg/png/webp)\n\
-        - 수거지 정보는 주문 당시 배송지에서 자동 복사됩니다.\n- 환불 금액은 (할인가 / 수량) × 클레임 수량으로 자동 계산됩니다.\n"
+      summary: 환불/교환 신청 - 400 신청 불가 상태
+      description: 주문 상세가 NORMAL 상태가 아닐 때 반환되는 오류입니다.
       operationId: claim/create-claim-
       parameters:
       - name: orderDetailId
@@ -1768,6 +1766,31 @@ paths:
           type: string
         example: Bearer test-jwt-token
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-orders-orderDetailId-claim-458604118'
+              examples:
+                claim/create-claim-400-not-allowed:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"환불/교환 신청\
+                    이 불가한 상태입니다.\",\"data\":null}"
+                claim/create-claim-400-quantity-exceeded:
+                  value: "{\"success\":false,\"status\":400,\"message\":\"클레임 수량이\
+                    \ 주문 수량을 초과합니다.\",\"data\":null}"
+        "401":
+          description: "401"
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1-orders-orderDetailId-claim-458604118'
+              examples:
+                claim/create-claim-409:
+                  value: "{\"success\":false,\"status\":409,\"message\":\"이미 처리 중인\
+                    \ 환불/교환 신청이 있습니다.\",\"data\":null}"
         "201":
           description: "201"
           content:
@@ -1777,13 +1800,12 @@ paths:
               examples:
                 claim/create-claim-no-image:
                   value: "{\"success\":true,\"status\":201,\"message\":\"환불/교환 신청이\
-                    \ 완료되었습니다.\",\"data\":{\"claimId\":1,\"claimType\":\"REFUND\"\
-                    ,\"claimStatus\":\"REQUESTED\",\"reasonType\":\"DEFECT_OR_DAMAGE\"\
-                    ,\"reasonDetail\":\"빵이 눌려서 왔어요.\",\"quantity\":1,\"refundAmount\"\
-                    :12000,\"refundPoint\":0,\"pickupReceiver\":\"홍길동\",\"pickupPhone\"\
-                    :\"010-1234-5678\",\"pickupZipCode\":\"06123\",\"pickupAddress\"\
-                    :\"서울시 강남구 테헤란로 1\",\"pickupDetailAddress\":\"101동 202호\",\"imageUrls\"\
-                    :[\"https://s3.example.com/claim/20260501-abc.jpg\"],\"createdAt\"\
+                    \ 완료되었습니다.\",\"data\":{\"claimId\":2,\"claimType\":\"EXCHANGE\"\
+                    ,\"claimStatus\":\"REQUESTED\",\"reasonType\":\"WRONG_SIZE\",\"\
+                    reasonDetail\":null,\"quantity\":1,\"refundAmount\":0,\"refundPoint\"\
+                    :0,\"pickupReceiver\":\"홍길동\",\"pickupPhone\":\"010-1234-5678\"\
+                    ,\"pickupZipCode\":\"06123\",\"pickupAddress\":\"서울시 강남구 테헤란로\
+                    \ 1\",\"pickupDetailAddress\":null,\"imageUrls\":[],\"createdAt\"\
                     :\"2026-05-01T10:00:00\"}}"
                 claim/create-claim-with-images:
                   value: "{\"success\":true,\"status\":201,\"message\":\"환불/교환 신청이\
@@ -2524,9 +2546,21 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"2\":1,\"1\":0,\"5\":7,\"4\":5,\"3\":2}}}"
+                    ratingCounts\":{\"3\":2,\"2\":1,\"1\":0,\"5\":7,\"4\":5}}}"
 components:
   schemas:
+    v1-orders-orderDetailId-claim-458604118:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 성공 여부 (false)
+        message:
+          type: string
+          description: 에러 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     ErrorResponse:
       title: ErrorResponse
       type: object
@@ -3124,73 +3158,6 @@ components:
             totalElements:
               type: number
               description: 전체 상품 수
-        success:
-          type: boolean
-          description: 성공 여부
-        message:
-          type: string
-          description: 응답 메시지
-        status:
-          type: number
-          description: HTTP 상태 코드
-    ClaimResponse:
-      title: ClaimResponse
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            pickupPhone:
-              type: string
-              description: 수거지 연락처
-            quantity:
-              type: number
-              description: 클레임 수량
-            claimId:
-              type: number
-              description: 클레임 ID
-            reasonType:
-              type: string
-              description: 사유 코드
-            createdAt:
-              type: string
-              description: 신청 일시
-            claimType:
-              type: string
-              description: 클레임 유형
-            reasonDetail:
-              type: string
-              description: 상세 사유
-            refundPoint:
-              type: number
-              description: 환불 포인트
-            pickupDetailAddress:
-              type: string
-              description: 수거지 상세주소
-            pickupAddress:
-              type: string
-              description: 수거지 주소
-            imageUrls:
-              type: array
-              description: 첨부 이미지 URL 목록
-              items:
-                oneOf:
-                - type: object
-                - type: boolean
-                - type: string
-                - type: number
-            pickupZipCode:
-              type: string
-              description: 수거지 우편번호
-            pickupReceiver:
-              type: string
-              description: 수거지 수령인
-            claimStatus:
-              type: string
-              description: 처리 상태
-            refundAmount:
-              type: number
-              description: 환불 금액
         success:
           type: boolean
           description: 성공 여부
@@ -3963,8 +3930,75 @@ components:
         status:
           type: number
           description: HTTP 상태 코드
-    v1-users486549215:
+    v1-addresses-addressId486549215:
       type: object
+    ClaimResponse:
+      title: ClaimResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pickupPhone:
+              type: string
+              description: 수거지 연락처
+            quantity:
+              type: number
+              description: 클레임 수량
+            claimId:
+              type: number
+              description: 클레임 ID
+            reasonType:
+              type: string
+              description: 사유 코드
+            createdAt:
+              type: string
+              description: 신청 일시
+            claimType:
+              type: string
+              description: 클레임 유형
+            reasonDetail:
+              type: string
+              description: 상세 사유
+            refundPoint:
+              type: number
+              description: 환불 포인트
+            pickupDetailAddress:
+              type: string
+              description: 수거지 상세주소
+            pickupAddress:
+              type: string
+              description: 수거지 주소
+            imageUrls:
+              type: array
+              description: 첨부 이미지 URL 목록 (S3 문자열 배열). 이미지 없으면 빈 배열.
+              items:
+                oneOf:
+                - type: object
+                - type: boolean
+                - type: string
+                - type: number
+            pickupZipCode:
+              type: string
+              description: 수거지 우편번호
+            pickupReceiver:
+              type: string
+              description: 수거지 수령인
+            claimStatus:
+              type: string
+              description: 처리 상태
+            refundAmount:
+              type: number
+              description: 환불 금액
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
     MyInfoEditResponse:
       title: MyInfoEditResponse
       type: object
