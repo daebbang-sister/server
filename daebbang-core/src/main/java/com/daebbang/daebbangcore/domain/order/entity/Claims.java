@@ -105,6 +105,15 @@ public class Claims extends DefaultBase {
         int refundAmount, int refundPoint,
         String pickupReceiver, String pickupPhone, String pickupZipCode,
         String pickupAddress, String pickupDetailAddress) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("클레임 수량은 1 이상이어야 합니다. quantity=" + quantity);
+        }
+        if (refundAmount < 0) {
+            throw new IllegalArgumentException("환불 금액은 0 이상이어야 합니다. refundAmount=" + refundAmount);
+        }
+        if (refundPoint < 0) {
+            throw new IllegalArgumentException("환불 포인트는 0 이상이어야 합니다. refundPoint=" + refundPoint);
+        }
         return Claims.builder()
             .orderDetail(orderDetail)
             .claimType(claimType)
@@ -122,6 +131,9 @@ public class Claims extends DefaultBase {
     }
 
     public void addImage(ClaimImage image) {
+        if (image.getClaim() != this) {
+            throw new IllegalArgumentException("ClaimImage의 claim 참조가 현재 엔티티와 일치하지 않습니다.");
+        }
         this.images.add(image);
     }
 

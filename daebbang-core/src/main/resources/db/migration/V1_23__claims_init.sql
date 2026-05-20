@@ -18,8 +18,13 @@ CREATE TABLE claims
     completed_at          DATETIME     NULL                   COMMENT '완료 날짜',
     updated_at            DATETIME     NOT NULL               COMMENT '수정 날짜',
     deleted_at            DATETIME     NULL                   COMMENT '삭제 날짜',
+    -- 동시 중복 신청 방지: REQUESTED 상태가 아닌 경우 NULL → MySQL 유니크 인덱스에서 NULL 제외
+    active_flag           TINYINT(1) GENERATED ALWAYS AS (
+        CASE WHEN claim_status = 'REQUESTED' AND deleted_at IS NULL THEN 1 ELSE NULL END
+    ) VIRTUAL                                                  COMMENT '활성 클레임 여부 (REQUESTED + 미삭제 시 1, 나머지 NULL)',
     PRIMARY KEY (id),
-    CONSTRAINT fk_claims_order_detail FOREIGN KEY (order_detail_id) REFERENCES order_details (id)
+    CONSTRAINT fk_claims_order_detail FOREIGN KEY (order_detail_id) REFERENCES order_details (id),
+    UNIQUE KEY uq_claims_order_detail_active (order_detail_id, active_flag)
 );
 
 CREATE TABLE claim_images

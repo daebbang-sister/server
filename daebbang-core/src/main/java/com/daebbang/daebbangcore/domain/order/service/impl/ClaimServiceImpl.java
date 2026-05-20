@@ -42,8 +42,13 @@ public class ClaimServiceImpl implements ClaimService {
             throw new BusinessException(ImageErrorCode.IMAGE_COUNT_EXCEEDED);
         }
 
+        if (command.quantity() <= 0) {
+            throw new BusinessException(OrderErrorCode.CLAIM_QUANTITY_INVALID);
+        }
+
+        // PESSIMISTIC_WRITE 락: 동일 주문상세에 대한 동시 클레임 신청을 직렬화한다.
         OrderDetails orderDetail = orderDetailsRepository
-            .findByIdAndUserIdAndStatus(command.orderDetailId(), command.userId(), OrderDetailStatus.NORMAL)
+            .findByIdAndUserIdAndStatusForUpdate(command.orderDetailId(), command.userId(), OrderDetailStatus.NORMAL)
             .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_DETAIL_NOT_FOUND));
 
         if (claimRepository.existsByOrderDetailIdAndStatus(command.orderDetailId(), ClaimStatus.REQUESTED)) {

@@ -31,6 +31,7 @@ public enum OrderErrorCode implements ErrorCode {
 
     CLAIM_NOT_ALLOWED(400, "환불/교환 신청이 불가한 상태입니다."),
     CLAIM_ALREADY_EXISTS(409, "이미 처리 중인 환불/교환 신청이 있습니다."),
+    CLAIM_QUANTITY_INVALID(400, "클레임 수량은 1 이상이어야 합니다."),
     CLAIM_QUANTITY_EXCEEDED(400, "클레임 수량이 주문 수량을 초과합니다."),
     CLAIM_NOT_FOUND(404, "클레임 정보를 찾을 수 없습니다.");
 
