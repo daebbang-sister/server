@@ -36,8 +36,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -81,8 +79,8 @@ public class ReviewServiceImpl implements ReviewService {
             command.content()
         );
 
-        List<String> uploadedUrls = uploadAll(images);
-        registerS3CleanupOnRollback(uploadedUrls);
+        List<String> uploadedUrls = s3Service.uploadAll(images, S3_REVIEW_DIRECTORY);
+        s3Service.registerS3CleanupOnRollback(uploadedUrls);
         addImages(review, uploadedUrls);
         reviewRepository.save(review);
     }
@@ -112,8 +110,8 @@ public class ReviewServiceImpl implements ReviewService {
         Set<String> keepSet = new HashSet<>(keepUrls);
         List<String> removedUrls = existingUrls.stream().filter(url -> !keepSet.contains(url)).toList();
 
-        List<String> uploadedUrls = uploadAll(newImages);
-        registerS3CleanupOnRollback(uploadedUrls);
+        List<String> uploadedUrls = s3Service.uploadAll(newImages, S3_REVIEW_DIRECTORY);
+        s3Service.registerS3CleanupOnRollback(uploadedUrls);
 
         review.clearImages();
         List<String> finalUrls = new ArrayList<>(keepUrls.size() + uploadedUrls.size());
@@ -121,7 +119,7 @@ public class ReviewServiceImpl implements ReviewService {
         finalUrls.addAll(uploadedUrls);
         addImages(review, finalUrls);
 
-        registerS3CleanupOnCommit(removedUrls);
+        s3Service.registerS3CleanupOnCommit(removedUrls);
     }
 
     @Override
@@ -134,7 +132,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         review.softDelete();
 
-        registerS3CleanupOnCommit(imageUrls);
+        s3Service.registerS3CleanupOnCommit(imageUrls);
     }
 
     @Override
@@ -192,20 +190,6 @@ public class ReviewServiceImpl implements ReviewService {
             review.getUser().getId(), review.getId(), review.isPhotoReview());
     }
 
-    private List<String> uploadAll(List<UploadFile> files) {
-        if (files.isEmpty()) return List.of();
-        List<String> uploaded = new ArrayList<>(files.size());
-        try {
-            for (UploadFile file : files) {
-                uploaded.add(s3Service.upload(file, S3_REVIEW_DIRECTORY));
-            }
-            return List.copyOf(uploaded);
-        } catch (RuntimeException e) {
-            s3Service.deleteAll(uploaded);
-            throw e;
-        }
-    }
-
     private void addImages(Review review, List<String> imageUrls) {
         if (imageUrls == null || imageUrls.isEmpty()) return;
         for (int i = 0; i < imageUrls.size(); i++) {
@@ -215,32 +199,5 @@ public class ReviewServiceImpl implements ReviewService {
 
     private <T> List<T> safe(List<T> list) {
         return list == null ? List.of() : list;
-    }
-
-    private void registerS3CleanupOnCommit(List<String> urls) {
-        if (urls == null || urls.isEmpty()) return;
-        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            s3Service.deleteAll(urls);
-            return;
-        }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                s3Service.deleteAll(urls);
-            }
-        });
-    }
-
-    private void registerS3CleanupOnRollback(List<String> urls) {
-        if (urls == null || urls.isEmpty()) return;
-        if (!TransactionSynchronizationManager.isSynchronizationActive()) return;
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCompletion(int status) {
-                if (status == STATUS_ROLLED_BACK) {
-                    s3Service.deleteAll(urls);
-                }
-            }
-        });
     }
 }

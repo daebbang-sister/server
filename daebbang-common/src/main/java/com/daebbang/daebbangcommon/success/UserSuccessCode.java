@@ -49,7 +49,11 @@ public enum UserSuccessCode implements SuccessCode {
     REVIEW_STATS_RETRIEVED(200, "리뷰 통계 조회에 성공하였습니다."),
 
     POINT_BALANCE_RETRIEVED(200, "적립금 잔액 조회에 성공하였습니다."),
-    POINT_HISTORY_RETRIEVED(200, "적립금 내역 조회에 성공하였습니다.");
+    POINT_HISTORY_RETRIEVED(200, "적립금 내역 조회에 성공하였습니다."),
+
+    CLAIM_CREATED(201, "환불/교환 신청이 완료되었습니다."),
+    CLAIM_RETRIEVED(200, "클레임 조회에 성공하였습니다."),
+    CLAIM_REASON_TYPES_RETRIEVED(200, "클레임 사유 목록 조회에 성공하였습니다.");
 
     private final int status;
     private final String message;

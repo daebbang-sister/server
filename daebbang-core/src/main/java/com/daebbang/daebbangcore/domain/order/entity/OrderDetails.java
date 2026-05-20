@@ -86,14 +86,19 @@ public class OrderDetails extends CreatedBase {
         this.status = OrderDetailStatus.CANCELLED;
     }
 
-    public void refundRequest() {
+    public void claimRequest() {
         requireStatus(OrderDetailStatus.NORMAL);
-        this.status = OrderDetailStatus.REFUND_REQUESTED;
+        this.status = OrderDetailStatus.CLAIM_REQUESTED;
     }
 
-    public void returned() {
-        requireStatus(OrderDetailStatus.REFUND_REQUESTED);
-        this.status = OrderDetailStatus.RETURNED;
+    public void claimComplete() {
+        requireStatus(OrderDetailStatus.CLAIM_REQUESTED);
+        this.status = OrderDetailStatus.CLAIM_COMPLETED;
+    }
+
+    public void claimReject() {
+        requireStatus(OrderDetailStatus.CLAIM_REQUESTED);
+        this.status = OrderDetailStatus.CLAIM_REJECTED;
     }
 
     private void requireStatus(OrderDetailStatus... allowed) {

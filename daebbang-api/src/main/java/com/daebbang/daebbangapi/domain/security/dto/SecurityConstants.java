@@ -7,7 +7,8 @@ public abstract class SecurityConstants {
         "/v1/products/**",
         "/v1/categories/**",
         "/v1/products/*/reviews",
-        "/v1/products/*/reviews/stats"
+        "/v1/products/*/reviews/stats",
+        "/v1/orders/claim/reason-types"
     };
 
     public static final String[] PUBLIC_POST_URI = {

@@ -12,6 +12,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -75,6 +78,59 @@ public class S3Service {
                 log.warn("[S3 일괄 삭제 일부 실패] url={}", url);
             }
         }
+    }
+
+    /**
+     * 파일 목록을 순서대로 업로드하고 URL 리스트를 반환한다.
+     * 도중 실패 시 이미 업로드된 파일을 즉시 삭제하고 예외를 재던진다.
+     */
+    public List<String> uploadAll(List<UploadFile> files, String directory) {
+        if (files == null || files.isEmpty()) return List.of();
+        List<String> uploaded = new ArrayList<>(files.size());
+        try {
+            for (UploadFile file : files) {
+                uploaded.add(upload(file, directory));
+            }
+            return List.copyOf(uploaded);
+        } catch (RuntimeException e) {
+            deleteAll(uploaded);
+            throw e;
+        }
+    }
+
+    /**
+     * 트랜잭션 롤백 시 S3에서 해당 URL들을 삭제하도록 동기화를 등록한다.
+     * 트랜잭션 동기화가 활성화되지 않은 경우 아무 작업도 하지 않는다.
+     */
+    public void registerS3CleanupOnRollback(List<String> urls) {
+        if (urls == null || urls.isEmpty()) return;
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) return;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    deleteAll(urls);
+                }
+            }
+        });
+    }
+
+    /**
+     * 트랜잭션 커밋 후 S3에서 해당 URL들을 삭제하도록 동기화를 등록한다.
+     * 트랜잭션 동기화가 비활성 상태이면 즉시 삭제한다.
+     */
+    public void registerS3CleanupOnCommit(List<String> urls) {
+        if (urls == null || urls.isEmpty()) return;
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            deleteAll(urls);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                deleteAll(urls);
+            }
+        });
     }
 
     private void validate(UploadFile file) {
