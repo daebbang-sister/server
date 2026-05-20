@@ -27,7 +27,13 @@ public enum OrderErrorCode implements ErrorCode {
     PAYMENT_NOT_FOUND(404, "결제 정보를 찾을 수 없습니다."),
     PAYMENT_CANCEL_FAILED(502, "결제 취소에 실패했습니다. 관리자에게 문의하세요."),
 
-    POINT_EXCEEDS_PAYMENT(400, "포인트가 결제 금액을 초과합니다.");
+    POINT_EXCEEDS_PAYMENT(400, "포인트가 결제 금액을 초과합니다."),
+
+    CLAIM_NOT_ALLOWED(400, "환불/교환 신청이 불가한 상태입니다."),
+    CLAIM_ALREADY_EXISTS(409, "이미 처리 중인 환불/교환 신청이 있습니다."),
+    CLAIM_QUANTITY_INVALID(400, "클레임 수량은 1 이상이어야 합니다."),
+    CLAIM_QUANTITY_EXCEEDED(400, "클레임 수량이 주문 수량을 초과합니다."),
+    CLAIM_NOT_FOUND(404, "클레임 정보를 찾을 수 없습니다.");
 
     private final int status;
     private final String message;
