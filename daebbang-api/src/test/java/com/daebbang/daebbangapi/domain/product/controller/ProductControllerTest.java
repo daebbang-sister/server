@@ -6,7 +6,9 @@ import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -1076,5 +1078,143 @@ class ProductControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/best - 베스트 상품 조회 성공 (카테고리 없음)")
+    void getBestProducts_success_noCategory() throws Exception {
+        // given
+        given(productService.getBestProducts(isNull(), anyInt(), nullable(Integer.class)))
+            .willReturn(createProductQueryResults());
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/best")
+                .param("limit", "8")
+                .param("periodDays", "7")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("조회에 성공하였습니다."))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data[0].id").value(1L))
+            .andExpect(jsonPath("$.data[0].categoryName").value("TOP"))
+            .andExpect(jsonPath("$.data[0].productName").value("루즈핏 티셔츠"))
+            .andExpect(jsonPath("$.data[0].originalPrice").value(50000))
+            .andExpect(jsonPath("$.data[0].sellingPrice").value(40000))
+            .andExpect(jsonPath("$.data[0].discountRate").value(20))
+            .andExpect(jsonPath("$.data[0].colorCodes").isArray())
+            .andDo(document("products/best-01-success",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("베스트 상품 조회")
+                    .description("""
+                        지정한 기간(periodDays) 내 판매량 기준으로 베스트 상품 목록을 조회합니다.
+                        categoryId를 지정하면 해당 카테고리 내 베스트 상품을 반환합니다.
+                        기간 내 판매 이력이 없는 상품은 결과에 포함되지 않습니다.
+                        """)
+                    .responseSchema(Schema.schema("ProductBestListResponse"))
+                    .queryParameters(
+                        parameterWithName("categoryId").description("카테고리 ID (없으면 전체 베스트)").type(SimpleType.INTEGER).optional(),
+                        parameterWithName("limit").description("조회할 상품 수 (최소 1, 최대 50, 기본값 8)").type(SimpleType.INTEGER).optional(),
+                        parameterWithName("periodDays").description("집계 기간 (일 수, 최소 1, 설정 최대값으로 자동 보정, 기본값은 설정값)").type(SimpleType.INTEGER).optional()
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.ARRAY).description("베스트 상품 목록"),
+                        fieldWithPath("data[].id").type(JsonFieldType.NUMBER).description("상품 ID"),
+                        fieldWithPath("data[].categoryName").type(JsonFieldType.STRING).description("카테고리명"),
+                        fieldWithPath("data[].productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data[].mainImageUrl").type(JsonFieldType.STRING).description("메인 이미지 URL"),
+                        fieldWithPath("data[].hoverImageUrl").type(JsonFieldType.VARIES).optional().description("호버 이미지 URL (없을 수 있음)"),
+                        fieldWithPath("data[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가 (할인 미적용 시 정가와 동일)"),
+                        fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록 (HEX 문자열 배열)")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/best - 베스트 상품 조회 성공 (카테고리 지정)")
+    void getBestProducts_success_withCategory() throws Exception {
+        // given
+        given(productService.getBestProducts(eq(1L), anyInt(), nullable(Integer.class)))
+            .willReturn(createProductQueryResults());
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/best")
+                .param("categoryId", "1")
+                .param("limit", "8")
+                .param("periodDays", "30")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data[0].id").value(1L))
+            .andDo(document("products/best-02-category",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("베스트 상품 조회 - 카테고리 지정")
+                    .description("특정 카테고리 내 기간 판매량 기준 베스트 상품을 조회합니다.")
+                    .responseSchema(Schema.schema("ProductBestListResponse"))
+                    .queryParameters(
+                        parameterWithName("categoryId").description("카테고리 ID").type(SimpleType.INTEGER),
+                        parameterWithName("limit").description("조회할 상품 수").type(SimpleType.INTEGER).optional(),
+                        parameterWithName("periodDays").description("집계 기간 (일 수, 기본값은 설정값)").type(SimpleType.INTEGER).optional()
+                    )
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.ARRAY).description("베스트 상품 목록"),
+                        fieldWithPath("data[].id").type(JsonFieldType.NUMBER).description("상품 ID"),
+                        fieldWithPath("data[].categoryName").type(JsonFieldType.STRING).description("카테고리명"),
+                        fieldWithPath("data[].productName").type(JsonFieldType.STRING).description("상품명"),
+                        fieldWithPath("data[].mainImageUrl").type(JsonFieldType.STRING).description("메인 이미지 URL"),
+                        fieldWithPath("data[].hoverImageUrl").type(JsonFieldType.VARIES).optional().description("호버 이미지 URL (없을 수 있음)"),
+                        fieldWithPath("data[].originalPrice").type(JsonFieldType.NUMBER).description("정가"),
+                        fieldWithPath("data[].sellingPrice").type(JsonFieldType.NUMBER).description("판매가"),
+                        fieldWithPath("data[].discountRate").type(JsonFieldType.VARIES).optional().description("할인율 % (할인 없을 시 null)"),
+                        fieldWithPath("data[].colorCodes").type(JsonFieldType.ARRAY).description("색상 코드 목록")
+                    )
+                    .build()
+                )));
+    }
+
+    @Test
+    @DisplayName("GET /v1/products/best - 기간 내 판매 이력 없으면 빈 배열 반환")
+    void getBestProducts_empty() throws Exception {
+        // given
+        given(productService.getBestProducts(isNull(), anyInt(), nullable(Integer.class)))
+            .willReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get(BASE_URL + "/best")
+                .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data").isEmpty())
+            .andDo(document("products/best-03-empty",
+                resource(ResourceSnippetParameters.builder()
+                    .tag("Product")
+                    .summary("베스트 상품 조회 - 빈 목록")
+                    .description("기간 내 판매 이력이 없으면 빈 배열을 반환합니다.")
+                    .responseSchema(Schema.schema("ProductBestListResponse"))
+                    .responseFields(
+                        fieldWithPath("success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                        fieldWithPath("status").type(JsonFieldType.NUMBER).description("HTTP 상태 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                        fieldWithPath("data").type(JsonFieldType.ARRAY).description("베스트 상품 목록 (빈 배열)")
+                    )
+                    .build()
+                )));
     }
 }

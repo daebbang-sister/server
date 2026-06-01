@@ -67,13 +67,13 @@ paths:
               $ref: '#/components/schemas/AddressSaveRequest'
             examples:
               address/add-address:
-                value: "{\"zipCode\":\"12345\",\"alias\":\"집\",\"isDefault\":true,\"\
-                  address\":\"서울시 강남구 테헤란로\",\"detailAddress\":\"101호\",\"receiver\"\
-                  :\"홍길동\",\"receiverPhoneNumber\":\"010-1234-5678\"}"
+                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"zipCode\":\"\
+                  12345\",\"alias\":\"집\",\"isDefault\":true,\"address\":\"서울시 강남구\
+                  \ 테헤란로\",\"detailAddress\":\"101호\",\"receiver\":\"홍길동\"}"
               address/add-address-limit-exceeded:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
-                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
-                  \",\"address\":\"서울시 강남구 테헤란로\"}"
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
+                  ,\"detailAddress\":\"101호\"}"
       responses:
         "201":
           description: "201"
@@ -498,7 +498,7 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               user/withdraw-user:
-                value: _csrf=PSiLvQjQOhkKOiNr3Olg6er9pQV7reVNob7Zi1xsTmdgVfB-BB-z3G3oD3snDxRfv8RU39rPiGRCn4RglIi8vmped1IGNJFO
+                value: _csrf=9XfwqnPV81AgLv9R2ps6nLe6IlcSw55473-RKZDTCz-JsXHAwkTIzBXgwmYNT8Yw47YO-dKDDzYioa5V2kbzGaSyPgu-1xSl
       responses:
         "200":
           description: "200"
@@ -643,13 +643,13 @@ paths:
               $ref: '#/components/schemas/AddressUpdateRequest'
             examples:
               address/update-address:
-                value: "{\"zipCode\":\"54321\",\"alias\":\"회사\",\"isDefault\":false,\"\
-                  address\":\"서울시 서초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\"\
-                  :\"김철수\",\"receiverPhoneNumber\":\"010-9876-5432\"}"
+                value: "{\"receiverPhoneNumber\":\"010-9876-5432\",\"zipCode\":\"\
+                  54321\",\"alias\":\"회사\",\"isDefault\":false,\"address\":\"서울시 서\
+                  초구 반포대로\",\"detailAddress\":\"202호\",\"receiver\":\"김철수\"}"
               address/update-address-not-found:
-                value: "{\"receiverPhoneNumber\":\"010-1234-5678\",\"isDefault\":false,\"\
-                  zipCode\":\"12345\",\"receiver\":\"홍길동\",\"detailAddress\":\"101호\
-                  \",\"address\":\"서울시 강남구 테헤란로\"}"
+                value: "{\"address\":\"서울시 강남구 테헤란로\",\"receiverPhoneNumber\":\"010-1234-5678\"\
+                  ,\"isDefault\":false,\"zipCode\":\"12345\",\"receiver\":\"홍길동\"\
+                  ,\"detailAddress\":\"101호\"}"
       responses:
         "200":
           description: "200"
@@ -698,9 +698,9 @@ paths:
               $ref: '#/components/schemas/v1-addresses-addressId486549215'
             examples:
               address/delete-address:
-                value: _csrf=ei86VtgH1SrOZPHd4WR3HY2YJyPnuvWKyKh93cM3d6ZhHQE6H0kMZ-A3tBvjBpfr1UlDK7WrChuCg8Sn-JFP7PRRFcBSfjkD
+                value: _csrf=kp_N6gLfe0HQZVfoNhM4ye9oy7ws0qLTONazZb3XYcGklvEDoPuoiTXtGnL9VzHbBj4Mqo4O5t4Ys8D-C7TVXduxBfKQpMA0
               address/delete-address-not-found:
-                value: _csrf=IQXyfMH5jQPyrvXrr_KchyP08NAc0lE-HTHK0yBVTRJ_nkKAGDCQHfDP7zTfysDczd-o4hPA3eklszITe1T7sBNjfHRHrXHh
+                value: _csrf=zDHCVCoVkm7y7SWsF_EehLJnhGfu-Oruke5gwI_bn7i07SvM-winMh52q1_f3RydL9wqs4pXqV_fnNvDpI9S8ba9_ouD20mp
       responses:
         "200":
           description: "200"
@@ -1206,6 +1206,69 @@ paths:
                   value: "{\"success\":true,\"status\":200,\"message\":\"적립금 잔액 조회\
                     에 성공하였습니다.\",\"data\":{\"currentAmount\":0,\"totalEarned\":0,\"\
                     totalUsed\":0}}"
+  /v1/products/best:
+    get:
+      tags:
+      - Product
+      summary: 베스트 상품 조회
+      description: |
+        지정한 기간(periodDays) 내 판매량 기준으로 베스트 상품 목록을 조회합니다.
+        categoryId를 지정하면 해당 카테고리 내 베스트 상품을 반환합니다.
+        기간 내 판매 이력이 없는 상품은 결과에 포함되지 않습니다.
+      operationId: products/best-0
+      parameters:
+      - name: categoryId
+        in: query
+        description: 카테고리 ID (없으면 전체 베스트)
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: "조회할 상품 수 (최소 1, 최대 50, 기본값 8)"
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: periodDays
+        in: query
+        description: "집계 기간 (일 수, 최소 1, 설정 최대값으로 자동 보정, 기본값은 설정값)"
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductBestListResponse'
+              examples:
+                products/best-01-success:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}]}"
+                products/best-02-category:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[{\"id\":1,\"categoryName\":\"TOP\",\"productName\"\
+                    :\"루즈핏 티셔츠\",\"mainImageUrl\":\"http://example.com/main1.jpg\"\
+                    ,\"hoverImageUrl\":\"http://example.com/hover1.jpg\",\"originalPrice\"\
+                    :50000,\"sellingPrice\":40000,\"discountRate\":20,\"colorCodes\"\
+                    :[\"#000000\",\"#FFFFFF\"]},{\"id\":2,\"categoryName\":\"TOP\"\
+                    ,\"productName\":\"오버핏 니트\",\"mainImageUrl\":\"http://example.com/main2.jpg\"\
+                    ,\"hoverImageUrl\":null,\"originalPrice\":39000,\"sellingPrice\"\
+                    :39000,\"discountRate\":null,\"colorCodes\":[\"#8B5A2B\"]}]}"
+                products/best-03-empty:
+                  value: "{\"success\":true,\"status\":200,\"message\":\"조회에 성공하였습\
+                    니다.\",\"data\":[]}"
   /v1/products/new:
     get:
       tags:
@@ -2263,8 +2326,8 @@ paths:
                 user/check-login-id-blank:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
-                    :\"아이디는 비어있어서는 안됩니다.\"},{\"field\":\"loginId\",\"message\":\"아\
-                    이디는 4자에서 16자 사이여야 합니다.\"}]}"
+                    :\"아이디는 4자에서 16자 사이여야 합니다.\"},{\"field\":\"loginId\",\"message\"\
+                    :\"아이디는 비어있어서는 안됩니다.\"}]}"
                 user/check-login-id-invalid:
                   value: "{\"success\":false,\"status\":400,\"message\":\"잘못된 입력값입\
                     니다.\",\"data\":null,\"errors\":[{\"field\":\"loginId\",\"message\"\
@@ -2546,7 +2609,7 @@ paths:
                 product/product-review-stats:
                   value: "{\"success\":true,\"status\":200,\"message\":\"리뷰 통계 조회에\
                     \ 성공하였습니다.\",\"data\":{\"totalCount\":15,\"averageRating\":4.3,\"\
-                    ratingCounts\":{\"3\":2,\"2\":1,\"1\":0,\"5\":7,\"4\":5}}}"
+                    ratingCounts\":{\"4\":5,\"3\":2,\"2\":1,\"1\":0,\"5\":7}}}"
 components:
   schemas:
     v1-orders-orderDetailId-claim-458604118:
@@ -4025,6 +4088,58 @@ components:
               type: string
               description: 회원 이름 (변경 불가)
           description: 회원 수정용 정보
+        success:
+          type: boolean
+          description: 성공 여부
+        message:
+          type: string
+          description: 응답 메시지
+        status:
+          type: number
+          description: HTTP 상태 코드
+    ProductBestListResponse:
+      title: ProductBestListResponse
+      type: object
+      properties:
+        data:
+          type: array
+          description: 베스트 상품 목록 (빈 배열)
+          items:
+            type: object
+            properties:
+              colorCodes:
+                type: array
+                description: 색상 코드 목록
+                items:
+                  oneOf:
+                  - type: object
+                  - type: boolean
+                  - type: string
+                  - type: number
+              discountRate:
+                type: object
+                description: 할인율 % (할인 없을 시 null)
+              sellingPrice:
+                type: number
+                description: 판매가
+              originalPrice:
+                type: number
+                description: 정가
+              id:
+                type: number
+                description: 상품 ID
+              hoverImageUrl:
+                type: object
+                description: 호버 이미지 URL (없을 수 있음)
+              mainImageUrl:
+                type: string
+                description: 메인 이미지 URL
+              categoryName:
+                type: string
+                description: 카테고리명
+              productName:
+                type: string
+                description: 상품명
         success:
           type: boolean
           description: 성공 여부

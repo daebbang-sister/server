@@ -6,6 +6,7 @@ import com.daebbang.daebbangcore.domain.product.dto.ProductColorOption;
 import com.daebbang.daebbangcore.domain.product.dto.ProductDetailResult;
 import com.daebbang.daebbangcore.domain.product.entity.Products;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
+import jakarta.annotation.Nullable;
 import java.util.List;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ public interface ProductService {
 
     List<ProductCardQueryResult> getOnSaleNewProducts(int limit);
     List<ProductCardQueryResult> getOnSaleCategoryProducts(Long categoryId, int limit);
+    Page<@NonNull ProductCardQueryResult> getOnSaleNewProductsPage(ProductSortType sort, SortDirection direction, Pageable pageable);
     Page<@NonNull ProductCardQueryResult> getOnSaleProductsByCategory(Long categoryId, ProductSortType sort, SortDirection direction, Pageable pageable);
     Page<@NonNull ProductCardQueryResult> searchProducts(String keyword, ProductSortType sort, SortDirection direction, Pageable pageable);
 
@@ -22,4 +24,6 @@ public interface ProductService {
 
     ProductDetailResult getProductDetail(Long productId);
     List<ProductColorOption> getProductOptions(Long productId);
+
+    List<ProductCardQueryResult> getBestProducts(@Nullable Long categoryId, int limit, @Nullable Integer periodDays);
 }

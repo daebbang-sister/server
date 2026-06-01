@@ -13,6 +13,7 @@ import com.daebbang.daebbangcore.domain.page.PageResponse;
 import com.daebbang.daebbangcore.domain.product.entity.ProductSortType;
 import com.daebbang.daebbangcore.domain.product.service.ProductService;
 import com.daebbang.daebbangcore.domain.review.service.ReviewService;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -130,6 +131,21 @@ public class ProductController {
         return CommonResponse.success(
             UserSuccessCode.REVIEW_STATS_RETRIEVED,
             ProductReviewStatsResponse.from(reviewService.getProductReviewStats(productId))
+        );
+    }
+
+    @GetMapping("/best")
+    public CommonResponse<List<ProductsCard>> getBestProducts(
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam(defaultValue = "8") @Min(1) @Max(50) int limit,
+        @RequestParam(required = false) @Min(1) Integer periodDays
+    ) {
+        return CommonResponse.success(
+            CommonSuccessCode.SELECT_SUCCESS,
+            productService.getBestProducts(categoryId, limit, periodDays)
+                .stream()
+                .map(ProductsCard::of)
+                .toList()
         );
     }
 
