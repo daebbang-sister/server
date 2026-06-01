@@ -16,6 +16,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -37,6 +38,8 @@ import static com.daebbang.daebbangcore.domain.category.entity.QCategory.categor
 import static com.daebbang.daebbangcore.domain.product.entity.QProductCategory.productCategory;
 import static com.daebbang.daebbangcore.domain.product.entity.QProductDetails.productDetails;
 import static com.daebbang.daebbangcore.domain.product.entity.QProductImage.productImage;
+import static com.daebbang.daebbangcore.domain.product.entity.QProductSalesLog.productSalesLog;
+import static com.daebbang.daebbangcore.domain.product.entity.QProductStats.productStats;
 
 @Repository
 @RequiredArgsConstructor
@@ -65,7 +68,9 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .innerJoin(productCategory)
             .on(productCategory.product.eq(products))
             .innerJoin(category)
-            .on(category.eq(productCategory.category));
+            .on(category.eq(productCategory.category))
+            .leftJoin(productStats)
+            .on(productStats.product.eq(products));
     }
 
     private Map<Long, List<String>> fetchColors(List<Long> productIds) {
@@ -114,7 +119,10 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             baseQuery()
                 .where(
                     products.createdAt.goe(from.atStartOfDay()),
-                    products.productStatus.eq(ProductStatus.SALE)
+                    products.productStatus.eq(ProductStatus.SALE),
+                    products.discountStartDate.isNotNull()
+                        .and(products.discountStartDate.eq(
+                            Expressions.dateTemplate(LocalDate.class, "DATE({0})", products.createdAt)))
                 )
                 .orderBy(products.createdAt.desc())
                 .limit(limit)
@@ -134,6 +142,64 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
                 .limit(limit)
                 .fetch()
         );
+    }
+
+    @Override
+    public Page<@NonNull ProductCardQueryResult> findOnSaleNewProductsPage(LocalDate from, ProductSortType sort,
+        SortDirection direction, Pageable pageable) {
+
+        BooleanBuilder condition = new BooleanBuilder();
+        condition.and(products.productStatus.eq(ProductStatus.SALE));
+        condition.and(products.createdAt.goe(from.atStartOfDay()));
+        // 등록일부터 할인이 시작되어야 신상품으로 인정
+        condition.and(
+            products.discountStartDate.isNotNull()
+                .and(products.discountStartDate.eq(
+                    Expressions.dateTemplate(LocalDate.class, "DATE({0})", products.createdAt)))
+        );
+
+        // 다중 카테고리 중복 방지를 위한 2-step 조회 (distinct id → 카드 fetch)
+        List<Long> productIds = queryFactory
+            .select(products.id)
+            .distinct()
+            .from(products)
+            .innerJoin(productCategory).on(productCategory.product.eq(products))
+            .innerJoin(category).on(category.eq(productCategory.category))
+            .leftJoin(productStats).on(productStats.product.eq(products))
+            .where(condition)
+            .orderBy(resolveSort(sort, direction))
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetch();
+
+        List<ProductCardQueryResult> content = productIds.isEmpty()
+            ? List.of()
+            : attachColors(
+                baseQuery()
+                    .where(products.id.in(productIds))
+                    .orderBy(resolveSort(sort, direction), category.id.asc())
+                    .fetch()
+                    .stream()
+                    .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(
+                            ProductCardQueryResult::id,
+                            r -> r,
+                            (a, b) -> a,
+                            LinkedHashMap::new
+                        ),
+                        m -> new ArrayList<>(m.values())
+                    ))
+            );
+
+        Long total = queryFactory
+            .select(products.countDistinct())
+            .from(products)
+            .innerJoin(productCategory).on(productCategory.product.eq(products))
+            .innerJoin(category).on(category.eq(productCategory.category))
+            .where(condition)
+            .fetchOne();
+
+        return new PageImpl<>(content, pageable, Objects.nonNull(total) ? total : 0L);
     }
 
     @Override
@@ -180,6 +246,7 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .from(products)
             .innerJoin(productCategory).on(productCategory.product.eq(products))
             .innerJoin(category).on(category.eq(productCategory.category))
+            .leftJoin(productStats).on(productStats.product.eq(products))
             .where(condition)
             .orderBy(resolveSort(sort, direction))
             .offset(pageable.getOffset())
@@ -283,6 +350,51 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .fetch();
     }
 
+    @Override
+    public List<ProductCardQueryResult> findBestProducts(@Nullable Long categoryId, int limit, int periodDays) {
+        LocalDate from = LocalDate.now().minusDays(periodDays);
+
+        BooleanBuilder condition = new BooleanBuilder();
+        condition.and(products.productStatus.eq(ProductStatus.SALE));
+        condition.and(products.deletedAt.isNull());
+        if (Objects.nonNull(categoryId)) {
+            condition.and(category.id.eq(categoryId));
+        }
+
+        // Step 1: 기간 내 판매량 합계 기준으로 상품 ID 순위 결정
+        var periodSalesSum = Expressions.numberTemplate(Long.class, "SUM({0})", productSalesLog.salesCount);
+        List<Long> orderedIds = queryFactory
+            .select(productSalesLog.product.id)
+            .from(productSalesLog)
+            .innerJoin(products).on(products.id.eq(productSalesLog.product.id))
+            .innerJoin(productCategory).on(productCategory.product.eq(products))
+            .innerJoin(category).on(category.eq(productCategory.category))
+            .where(
+                productSalesLog.saleDate.goe(from),
+                condition
+            )
+            .groupBy(productSalesLog.product.id)
+            .orderBy(periodSalesSum.desc())
+            .limit(limit)
+            .fetch();
+
+        if (orderedIds.isEmpty()) {
+            return List.of();
+        }
+
+        // Step 2: 카드 데이터 조회 후 Step 1 순서 복원
+        Map<Long, ProductCardQueryResult> cardMap = attachColors(
+            baseQuery()
+                .where(products.id.in(orderedIds))
+                .fetch()
+        ).stream().collect(Collectors.toMap(ProductCardQueryResult::id, r -> r, (a, b) -> a));
+
+        return orderedIds.stream()
+            .map(cardMap::get)
+            .filter(Objects::nonNull)
+            .toList();
+    }
+
     private OrderSpecifier<?> resolveSort(ProductSortType sort, SortDirection direction) {
         return switch (sort) {
             case NEW -> products.createdAt.desc();
@@ -295,7 +407,7 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             case PRICE -> direction == SortDirection.ASC
                 ? products.originalPrice.asc()
                 : products.originalPrice.desc();
-            case POPULAR -> products.createdAt.desc(); // TODO: 인기순 구현 전 임시 fallback
+            case POPULAR -> productStats.reviewCount.desc().nullsLast();
         };
     }
 }
