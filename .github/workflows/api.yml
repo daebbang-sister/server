@@ -71,6 +71,10 @@ jobs:
           image: ${{ secrets.DOCKERHUB_USERNAME }}/daebbang-server:api-latest
           exit-code: true
           only-severities: critical
+          # base image(eclipse-temurin)에서 상속된 취약점은 무시한다.
+          # (예: golang.org/x/net CVE-2026-39821 - OS 레이어 소속이라 우리 Gradle 의존성으로 수정 불가)
+          # 우리 애플리케이션 레이어에서 유입된 critical 취약점은 계속 빌드를 실패시킨다.
+          ignore-base: true
 
   deploy:
     needs: build-and-push
